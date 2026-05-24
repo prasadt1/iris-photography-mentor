@@ -77,11 +77,25 @@ See [`mongodb-setup.md`](mongodb-setup.md).
 
 ---
 
-## ADR-007: HITL assignment approval — post-MVP
+## ADR-007: HITL assignment approval — MVP implementation
 
-**Status:** Deferred
-**Context:** Early ideation included accept/decline on planner output. Spec v3 uses implicit flow (Planner creates `active` assignment).
-**Decision:** No HITL UI for hackathon MVP. Add `status: proposed` + Accept in post-hackathon if needed.
+**Status:** Accepted (updated May 24, 2026)
+**Context:** Assignment workflow needs human-in-the-loop control. Planner generates assignments; user decides whether to practice them. Mode toggle (hobbyist vs working-pro) also demonstrates human routing control for judges.
+**Decision:**
+
+MVP includes HITL via assignment status flow:
+- Planner creates assignment with `status: proposed`
+- User reviews assignment in Practice tab
+- User clicks "Accept" → status changes to `active`
+- User clicks "Decline" → status changes to `abandoned`
+- Only `active` assignments trigger Reflection sub-agent on completion
+
+**UI Implementation** (Phase 3):
+- Practice tab displays proposed assignments with Accept/Decline buttons
+- Active assignments show progress and baseline comparisons
+- Completed assignments show ISAR delta
+
+**Judge narrative:** Mode toggle + assignment approval = two forms of HITL routing, demonstrating human oversight of AI recommendations.
 
 ---
 

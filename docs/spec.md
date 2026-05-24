@@ -683,7 +683,7 @@ Seed script uploads demo images to GCS once, then inserts MongoDB documents.
 {
   "_id": "ObjectId",
   "user_id": "ObjectId",
-  "status": "active | completed | abandoned",
+  "status": "proposed | active | completed | abandoned",
   "brief": "string",
   "target_skill": "string",
   "rationale": "string",
@@ -699,6 +699,8 @@ Seed script uploads demo images to GCS once, then inserts MongoDB documents.
   "completed_at": "ISODate | null"
 }
 ```
+
+**HITL Flow** (Phase 3, ADR-007): Planner creates assignments with `status: proposed`. Practice tab UI shows Accept/Decline buttons. Only `active` assignments trigger Reflection on completion.
 
 **`conversations`**
 ```json

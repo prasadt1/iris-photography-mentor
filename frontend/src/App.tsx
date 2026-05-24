@@ -3,11 +3,39 @@ import './App.css'
 import { ModeToggle } from './components/ModeToggle'
 import { PracticeTab } from './components/PracticeTab'
 import { MemoryTab } from './components/MemoryTab'
+import { PhotoUploader } from './components/PhotoUploader'
+import { AnalysisResults } from './components/AnalysisResults'
+import { analyzePhoto } from './services/agentClient'
+import type { AnalysisResult } from './types'
 
 type Tab = 'studio' | 'practice' | 'memory' | 'field';
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('studio');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (file: File) => {
+    setAnalyzing(true);
+    setResult(null);
+
+    try {
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setImageUrl(url);
+
+      // Call agent (mock in Phase 1, real Agent Engine in Phase 2)
+      const analysisResult = await analyzePhoto({ imageFile: file });
+
+      setResult(analysisResult);
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      alert('Analysis failed. See console for details.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   return (
     <>
@@ -48,14 +76,37 @@ function App() {
           {activeTab === 'studio' && (
             <div style={{ padding: '20px' }}>
               <h2>Studio Mode</h2>
-              <p><strong>Phase 1 Stub</strong> - Will include:</p>
-              <ul>
-                <li>Photo uploader component (ported from gemini3)</li>
-                <li>Analysis results display with Glass Box reasoning</li>
-                <li>Spatial overlay visualization</li>
-                <li>XMP export to Lightroom</li>
-              </ul>
-              <p>Components will be ported from source repos in Phase 1.3</p>
+              <p style={{ color: '#666', marginBottom: '20px' }}>
+                Upload a photo for AI critique. Phase 1 uses mock data; Agent Engine integration in Phase 2.
+              </p>
+
+              <PhotoUploader onUpload={handlePhotoUpload} loading={analyzing} />
+
+              {result && imageUrl && (
+                <div style={{ marginTop: '30px' }}>
+                  <AnalysisResults result={result} imageUrl={imageUrl} />
+
+                  <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                    <button
+                      onClick={() => {
+                        setResult(null);
+                        setImageUrl(null);
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#646cff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '1em',
+                      }}
+                    >
+                      Upload Another Photo
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {activeTab === 'practice' && <PracticeTab />}
