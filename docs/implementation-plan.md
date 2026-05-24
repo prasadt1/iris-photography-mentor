@@ -104,34 +104,35 @@ Use [`mongodb-setup.md`](mongodb-setup.md) and [`decisions.md`](decisions.md) fo
 
 **Goal**: Generate project scaffold using Agent Starter Pack, set up frontend, port utility files from source repos.
 
-### 1.1 Generate ADK Scaffold
+### 1.1 Generate ADK Scaffold ✅ COMPLETE
 
-**Command**:
+**Command Used**:
 ```bash
-uvx agent-starter-pack create
+uvx google-agents-cli create app --adk --region us-central1 --cicd-runner github_actions --agent-directory orchestrator
 ```
 
-**Selections**:
-- Project name: `photography-practice-companion`
-- Template: `adk_live` (multimodal RAG with audio/video/text)
-- Region: `us-central1`
-- Deployment target: `agent_engine`
-- CI/CD: `github_actions`
+**Note**: Used `google-agents-cli` instead of `agent-starter-pack` (see ADR-008 in docs/decisions.md). The `--adk` flag creates basic ADK scaffold suitable for customization.
 
 **Outputs**:
-- `pyproject.toml`, `uv.lock` (Python dependencies)
-- `Makefile` (common commands: `playground`, `deploy`, etc.)
-- `app/` (agent code structure)
-- `deployment/terraform/` (IaC for Agent Engine)
-- `deployment/ci-cd/` (GitHub Actions workflows)
-- `.github/workflows/` (CI/CD automation)
+- `pyproject.toml`, `uv.lock` (Python dependencies) ✅
+- `app/orchestrator/` (agent code structure) ✅
+- `app/deployment/terraform/` (IaC for Agent Engine) ✅
+- `app/tests/` (unit, integration, eval frameworks) ✅
+
+**Fixes Applied** (per user requirements):
+1. ✅ Removed demo tools (get_weather, get_current_time)
+2. ✅ Created `app/prompts/orchestrator.txt` with routing-only instruction per spec §10.1
+3. ✅ Fixed model config: reads `GEMINI_MODEL` from .env (gemini-3-pro)
+4. ✅ Fixed location: uses `VERTEX_AI_REGION` from .env (us-central1, not global)
+5. ✅ Set `GOOGLE_GENAI_USE_VERTEXAI=True`
+6. ✅ Added python-dotenv dependency
+7. ✅ Agent loads .env from project root
 
 **Verification**:
 ```bash
-uv sync
-make playground
+uv run python -c "from orchestrator.agent import app, root_agent; print(root_agent.name)"
 ```
-Test prompt: "Hello, I'm a test user." → Base agent responds → ✅
+Result: `practice_companion_orchestrator` ✅ (uses gemini-3-pro, us-central1, no tools yet)
 
 ### 1.2 Frontend Scaffold
 

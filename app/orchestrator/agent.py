@@ -13,64 +13,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import datetime
-from zoneinfo import ZoneInfo
+"""
+Practice Companion Orchestrator Agent
 
+Phase 1 stub: routing-only instruction, no tools yet.
+Phase 2 will add: MongoDB MCP, Data Store grounding, Atlas Search, sub-agents.
+"""
+
+import os
+from pathlib import Path
+
+import google.auth
 from google.adk.agents import Agent
 from google.adk.apps import App
 from google.adk.models import Gemini
 from google.genai import types
+from dotenv import load_dotenv
 
-import os
-import google.auth
+# Load environment variables from .env file (look in parent directory if not found)
+env_path = Path(__file__).parent.parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
-_, project_id = google.auth.default()
+# Set up GCP environment
+# Use application default credentials (already authenticated via gcloud)
+try:
+    _, project_id = google.auth.default()
+except Exception:
+    # Fallback to env var if ADC not available
+    project_id = os.getenv("GOOGLE_CLOUD_PROJECT", "practice-companion-hackathon")
+
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+
+# Read from .env with defaults
+# VERTEX_AI_REGION from .env (us-central1 per spec)
+vertex_region = os.getenv("VERTEX_AI_REGION", "us-central1")
+os.environ["GOOGLE_CLOUD_LOCATION"] = vertex_region
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
+# Model from .env (gemini-3-pro per spec, with fallback to available models)
+gemini_model = os.getenv("GEMINI_MODEL", "gemini-pro")
 
-def get_weather(query: str) -> str:
-    """Simulates a web search. Use it get information on weather.
+# Load orchestrator instruction from prompts/orchestrator.txt
+prompts_dir = Path(__file__).parent.parent / "prompts"
+orchestrator_instruction = (prompts_dir / "orchestrator.txt").read_text()
 
-    Args:
-        query: A string containing the location to get weather information for.
-
-    Returns:
-        A string with the simulated weather information for the queried location.
-    """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        return "It's 60 degrees and foggy."
-    return "It's 90 degrees and sunny."
-
-
-def get_current_time(query: str) -> str:
-    """Simulates getting the current time for a city.
-
-    Args:
-        city: The name of the city to get the current time for.
-
-    Returns:
-        A string with the current time information.
-    """
-    if "sf" in query.lower() or "san francisco" in query.lower():
-        tz_identifier = "America/Los_Angeles"
-    else:
-        return f"Sorry, I don't have timezone information for query: {query}."
-
-    tz = ZoneInfo(tz_identifier)
-    now = datetime.datetime.now(tz)
-    return f"The current time for query {query} is {now.strftime('%Y-%m-%d %H:%M:%S %Z%z')}"
-
-
+# Practice Companion Orchestrator (Phase 1 stub)
 root_agent = Agent(
-    name="root_agent",
+    name="practice_companion_orchestrator",
     model=Gemini(
-        model="gemini-flash-latest",
+        model=gemini_model,
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
-    instruction="You are a helpful AI assistant designed to provide accurate and useful information.",
-    tools=[get_weather, get_current_time],
+    instruction=orchestrator_instruction,
+    tools=[],  # Phase 2: will add MongoDB MCP, Data Store, Atlas Search, sub-agents
 )
 
 app = App(

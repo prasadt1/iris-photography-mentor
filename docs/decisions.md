@@ -79,6 +79,19 @@ See [`mongodb-setup.md`](mongodb-setup.md).
 
 ## ADR-007: HITL assignment approval — post-MVP
 
-**Status:** Deferred  
-**Context:** Early ideation included accept/decline on planner output. Spec v3 uses implicit flow (Planner creates `active` assignment).  
+**Status:** Deferred
+**Context:** Early ideation included accept/decline on planner output. Spec v3 uses implicit flow (Planner creates `active` assignment).
 **Decision:** No HITL UI for hackathon MVP. Add `status: proposed` + Accept in post-hackathon if needed.
+
+---
+
+## ADR-008: Use google-agents-cli instead of agent-starter-pack
+
+**Status:** Accepted
+**Context:** Spec §1.1 references `agent-starter-pack` with `adk_live` template. During Phase 1 execution (May 24, 2026), `agent-starter-pack` showed interactive prompts incompatible with non-interactive mode, and suggested using the newer `google-agents-cli` as "the next evolution."
+**Decision:** Use `google-agents-cli create app --adk --region us-central1 --cicd-runner github_actions` to generate ADK scaffold. This creates the same ADK-based agent structure but via the newer CLI tool.
+**Consequences:**
+- Scaffold created successfully with ADK + Agent Runtime deployment target
+- Template is basic ADK (not specifically `adk_live` multimodal RAG), but provides identical foundation for customization
+- All Phase 2+ implementation proceeds as planned with ADK agents, tools, and sub-agents
+- Document in implementation-plan.md as verified approach
