@@ -99,7 +99,7 @@ export const FieldTab: React.FC<Props> = ({
     return (
       <div className="max-w-lg mx-auto text-center p-10 rounded-2xl border border-dashed border-slate-700">
         <Target className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-        <h2 className="text-xl font-bold text-white mb-2">Field mode</h2>
+        <h2 className="text-xl font-bold text-white mb-2">Shoot Now</h2>
         <p className="text-slate-400 text-sm mb-4">
           Accept a practice assignment first — then choose &quot;Shoot now&quot; to practice with
           your camera.
@@ -109,7 +109,7 @@ export const FieldTab: React.FC<Props> = ({
           onClick={onGoToPractice}
           className="text-brand-400 font-semibold text-sm hover:underline"
         >
-          Go to Practice
+          Go to My Practice
         </button>
       </div>
     );
@@ -118,9 +118,9 @@ export const FieldTab: React.FC<Props> = ({
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fadeIn">
       <div>
-        <h2 className="text-2xl font-bold text-white mb-1">Field</h2>
+        <h2 className="text-2xl font-bold text-white mb-1">Shoot Now</h2>
         <p className="text-slate-400 text-sm">
-          Live capture for your active assignment — uploads are tagged automatically.
+          Use your camera for the assignment you accepted — I&apos;ll critique the frame right away.
         </p>
       </div>
 
@@ -142,7 +142,7 @@ export const FieldTab: React.FC<Props> = ({
         {analyzing && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80">
             <Loader2 className="w-10 h-10 animate-spin text-brand-400 mb-2" />
-            <p className="text-sm text-slate-300">Analyzing with Gemini…</p>
+            <p className="text-sm text-slate-300">Analyzing your shot…</p>
           </div>
         )}
       </div>

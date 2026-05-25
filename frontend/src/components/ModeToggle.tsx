@@ -4,7 +4,6 @@ import type { UserMode } from '../types/practice';
 interface Props {
   mode: UserMode;
   onModeChange: (mode: UserMode) => void;
-  /** Persist persona to MongoDB (orchestrator toolset). */
   onPersistPersona?: (mode: UserMode) => Promise<void>;
   onPersistError?: (message: string) => void;
 }
@@ -25,7 +24,7 @@ export const ModeToggle: React.FC<Props> = ({
       await onPersistPersona(next);
     } catch (e) {
       onPersistError?.(
-        e instanceof Error ? e.message : 'Could not save persona to server',
+        e instanceof Error ? e.message : 'Could not save your profile mode',
       );
     } finally {
       setSaving(false);
@@ -35,9 +34,13 @@ export const ModeToggle: React.FC<Props> = ({
   return (
     <div className="py-3 flex flex-wrap items-center gap-4">
       <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-        Persona (orchestrator)
+        I&apos;m here as a
       </span>
-      <div className="flex p-1 bg-slate-800 rounded-lg border border-slate-700">
+      <div
+        className="flex p-1 bg-slate-800 rounded-lg border border-slate-700"
+        role="group"
+        aria-label="Photographer profile mode"
+      >
         {(
           [
             { id: 'hobbyist' as const, label: 'Hobbyist' },
@@ -47,6 +50,7 @@ export const ModeToggle: React.FC<Props> = ({
           <button
             key={m.id}
             type="button"
+            aria-pressed={mode === m.id}
             onClick={() => void handleChange(m.id)}
             disabled={saving}
             className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
@@ -60,7 +64,9 @@ export const ModeToggle: React.FC<Props> = ({
         ))}
       </div>
       <p className="text-xs text-slate-500">
-        {saving ? 'Saving…' : 'Saved to MongoDB — orchestrator & Mentor chat use this persona.'}
+        {saving
+          ? 'Saving your mode…'
+          : 'Working pro unlocks print listing drafts. Everything else stays in sync.'}
       </p>
     </div>
   );

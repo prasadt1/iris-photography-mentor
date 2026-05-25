@@ -39,13 +39,10 @@ const GlassBoxPanel: React.FC<Props> = ({
                 <Brain className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-white font-bold text-sm md:text-base">Glass Box · Gemini 3.1 Pro</h3>
-                <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                  <p className="text-xs text-slate-400 font-mono">Structured reasoning you can audit</p>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 rounded font-mono">
-                    thinking_level: high
-                  </span>
-                </div>
+                <h3 className="text-white font-bold text-sm md:text-base">Why I scored it this way</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Glass Box — my reasoning steps, so you can learn from the critique
+                </p>
               </div>
             </div>
             {expanded ? (

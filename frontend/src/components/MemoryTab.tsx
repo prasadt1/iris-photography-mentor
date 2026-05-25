@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ImageIcon, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { apiUnreachableMessage } from '../lib/apiHelp';
 import { fetchAestheticProfile, fetchPortfolio } from '../services/memoryClient';
 import type { AestheticProfileSummary, PortfolioListItem } from '../types/memory';
 
@@ -44,27 +45,16 @@ export const MemoryTab: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-slate-400">
         <Loader2 className="w-8 h-8 animate-spin text-brand-400 mb-3" />
-        <p className="text-sm">Loading portfolio from MongoDB…</p>
+        <p className="text-sm">Loading your portfolio…</p>
       </div>
     );
   }
 
   if (error) {
-    const isLocal =
-      typeof window !== 'undefined' &&
-      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     return (
       <div className="max-w-lg mx-auto p-8 rounded-2xl bg-slate-800/50 border border-rose-500/40 text-center">
         <p className="text-rose-400 text-sm mb-4">{error}</p>
-        <p className="text-slate-500 text-xs mb-4">
-          {isLocal ? (
-            <>
-              Ensure <code className="text-brand-400">make api-dev</code> is running on port 8081.
-            </>
-          ) : (
-            <>Check the Coach API is up and CORS allows this site (Cloud Run + Firebase).</>
-          )}
-        </p>
+        <p className="text-slate-500 text-xs mb-4">{apiUnreachableMessage()}</p>
         <button
           type="button"
           onClick={() => void load()}
@@ -81,9 +71,9 @@ export const MemoryTab: React.FC = () => {
     <div className="animate-fadeIn space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Memory</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">My Work</h2>
           <p className="text-slate-400 text-sm">
-            Persistent portfolio from Atlas — every Studio critique is remembered.
+            Every Studio critique lives here — tags, scores, and how your style is shifting.
           </p>
         </div>
         <button
@@ -179,6 +169,12 @@ export const MemoryTab: React.FC = () => {
                 <button
                   type="button"
                   className="text-left flex flex-col flex-1"
+                  aria-label={`View photo details, score ${entry.overallAverage} out of 10${
+                    entry.sceneDescription
+                      ? `: ${entry.sceneDescription.slice(0, 60)}`
+                      : ''
+                  }`}
+                  aria-expanded={expanded}
                   onClick={() => setExpandedId(expanded ? null : entry.id)}
                 >
                   <div className="aspect-[4/3] bg-black relative">

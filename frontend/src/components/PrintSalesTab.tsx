@@ -128,22 +128,22 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
     return (
       <div className="max-w-lg mx-auto text-center py-16 space-y-4">
         <p className="text-slate-400">
-          Print Sales is for the <strong className="text-slate-200">Working pro</strong> persona.
+          Listing drafts are for <strong className="text-slate-200">Working pro</strong> mode.
         </p>
         <p className="text-sm text-slate-500">
-          Switch persona at the top, or ask in{' '}
+          Switch to Working pro at the top, or ask in{' '}
           {onGoToMentor ? (
             <button
               type="button"
               onClick={onGoToMentor}
               className="text-brand-400 underline hover:text-brand-300"
             >
-              Mentor
+              Ask Mentor
             </button>
           ) : (
-            'Mentor'
+            'Ask Mentor'
           )}{' '}
-          after switching — the orchestrator routes to the print_sales sub-agent.
+          which photos might sell as prints.
         </p>
       </div>
     );
@@ -154,13 +154,13 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       <div>
         <div className="flex items-center gap-2 text-brand-400 mb-2">
           <ShoppingBag className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase tracking-wide">Print Sales</span>
+          <span className="text-xs font-bold uppercase tracking-wide">List for Sale</span>
         </div>
         <h1 className="text-2xl font-extrabold text-white">Approve marketplace listings</h1>
         <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-          The <strong className="text-slate-300">print_sales</strong> sub-agent drafts listings —
-          nothing publishes until you approve each card (no batch approve). You can also ask Mentor:{' '}
-          <em className="text-slate-400">“Which photos should I list on Etsy?”</em>
+          I draft listing copy and price — nothing goes live until you approve each card one by one.
+          You can also ask in Ask Mentor:{' '}
+          <em className="text-slate-400">&quot;Which photos should I list on Etsy?&quot;</em>
         </p>
       </div>
 
@@ -190,7 +190,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       {!loading && items.length === 0 && (
         <p className="text-slate-500 text-sm border border-dashed border-slate-700 rounded-lg p-6 text-center">
           No drafts waiting. Run <strong className="text-slate-400">Draft listing proposals</strong>{' '}
-          or use Mentor (working pro) to create proposals via the print_sales agent.
+          or ask Ask Mentor (working pro) which photos to list.
         </p>
       )}
 
@@ -275,8 +275,8 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       </ul>
 
       <p className="text-xs text-slate-500 text-center">
-        Approved listings are saved to MongoDB <code className="text-brand-400">print_sales</code>{' '}
-        — not sent to a real marketplace API in this demo.
+        Approved listings are saved to your library — not sent to Etsy or another shop in this
+        preview.
       </p>
     </div>
   );

@@ -85,15 +85,17 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
       <div className="mb-6">
         <div className="flex items-center gap-2 text-brand-400 mb-2">
           <MessageCircle className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase tracking-wide">Mentor Copilot</span>
+          <span className="text-xs font-bold uppercase tracking-wide">Ask Mentor</span>
         </div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-white">
-          Chat with your mentor
+          Ask me about your progress
         </h1>
-        <p className="text-slate-400 mt-2 text-sm">
-          Routed through the v5 orchestrator (persona:{' '}
-          <span className="text-brand-300 font-medium">{mode.replace('_', ' ')}</span>
-          ). Requires <code className="text-brand-400">make api-dev</code> on port 8081.
+        <p className="text-slate-400 mt-2 text-sm leading-relaxed">
+          I look across your past critiques and portfolio — tuned for{' '}
+          <span className="text-slate-300">
+            {mode === 'working_pro' ? 'working pro' : 'hobbyist'}
+          </span>{' '}
+          goals. Replies can take 30–90 seconds when I dig through your library.
         </p>
       </div>
 
@@ -129,8 +131,8 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
               <div className="flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />
                 {mode === 'working_pro'
-                  ? 'Orchestrator → Print Sales (portfolio + listings)…'
-                  : 'Orchestrator thinking…'}
+                  ? 'Reviewing your portfolio and print opportunities…'
+                  : 'Reviewing your critiques and portfolio…'}
               </div>
               <p className="text-xs text-slate-500 pl-6">
                 {mode === 'working_pro'

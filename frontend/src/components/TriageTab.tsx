@@ -180,7 +180,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
       await decideApproval(id, action);
       setItems((prev) => prev.filter((p) => p.id !== id));
       if (action === 'approve') {
-        setScanSummary('Approved — open Memory and hit Refresh to see new labels on your photos.');
+        setScanSummary('Approved — open My Work and hit Refresh to see new labels on your photos.');
         void loadPreviews();
       }
     } catch (e) {
@@ -193,7 +193,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
   if (mode !== 'hobbyist' && mode !== 'working_pro') {
     return (
       <p className="text-slate-400 text-center py-12">
-        Backlog Triage is available in Hobbyist and Working pro personas.
+        Label Photos is available in Hobbyist and Working pro modes.
       </p>
     );
   }
@@ -203,13 +203,13 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
       <div>
         <div className="flex items-center gap-2 text-brand-400 mb-2">
           <Layers className="w-5 h-5" />
-          <span className="text-xs font-bold uppercase tracking-wide">Organize</span>
+          <span className="text-xs font-bold uppercase tracking-wide">Label Photos</span>
         </div>
         <h1 className="text-2xl font-extrabold text-white">Label your photo library</h1>
         <p className="text-slate-400 text-sm mt-2 leading-relaxed">
-          You already get tags when you upload in <strong className="text-slate-300">Studio</strong>{' '}
-          (Coach suggests them). Triage helps when you have <em>many</em> photos and want consistent
-          labels across old shoots — like putting &quot;still life&quot; on a group so you can find them later.
+          You already get tags when you upload in <strong className="text-slate-300">My Studio</strong>.
+          When you have many photos, I can suggest consistent labels across a shoot — like
+          &quot;still life&quot; on a group so you can find them later in My Work.
         </p>
       </div>
 
@@ -236,8 +236,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
             ) : (
               <span className="text-brand-400">Memory</span>
             )}{' '}
-            → Refresh → tags appear as small chips on each photo; &quot;Dominant tags&quot; at the top
-            updates too.
+            → Refresh → tags appear on each photo; dominant themes at the top of My Work update too.
           </li>
         </ol>
         <p className="text-xs text-slate-500 border-t border-slate-700 pt-3">

@@ -1,3 +1,4 @@
+import { apiUnreachableMessage } from '../lib/apiHelp';
 import type { PendingApproval } from '../types/triage';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
@@ -6,9 +7,7 @@ async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const detail = await res.text();
     if (res.status === 502 || res.status === 503) {
-      throw new Error(
-        'API not reachable. In another terminal run: make api-dev (port 8081), then retry.',
-      );
+      throw new Error(apiUnreachableMessage());
     }
     throw new Error(detail || `Request failed: ${res.status}`);
   }

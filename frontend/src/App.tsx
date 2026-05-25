@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Camera, Sparkles } from 'lucide-react';
+import { Camera, Sparkles, Target, Upload } from 'lucide-react';
 import { ModeToggle } from './components/ModeToggle';
 import { PracticeTab } from './components/PracticeTab';
 import { FieldTab } from './components/FieldTab';
@@ -90,13 +90,13 @@ function App() {
   };
 
   const navTabs: { id: Tab; label: string }[] = [
-    { id: 'studio', label: 'Studio' },
-    { id: 'practice', label: 'Practice' },
-    { id: 'memory', label: 'Memory' },
-    { id: 'mentor', label: 'Mentor' },
-    { id: 'triage', label: 'Organize' },
-    ...(userMode === 'working_pro' ? [{ id: 'print' as const, label: 'Print' }] : []),
-    { id: 'field', label: 'Field' },
+    { id: 'studio', label: 'My Studio' },
+    { id: 'practice', label: 'My Practice' },
+    { id: 'memory', label: 'My Work' },
+    { id: 'mentor', label: 'Ask Mentor' },
+    { id: 'triage', label: 'Label Photos' },
+    ...(userMode === 'working_pro' ? [{ id: 'print' as const, label: 'List for Sale' }] : []),
+    { id: 'field', label: 'Shoot Now' },
   ];
 
   return (
@@ -117,13 +117,9 @@ function App() {
                 <span className="text-xl md:text-2xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-slate-300">
                   Practice Companion
                 </span>
-                <span className="hidden sm:inline-flex items-center gap-1 bg-gradient-to-r from-emerald-500 to-purple-600 px-2.5 py-0.5 rounded-full text-[10px] font-bold text-white uppercase tracking-wide">
-                  <Sparkles className="w-3 h-3" />
-                  Gemini 3.1 Pro
-                </span>
               </div>
-              <span className="text-[11px] text-brand-400 font-semibold uppercase tracking-wide hidden sm:block">
-                AI mentor · Glass Box · Persistent memory
+              <span className="text-[11px] text-slate-400 font-medium hidden sm:block">
+                I remember your work · clear critique · practice that fits you
               </span>
             </div>
           </button>
@@ -143,8 +139,8 @@ function App() {
         />
         {personaError && (
           <p className="max-w-7xl mx-auto px-4 pb-2 text-sm text-amber-400" role="alert">
-            Persona not saved on server ({personaError}). Mentor chat still uses your
-            selected toggle.
+            Could not save your profile mode ({personaError}). Ask Mentor still uses your
+            selected mode above.
           </p>
         )}
       </div>
@@ -157,8 +153,10 @@ function App() {
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold capitalize transition-all ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
               activeTab === tab.id
                 ? 'bg-brand-500 text-slate-900 shadow-lg shadow-brand-500/20'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800'
@@ -177,17 +175,34 @@ function App() {
                 {activeAssignment && (
                   <ActivePracticeBanner assignment={activeAssignment} />
                 )}
-                <div className="text-center max-w-2xl">
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
-                    Studio{' '}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-400">
-                      critique
-                    </span>
-                  </h1>
-                  <p className="text-slate-400">
-                  Upload a photo for multimodal Glass Box feedback powered by Gemini 3.1 Pro.
-                  Run <code className="text-brand-400">make api-dev</code> on port 8081 first.
-                  </p>
+                <div className="text-center max-w-2xl space-y-6">
+                  <div>
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3 leading-tight">
+                      I&apos;ll remember every photo you share — and help you improve, shoot
+                      after shoot.
+                    </h1>
+                    <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+                      Upload once for honest scores, Glass Box reasoning you can read, and
+                      practice ideas tied to your real work.
+                    </p>
+                  </div>
+                  <div className="grid sm:grid-cols-3 gap-4 text-left">
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                      <Upload className="w-5 h-5 text-brand-400 mb-2" aria-hidden />
+                      <p className="text-sm font-semibold text-white">1. Upload</p>
+                      <p className="text-xs text-slate-500 mt-1">Any shot from camera or files</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                      <Sparkles className="w-5 h-5 text-brand-400 mb-2" aria-hidden />
+                      <p className="text-sm font-semibold text-white">2. Get critique</p>
+                      <p className="text-xs text-slate-500 mt-1">Scores plus why they matter</p>
+                    </div>
+                    <div className="rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+                      <Target className="w-5 h-5 text-brand-400 mb-2" aria-hidden />
+                      <p className="text-sm font-semibold text-white">3. Practice</p>
+                      <p className="text-xs text-slate-500 mt-1">Assignments from your weak spots</p>
+                    </div>
+                  </div>
                 </div>
                 <PhotoUploader onImageSelected={handleImageSelected} isAnalyzing={analyzing} />
               </div>
@@ -227,9 +242,11 @@ function App() {
         )}
       </main>
 
-      <footer className="border-t border-slate-800 py-8 text-center text-xs text-slate-500">
-        <p>Google Cloud Rapid Agent Hackathon — MongoDB track</p>
-        <p className="mt-1">UI theme: photography-coach-ai-gemini3 · Studio layout: gemma4</p>
+      <footer className="border-t border-slate-800 py-8 text-center text-xs text-slate-500 px-4">
+        <p>Practice Companion — your photos stay in your private library.</p>
+        <p className="mt-1 max-w-md mx-auto">
+          Listing and label suggestions need your approval before anything changes.
+        </p>
       </footer>
     </div>
   );

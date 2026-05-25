@@ -143,9 +143,10 @@ export const PracticeTab: React.FC<Props> = ({
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Practice</h2>
+          <h2 className="text-2xl font-bold text-white mb-1">My Practice</h2>
           <p className="text-slate-400 text-sm">
-            Planner proposes · you Accept or Decline (HITL) · then shoot in Studio.
+            I&apos;ll suggest a focused assignment — you accept or pass — then shoot in the field
+            or Studio.
           </p>
         </div>
         <div className="flex gap-2">
