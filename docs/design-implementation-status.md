@@ -1,6 +1,6 @@
 # Design review — implementation status
 
-**Last updated:** 2026-05-25 (after Tier G — trends + dynamic Mentor starters)
+**Last updated:** 2026-05-25 (after Tier H — Glass Box linking + Memory previews + PWA shell)
 
 Reference: [`design-reviews.md`](design-reviews.md), [`design-review-brief.md`](design-review-brief.md)
 
@@ -29,17 +29,19 @@ Reference: [`design-reviews.md`](design-reviews.md), [`design-review-brief.md`](
 | **Tier G** — `/api/v1/portfolio/trends` + Memory sparklines | Done |
 | **Tier G** — `/api/v1/mentor/suggested-questions` + Mentor tab | Done |
 | **Tier G** — DM Sans body font (Pass 3) | Done |
+| **Tier H** — Score ↔ Glass Box bidirectional highlight | Done |
+| **Tier H** — Memory card Glass Box preview (line-clamp + expand) | Done |
+| **Tier H** — Minimal PWA service worker (offline shell) | Done |
 
 ## Still future (honest)
 
 | Item | Why deferred |
 |------|----------------|
 | Vision impairment web UI | Phase 3–4 spec |
-| Full PWA (service worker, offline upload queue) | >2 days |
+| Full PWA (offline upload queue, push) | Beyond minimal `sw.js` |
 | Firebase Auth / multi-user | Hackathon uses demo user |
 | Live Etsy API | Out of scope per brief |
-| Full Memory grid redesign (Pass 3 mockups) | Partial (matte + badge + trends) |
-| Bidirectional score ↔ Glass Box highlight | Large interaction pass |
+| Full Memory grid redesign (Pass 3 mockups) | Partial (matte + badge + trends + Glass Box) |
 
 ## Branch
 

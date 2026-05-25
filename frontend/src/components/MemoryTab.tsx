@@ -241,6 +241,27 @@ export const MemoryTab: React.FC = () => {
                       </p>
                     )}
                     <p className="text-[10px] text-slate-500 mt-2 uppercase">{when}</p>
+                    {entry.glassBoxSummary.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-slate-700/80">
+                        <p className="text-[10px] font-bold uppercase text-brand-400/90 tracking-wide mb-1.5">
+                          Glass Box
+                        </p>
+                        <ul className="space-y-1 text-xs text-slate-400 leading-relaxed" role="list">
+                          {(expanded ? entry.glassBoxSummary : entry.glassBoxSummary.slice(0, 1)).map(
+                            (line, i) => (
+                              <li key={i} className={expanded ? '' : 'line-clamp-2'}>
+                                {line}
+                              </li>
+                            ),
+                          )}
+                        </ul>
+                        {!expanded && entry.glassBoxSummary.length > 0 && (
+                          <span className="text-[10px] text-brand-400 mt-1 inline-block">
+                            Show critique reasoning
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {entry.aestheticTags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-2">
                         {entry.aestheticTags.slice(0, expanded ? 12 : 4).map((tag) => (

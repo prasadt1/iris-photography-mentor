@@ -67,6 +67,14 @@ const StudioAnalysisResults: React.FC<Props> = ({
     { subject: 'Subject', score: analysis.scores.subjectImpact, critique: analysis.critique.overall },
   ].sort((a, b) => a.score - b.score);
 
+  const focusDimension = hoveredDimension ?? selectedDimension;
+
+  const focusScoreDimension = (subject: string) => {
+    setSelectedDimension(subject);
+    setHoveredDimension(subject);
+    setActiveTab('glass-box');
+  };
+
   const handleExportXMP = () => {
     const { filename, content } = exportXMPSidecar(analysis, originalFilename);
     const blob = new Blob([content], { type: 'application/xml' });
@@ -249,7 +257,7 @@ const StudioAnalysisResults: React.FC<Props> = ({
                         <button
                           key={item.subject}
                           type="button"
-                          onClick={() => setSelectedDimension(item.subject)}
+                          onClick={() => focusScoreDimension(item.subject)}
                           onMouseEnter={() => setHoveredDimension(item.subject)}
                           onMouseLeave={() => setHoveredDimension(null)}
                           onFocus={() => setHoveredDimension(item.subject)}
@@ -280,13 +288,13 @@ const StudioAnalysisResults: React.FC<Props> = ({
                             tabIndex={0}
                             onClick={(e) => {
                               e.stopPropagation();
-                              setActiveTab('glass-box');
+                              focusScoreDimension(item.subject);
                             }}
                             onKeyDown={(e) => {
                               if (e.key === 'Enter' || e.key === ' ') {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setActiveTab('glass-box');
+                                focusScoreDimension(item.subject);
                               }
                             }}
                             className="text-xs text-brand-400 hover:text-brand-300 shrink-0 cursor-pointer"
@@ -333,6 +341,14 @@ const StudioAnalysisResults: React.FC<Props> = ({
               groundingPrinciples={analysis.groundingPrinciples}
               groundingCitations={analysis.groundingCitations}
               evidence={analysis.evidence}
+              focusDimension={focusDimension}
+              onFocusDimension={(dim) => {
+                if (dim) focusScoreDimension(dim);
+                else {
+                  setSelectedDimension(null);
+                  setHoveredDimension(null);
+                }
+              }}
             />
           )}
 
