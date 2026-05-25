@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { ScanProgressBanner } from './ScanProgressBanner';
+import { triageScanStage } from '../lib/scanLoadingStages';
 import { Check, ExternalLink, ImageIcon, Layers, Loader2, Trash2, X } from 'lucide-react';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { friendlyErrorMessage } from '../lib/friendlyError';
@@ -112,6 +114,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
   const [items, setItems] = useState<PendingApproval[]>([]);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanWaitSec, setScanWaitSec] = useState(0);
   const [acting, setActing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanSummary, setScanSummary] = useState<string | null>(null);
@@ -152,6 +155,15 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
     void refresh();
     void loadPreviews();
   }, [refresh, loadPreviews]);
+
+  useEffect(() => {
+    if (!scanning) {
+      setScanWaitSec(0);
+      return;
+    }
+    const tick = window.setInterval(() => setScanWaitSec((s) => s + 1), 1000);
+    return () => window.clearInterval(tick);
+  }, [scanning]);
 
   const handleScan = async () => {
     if (mode !== 'hobbyist' && mode !== 'working_pro') return;
@@ -253,9 +265,16 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
         disabled={scanning}
         className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-brand-500 text-slate-900 font-semibold hover:bg-brand-400 disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Layers className="w-4 h-4" />}
-        {scanning ? 'Scanning your library…' : 'Scan my library'}
+        {!scanning && <Layers className="w-4 h-4" />}
+        {scanning ? 'Scanning…' : 'Scan my library'}
       </button>
+
+      {scanning && (
+        <ScanProgressBanner
+          message={triageScanStage(scanWaitSec)}
+          waitSec={scanWaitSec}
+        />
+      )}
 
       {scanSummary && <p className="text-sm text-emerald-400/90">{scanSummary}</p>}
       {error && (

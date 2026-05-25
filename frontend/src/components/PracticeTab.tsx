@@ -17,6 +17,7 @@ import {
   proposeAssignment,
 } from '../services/practiceClient';
 import { friendlyErrorMessage } from '../lib/friendlyError';
+import { formatSkillApplicationDelta } from '../lib/formatSkillDelta';
 import { ShootNowDialog } from './ShootNowDialog';
 import { PracticeCardsSkeleton } from './SkeletonBlocks';
 import type { Assignment, ReflectionResult, UserMode } from '../types/practice';
@@ -198,9 +199,8 @@ export const PracticeTab: React.FC<Props> = ({
             Reflection complete
           </p>
           <p className="leading-relaxed mb-2">{lastReflection.summary}</p>
-          <p className="text-emerald-400 font-mono text-xs">
-            ISAR Δ {lastReflection.skillDelta.delta >= 0 ? '+' : ''}
-            {(lastReflection.skillDelta.delta * 100).toFixed(0)}% on target skill · applied brief:{' '}
+          <p className="text-emerald-400 text-xs">
+            {formatSkillApplicationDelta(lastReflection.skillDelta.delta)} · applied brief:{' '}
             {lastReflection.appliedBrief ? 'yes' : 'not yet'}
           </p>
         </div>
@@ -267,6 +267,10 @@ function CompletedCard({
         onClick={long ? onToggle : undefined}
         className={`w-full text-left px-4 py-3 ${long ? 'hover:bg-slate-800/60 cursor-pointer' : 'cursor-default'}`}
       >
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" aria-hidden />
+          Completed
+        </p>
         <p
           className={`font-medium text-slate-200 leading-relaxed ${
             expanded || !long ? '' : 'line-clamp-2'
@@ -278,9 +282,9 @@ function CompletedCard({
           <span className="text-[10px] text-brand-400 mt-1 inline-block">Show full brief</span>
         )}
         {assignment.skillDelta && (
-          <p className="text-emerald-400 text-xs mt-2">
-            ISAR Δ {assignment.skillDelta.delta >= 0 ? '+' : ''}
-            {(assignment.skillDelta.delta * 100).toFixed(0)}% on target skill
+          <p className="text-emerald-400 text-xs mt-2 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden />
+            {formatSkillApplicationDelta(assignment.skillDelta.delta)}
           </p>
         )}
       </button>
@@ -309,7 +313,9 @@ function ProposedCard({
       <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wider mb-2">
         Proposed — your approval required
       </p>
-      <p className="text-xs text-brand-400 font-mono mb-3">{assignment.targetSkill}</p>
+      <p className="text-xs text-brand-400 mb-3 capitalize">
+        Focus: {assignment.targetSkill.replace(/_/g, ' ')}
+      </p>
       <p className="text-slate-100 leading-relaxed mb-4">{assignment.brief}</p>
       <p className="text-sm text-slate-400 border-l-2 border-slate-600 pl-3 mb-6">
         {assignment.rationale}
@@ -360,10 +366,16 @@ function ActiveCard({
 
   return (
     <section className="rounded-2xl border border-brand-500/50 bg-slate-800/50 p-6">
-      <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider mb-2">
-        Active practice · {when}
+      <div className="flex flex-wrap items-center gap-2 mb-2">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-brand-400 uppercase tracking-wider">
+          <Target className="w-3 h-3" aria-hidden />
+          Active practice
+        </span>
+        <span className="text-[10px] text-slate-400">{when}</span>
+      </div>
+      <p className="text-xs text-slate-400 mb-3 capitalize">
+        Focus: {assignment.targetSkill.replace(/_/g, ' ')}
       </p>
-      <p className="text-xs text-slate-500 font-mono mb-3">{assignment.targetSkill}</p>
       <p className="text-slate-100 leading-relaxed mb-3">{assignment.brief}</p>
       <p className="text-sm text-slate-400">{assignment.rationale}</p>
       <div className="mt-5 flex flex-wrap items-center gap-3">

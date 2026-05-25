@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Check, ImageIcon, Loader2, ShoppingBag, X } from 'lucide-react';
+import { Check, ImageIcon, Loader2, Settings, ShoppingBag, X } from 'lucide-react';
+import { ScanProgressBanner } from './ScanProgressBanner';
+import { printScanStage } from '../lib/scanLoadingStages';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { listingFromApproval } from '../lib/printListingPayload';
@@ -16,14 +18,16 @@ import type { PortfolioListItem } from '../types/memory';
 interface Props {
   mode: UserMode;
   onGoToMentor?: () => void;
+  onOpenSettings?: () => void;
 }
 
-export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
+export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onOpenSettings }) => {
   const [items, setItems] = useState<PendingApproval[]>([]);
   const [previews, setPreviews] = useState<Map<string, PortfolioListItem>>(new Map());
   const [prices, setPrices] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanWaitSec, setScanWaitSec] = useState(0);
   const [acting, setActing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [scanSummary, setScanSummary] = useState<string | null>(null);
@@ -63,6 +67,15 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
     void refresh();
     void loadPreviews();
   }, [refresh, loadPreviews]);
+
+  useEffect(() => {
+    if (!scanning) {
+      setScanWaitSec(0);
+      return;
+    }
+    const tick = window.setInterval(() => setScanWaitSec((s) => s + 1), 1000);
+    return () => window.clearInterval(tick);
+  }, [scanning]);
 
   const handleScan = async () => {
     setScanning(true);
@@ -128,25 +141,50 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
 
   if (mode !== 'working_pro') {
     return (
-      <div className="max-w-lg mx-auto text-center py-16 space-y-4">
-        <p className="text-slate-400">
-          Listing drafts are for <strong className="text-slate-200">Working pro</strong> mode.
-        </p>
-        <p className="text-sm text-slate-500">
-          Switch to Working pro at the top, or ask in{' '}
-          {onGoToMentor ? (
+      <div className="max-w-lg mx-auto space-y-6 py-8 animate-fadeIn">
+        <div>
+          <h1 className="text-2xl font-extrabold text-white">List for Sale</h1>
+          <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            Working pros get per-listing drafts with your approval before anything is saved. Hobbyists
+            can still ask Ask Mentor which shots might sell as prints.
+          </p>
+        </div>
+        <div className="rounded-xl border border-dashed border-slate-600 bg-slate-800/40 p-5 text-left space-y-3">
+          <p className="text-[10px] font-bold uppercase text-amber-400/90 tracking-wide">
+            Example listing draft
+          </p>
+          <p className="text-sm font-semibold text-white">Coastal light — limited print</p>
+          <p className="text-xs text-slate-400 line-clamp-2">
+            Archival matte print, signed. Suggested $45 — you approve title, copy, and price on each
+            card.
+          </p>
+          <p className="text-xs text-slate-400">
+            Portfolio score 8.2/10 · Etsy-style draft (saved in your library only, not live API)
+          </p>
+        </div>
+        {onOpenSettings && (
+          <button
+            type="button"
+            onClick={onOpenSettings}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-500 text-slate-900 font-semibold text-sm hover:bg-brand-400"
+          >
+            <Settings className="w-4 h-4" />
+            Switch to Working pro
+          </button>
+        )}
+        {onGoToMentor && (
+          <p className="text-sm text-slate-400">
+            Or{' '}
             <button
               type="button"
               onClick={onGoToMentor}
-              className="text-brand-400 underline hover:text-brand-300"
+              className="text-brand-400 hover:text-brand-300 underline"
             >
-              Ask Mentor
-            </button>
-          ) : (
-            'Ask Mentor'
-          )}{' '}
-          which photos might sell as prints.
-        </p>
+              ask Ask Mentor
+            </button>{' '}
+            which photos might sell.
+          </p>
+        )}
       </div>
     );
   }
@@ -172,9 +210,16 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
         disabled={scanning}
         className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-brand-500 text-slate-900 font-semibold hover:bg-brand-400 disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {scanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShoppingBag className="w-4 h-4" />}
+        {!scanning && <ShoppingBag className="w-4 h-4" />}
         {scanning ? 'Drafting listings…' : 'Draft listing proposals'}
       </button>
+
+      {scanning && (
+        <ScanProgressBanner
+          message={printScanStage(scanWaitSec)}
+          waitSec={scanWaitSec}
+        />
+      )}
 
       {scanSummary && <p className="text-sm text-emerald-400/90">{scanSummary}</p>}
       {error && (
@@ -207,11 +252,11 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
               className="rounded-xl border border-slate-700 bg-slate-800/60 overflow-hidden"
             >
               <div className="flex flex-col sm:flex-row gap-4 p-4">
-                <div className="shrink-0 w-full sm:w-28 aspect-[4/3] sm:aspect-square rounded-lg overflow-hidden bg-black border border-slate-600">
+                <div className="shrink-0 w-full sm:w-28 aspect-[3/4] sm:aspect-square rounded-lg overflow-hidden bg-black border border-slate-600">
                   {entry?.imageUrl ? (
                     <img
                       src={entry.imageUrl}
-                      alt=""
+                      alt={entry.sceneDescription?.slice(0, 80) || draft.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -234,9 +279,13 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
                   <h3 className="text-sm font-semibold text-white leading-snug">{draft.title}</h3>
                   <p className="text-xs text-slate-400 line-clamp-3">{draft.description}</p>
                   <HitlReasoningCallout reasoning={item.agentReasoning} />
-                  <label className="flex items-center gap-2 text-sm text-slate-300">
+                  <label
+                    htmlFor={`price-${item.id}`}
+                    className="flex items-center gap-2 text-sm text-slate-300"
+                  >
                     <span className="shrink-0">Price ({draft.currency})</span>
                     <input
+                      id={`price-${item.id}`}
                       type="number"
                       min={1}
                       step={0.5}
@@ -249,6 +298,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
                         }))
                       }
                       className="w-24 rounded-lg bg-slate-900 border border-slate-600 px-2 py-1 text-white text-sm"
+                      aria-label={`Listing price in ${draft.currency}`}
                     />
                   </label>
                 </div>

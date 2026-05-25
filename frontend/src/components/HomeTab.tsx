@@ -139,20 +139,18 @@ export const HomeTab: React.FC<Props> = ({
         onClick={() => onNavigate('memory')}
       />
 
-      {mode === 'hobbyist' && (
-        <HomeCard
-          icon={Layers}
-          title="Label photos"
-          badge={pendingLabels > 0 ? pendingLabels : undefined}
-          description={
-            pendingLabels > 0
-              ? 'I grouped similar shots — approve labels before they apply.'
-              : 'Scan your library for consistent tags across shoots.'
-          }
-          cta={pendingLabels > 0 ? 'Review suggestions' : 'Scan library'}
-          onClick={() => onNavigate('triage')}
-        />
-      )}
+      <HomeCard
+        icon={Layers}
+        title="Label photos"
+        badge={pendingLabels > 0 ? pendingLabels : undefined}
+        description={
+          pendingLabels > 0
+            ? 'I grouped similar shots — approve labels before they apply.'
+            : 'Scan your library for consistent tags across shoots.'
+        }
+        cta={pendingLabels > 0 ? 'Review suggestions' : 'Scan library'}
+        onClick={() => onNavigate('triage')}
+      />
 
       <HomeCard
         icon={MessageCircle}
@@ -170,15 +168,6 @@ export const HomeTab: React.FC<Props> = ({
         >
           Shoot Now →
         </button>
-        {mode === 'working_pro' && pendingLabels > 0 && (
-          <button
-            type="button"
-            onClick={() => onNavigate('triage')}
-            className="text-slate-400 hover:text-slate-300"
-          >
-            Label Photos ({pendingLabels})
-          </button>
-        )}
       </div>
     </div>
   );

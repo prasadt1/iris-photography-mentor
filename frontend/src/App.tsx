@@ -21,6 +21,8 @@ import { clearMentorSession } from './services/mentorClient';
 import { analyzePhoto } from './services/agentClient';
 import { fetchActiveAssignment } from './services/practiceClient';
 import { fetchUserProfile, personaToUserMode, updatePersona } from './services/userClient';
+import { OfflineBanner } from './components/OfflineBanner';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { isOnboardingComplete, setOnboardingComplete } from './lib/onboarding';
 import { mapAnalysisResult } from './lib/mapAnalysisResult';
 import type { AnalysisResult } from './types';
@@ -37,17 +39,13 @@ function App() {
   const [userMode, setUserMode] = useState<UserMode>('hobbyist');
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
+  const online = useOnlineStatus();
 
   const navigate = useCallback((tab: AppTab) => {
-    if (tab === 'print' && userMode !== 'working_pro') {
-      setActiveTab('home');
-      setTabHash('home');
-      return;
-    }
     setActiveTab(tab);
     setTabHash(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [userMode]);
+  }, []);
 
   const refreshActiveAssignment = useCallback(async () => {
     try {
@@ -73,11 +71,6 @@ function App() {
     void refreshActiveAssignment();
   }, [activeTab, ready, refreshActiveAssignment]);
 
-  useEffect(() => {
-    if (userMode !== 'working_pro' && activeTab === 'print') {
-      navigate('home');
-    }
-  }, [userMode, activeTab, navigate]);
 
   const handleImageSelected = async (file: File, previewUrl: string) => {
     setAnalyzing(true);
@@ -147,6 +140,9 @@ function App() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-slate-200 font-sans selection:bg-brand-500/30 flex">
+      <a href="#main-content" className="sr-only">
+        Skip to main content
+      </a>
       <AppSidebar activeTab={activeTab} mode={userMode} onNavigate={navigate} />
 
       <div className="flex-1 flex flex-col min-h-screen min-w-0 pb-20 lg:pb-0">
@@ -158,7 +154,11 @@ function App() {
           />
         )}
 
-        <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-10">
+        <main
+          id="main-content"
+          className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 md:py-10"
+        >
+          {!online && <OfflineBanner />}
           {personaError && activeTab === 'settings' && (
             <p className="mb-4 text-sm text-amber-400" role="alert">
               Could not save your profile mode ({personaError}).
@@ -183,9 +183,9 @@ function App() {
                   )}
                   <div className="text-center max-w-2xl space-y-6">
                     <div>
-                      <h1 className="text-3xl md:text-4xl font-extrabold text-white mb-3 leading-tight">
+                      <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3 leading-tight">
                         Critique a photo
-                      </h1>
+                      </h2>
                       <p className="text-slate-400 text-sm md:text-base leading-relaxed">
                         Upload once for honest scores, Glass Box reasoning you can read, and
                         practice ideas tied to your real work.
@@ -239,8 +239,12 @@ function App() {
           {activeTab === 'triage' && (
             <TriageTab mode={userMode} onGoToMemory={() => navigate('memory')} />
           )}
-          {activeTab === 'print' && userMode === 'working_pro' && (
-            <PrintSalesTab mode={userMode} onGoToMentor={() => navigate('mentor')} />
+          {activeTab === 'print' && (
+            <PrintSalesTab
+              mode={userMode}
+              onGoToMentor={() => navigate('mentor')}
+              onOpenSettings={() => navigate('settings')}
+            />
           )}
           {activeTab === 'field' && (
             <FieldTab

@@ -124,7 +124,7 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
         </p>
       </div>
 
-      <div className="flex-1 flex flex-col rounded-xl border border-slate-700 bg-slate-800/50 min-h-[400px]">
+      <div className="flex-1 flex flex-col rounded-xl border border-slate-700 bg-slate-800/50 min-h-[400px] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <p className="text-center text-slate-500 py-12">

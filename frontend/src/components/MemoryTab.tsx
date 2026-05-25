@@ -124,7 +124,7 @@ export const MemoryTab: React.FC = () => {
                 {SCORE_LABELS.map(({ key, label }) => (
                   <li key={key} className="flex justify-between gap-4">
                     <span>{label}</span>
-                    <span className="font-mono text-brand-400">
+                    <span className="tabular-nums text-brand-400 font-semibold">
                       {profile.averageScores[key]?.toFixed(1) ?? '—'}
                     </span>
                   </li>
@@ -180,21 +180,23 @@ export const MemoryTab: React.FC = () => {
                   aria-expanded={expanded}
                   onClick={() => setExpandedId(expanded ? null : entry.id)}
                 >
-                  <div className="aspect-[4/3] bg-black relative">
-                    {entry.imageUrl ? (
-                      <img
-                        src={entry.imageUrl}
-                        alt={entry.sceneDescription?.slice(0, 80) || 'Portfolio photo'}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-slate-600">
-                        <ImageIcon className="w-10 h-10" />
-                      </div>
-                    )}
-                    <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-slate-900/90 text-brand-400 text-xs font-bold border border-slate-600">
-                      {entry.overallAverage}/10
-                    </span>
+                  <div className="p-2 bg-slate-950">
+                    <div className="aspect-[4/3] bg-black relative rounded-lg overflow-hidden ring-1 ring-slate-700/80">
+                      {entry.imageUrl ? (
+                        <img
+                          src={entry.imageUrl}
+                          alt={entry.sceneDescription?.slice(0, 120) || 'Portfolio photo'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex items-center justify-center h-full text-slate-600">
+                          <ImageIcon className="w-10 h-10" aria-hidden />
+                        </div>
+                      )}
+                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full bg-amber-500/90 text-slate-900 text-xs font-bold shadow-md">
+                        {entry.overallAverage}/10
+                      </span>
+                    </div>
                   </div>
                   <div className="p-4 flex-1">
                     {entry.sceneDescription && (

@@ -236,7 +236,9 @@ const StudioAnalysisResults: React.FC<Props> = ({
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-slate-800/50 rounded-2xl p-5 border border-slate-700">
-                  <h3 className="text-xs font-semibold text-slate-400 uppercase mb-4">Score breakdown</h3>
+                  <h3 className="text-xs font-semibold text-slate-400 uppercase mb-4">
+                    Score breakdown
+                  </h3>
                   <div className="space-y-3">
                     {chartData.map((item) => {
                       const isActive =

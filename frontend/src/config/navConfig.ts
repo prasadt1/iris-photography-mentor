@@ -3,6 +3,7 @@ import {
   BookOpen,
   Camera,
   Home,
+  Layers,
   MessageCircle,
   ShoppingBag,
 } from 'lucide-react';
@@ -28,6 +29,7 @@ const STUDIO: NavItem = { id: 'studio', label: 'My Studio', icon: Camera };
 const MEMORY: NavItem = { id: 'memory', label: 'My Work', icon: BookOpen };
 const MENTOR: NavItem = { id: 'mentor', label: 'Ask Mentor', icon: MessageCircle };
 const PRINT: NavItem = { id: 'print', label: 'List for Sale', icon: ShoppingBag };
+const LABEL: NavItem = { id: 'triage', label: 'Label Photos', icon: Layers };
 
 /** Mobile bottom bar — max 4 items (print via Home for working pro). */
 export function bottomNavItems(_mode: UserMode): NavItem[] {
@@ -37,9 +39,9 @@ export function bottomNavItems(_mode: UserMode): NavItem[] {
 /** Desktop sidebar — working pro gets List for Sale in the rail. */
 export function sidebarNavItems(mode: UserMode): NavItem[] {
   if (mode === 'working_pro') {
-    return [HOME, STUDIO, MEMORY, PRINT, MENTOR];
+    return [HOME, STUDIO, MEMORY, PRINT, LABEL, MENTOR];
   }
-  return [HOME, STUDIO, MEMORY, MENTOR];
+  return [HOME, STUDIO, MEMORY, LABEL, MENTOR];
 }
 
 export const CORE_TAB_IDS: CoreTab[] = ['home', 'studio', 'memory', 'mentor'];
