@@ -40,6 +40,19 @@ export function rememberPersonaForSession(persona: string): void {
   sessionStorage.setItem(PERSONA_KEY, persona);
 }
 
+export async function fetchMentorSuggestedQuestions(
+  persona: 'hobbyist' | 'working_pro',
+): Promise<{ questions: string[]; source: string }> {
+  const res = await fetch(
+    `${API_BASE}/api/v1/mentor/suggested-questions?persona=${persona}`,
+  );
+  if (!res.ok) {
+    const detail = await res.text();
+    throw new Error(detail || `Suggestions failed (${res.status})`);
+  }
+  return res.json() as Promise<{ questions: string[]; source: string }>;
+}
+
 export async function sendMentorMessage(
   message: string,
   persona: 'hobbyist' | 'working_pro',

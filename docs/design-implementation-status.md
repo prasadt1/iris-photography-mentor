@@ -1,6 +1,6 @@
 # Design review — implementation status
 
-**Last updated:** 2026-05-25 (after Tier A–C + Tier D/E/F batch)
+**Last updated:** 2026-05-25 (after Tier G — trends + dynamic Mentor starters)
 
 Reference: [`design-reviews.md`](design-reviews.md), [`design-review-brief.md`](design-review-brief.md)
 
@@ -26,19 +26,19 @@ Reference: [`design-reviews.md`](design-reviews.md), [`design-review-brief.md`](
 | **Tier F** — `demo-script.md` updated for new IA | Done |
 | Print price `<label>` + alt text | Done |
 | Practice Active/Completed status (icon + text) | Done |
+| **Tier G** — `/api/v1/portfolio/trends` + Memory sparklines | Done |
+| **Tier G** — `/api/v1/mentor/suggested-questions` + Mentor tab | Done |
+| **Tier G** — DM Sans body font (Pass 3) | Done |
 
 ## Still future (honest)
 
 | Item | Why deferred |
 |------|----------------|
-| Memory trend sparklines | Backend aggregation + charts |
-| Dynamic Mentor starters | New API endpoint |
 | Vision impairment web UI | Phase 3–4 spec |
 | Full PWA (service worker, offline upload queue) | >2 days |
 | Firebase Auth / multi-user | Hackathon uses demo user |
 | Live Etsy API | Out of scope per brief |
-| Geist body font | Inter retained; amber applied |
-| Full Memory grid redesign (Pass 3 mockups) | Partial (matte + badge only) |
+| Full Memory grid redesign (Pass 3 mockups) | Partial (matte + badge + trends) |
 | Bidirectional score ↔ Glass Box highlight | Large interaction pass |
 
 ## Branch

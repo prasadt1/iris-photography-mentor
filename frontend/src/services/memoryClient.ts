@@ -2,7 +2,11 @@
  * Memory tab — portfolio + aesthetic profile from Coach API.
  */
 
-import type { AestheticProfileSummary, PortfolioListResponse } from '../types/memory';
+import type {
+  AestheticProfileSummary,
+  PortfolioListResponse,
+  PortfolioTrendsResponse,
+} from '../types/memory';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -21,4 +25,8 @@ export function fetchPortfolio(limit = 48): Promise<PortfolioListResponse> {
 
 export function fetchAestheticProfile(): Promise<AestheticProfileSummary> {
   return getJson('/api/v1/aesthetic-profile');
+}
+
+export function fetchPortfolioTrends(limit = 12): Promise<PortfolioTrendsResponse> {
+  return getJson(`/api/v1/portfolio/trends?limit=${limit}`);
 }

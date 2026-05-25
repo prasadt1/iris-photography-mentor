@@ -26,3 +26,19 @@ export interface AestheticProfileSummary {
   stylisticConsistencyScore: number | null;
   computedAt?: string;
 }
+
+export interface PortfolioTrendDimension {
+  key: string;
+  label: string;
+  values: number[];
+  latest: number | null;
+  delta: number | null;
+  trend: 'up' | 'down' | 'flat';
+}
+
+export interface PortfolioTrendsResponse {
+  photoCount: number;
+  points: { createdAt: string; overall: number }[];
+  dimensions: PortfolioTrendDimension[];
+  insufficientData: boolean;
+}

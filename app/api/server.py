@@ -32,7 +32,9 @@ from memory.assignments import (  # noqa: E402
     list_assignments,
     propose_assignment,
 )
+from api.mentor_suggestions import suggest_mentor_questions  # noqa: E402
 from memory.portfolio import compute_aesthetic_summary, list_portfolio_entries  # noqa: E402
+from memory.trends import compute_portfolio_trends  # noqa: E402
 from memory.pending_approvals import apply_decision, list_pending  # noqa: E402
 from memory.users import get_user_profile, set_persona  # noqa: E402
 from api.triage_scan import run_triage_scan  # noqa: E402
@@ -208,6 +210,25 @@ def portfolio_list(user_id: str | None = None, limit: int = 48) -> dict:
 def aesthetic_profile(user_id: str | None = None) -> dict:
     try:
         return compute_aesthetic_summary(user_id=user_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/portfolio/trends")
+def portfolio_trends(user_id: str | None = None, limit: int = 12) -> dict:
+    try:
+        return compute_portfolio_trends(user_id=user_id, limit=limit)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/mentor/suggested-questions")
+def mentor_suggested_questions(
+    persona: Literal["hobbyist", "working_pro"] = "hobbyist",
+    user_id: str | None = None,
+) -> dict:
+    try:
+        return suggest_mentor_questions(persona=persona, user_id=user_id)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

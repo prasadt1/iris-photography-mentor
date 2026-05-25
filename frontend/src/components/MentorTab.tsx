@@ -5,6 +5,7 @@ import { MentorMarkdown } from './MentorMarkdown';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { mentorLoadingStage } from '../lib/mentorLoadingStages';
 import {
+  fetchMentorSuggestedQuestions,
   loadSessionId,
   sendMentorMessage,
   type ChatMessage,
@@ -35,8 +36,20 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
   const [waitSec, setWaitSec] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [lastFailedText, setLastFailedText] = useState<string | null>(null);
+  const [starters, setStarters] = useState<string[]>(STARTERS_BY_MODE[mode]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    setStarters(STARTERS_BY_MODE[mode]);
+    void fetchMentorSuggestedQuestions(mode)
+      .then((res) => {
+        if (res.questions.length > 0) setStarters(res.questions);
+      })
+      .catch(() => {
+        /* keep mode defaults */
+      });
+  }, [mode]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -102,7 +115,6 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
   }, [loading, mode]);
 
   const hasSession = Boolean(loadSessionId());
-  const starters = STARTERS_BY_MODE[mode];
   const stageMessage = mentorLoadingStage(waitSec, mode);
 
   return (

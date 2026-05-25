@@ -4,8 +4,15 @@ import { ImageIcon, RefreshCw, Sparkles } from 'lucide-react';
 import { apiUnreachableMessage } from '../lib/apiHelp';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { MemoryGridSkeleton } from './SkeletonBlocks';
-import { fetchAestheticProfile, fetchPortfolio } from '../services/memoryClient';
-import type { AestheticProfileSummary, PortfolioListItem } from '../types/memory';
+import { ScoreTrendRow } from './ScoreTrendRow';
+import { fetchAestheticProfile, fetchPortfolio, fetchPortfolioTrends } from '../services/memoryClient';
+import type {
+  AestheticProfileSummary,
+  PortfolioListItem,
+  PortfolioTrendsResponse,
+} from '../types/memory';
+
+const TREND_DISPLAY_KEYS = ['composition', 'lighting', 'technique', 'overall'] as const;
 
 const SCORE_LABELS: { key: keyof AestheticProfileSummary['averageScores']; label: string }[] = [
   { key: 'composition', label: 'Composition' },
@@ -21,17 +28,20 @@ export const MemoryTab: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [trends, setTrends] = useState<PortfolioTrendsResponse | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [portfolio, aesthetic] = await Promise.all([
+      const [portfolio, aesthetic, trendData] = await Promise.all([
         fetchPortfolio(),
         fetchAestheticProfile(),
+        fetchPortfolioTrends(12).catch(() => null),
       ]);
       setEntries(portfolio.entries);
       setProfile(aesthetic);
+      setTrends(trendData);
     } catch (e) {
       setError(friendlyErrorMessage(e));
     } finally {
@@ -143,6 +153,28 @@ export const MemoryTab: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {trends && !trends.insufficientData && trends.dimensions.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-slate-700">
+              <p className="text-[10px] text-slate-400 uppercase mb-3 tracking-wide">
+                Recent progress (oldest → newest upload)
+              </p>
+              <ul className="space-y-1">
+                {trends.dimensions
+                  .filter((d) =>
+                    (TREND_DISPLAY_KEYS as readonly string[]).includes(d.key),
+                  )
+                  .map((d) => (
+                    <ScoreTrendRow key={d.key} dimension={d} />
+                  ))}
+              </ul>
+            </div>
+          )}
+          {trends?.insufficientData && trends.photoCount > 0 && (
+            <p className="mt-4 text-xs text-slate-400 border-t border-slate-700 pt-4">
+              Upload a few more photos in Studio to see score trends over time.
+            </p>
+          )}
         </section>
       )}
 
