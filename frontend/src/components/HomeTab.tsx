@@ -90,6 +90,16 @@ export const HomeTab: React.FC<Props> = ({
         </button>
       </div>
 
+      {mode === 'hobbyist' && (
+        <HomeCard
+          icon={Store}
+          title="Selling prints? (Working pro)"
+          description="Switch to Working pro in Settings to draft Etsy-style listings from your portfolio — each one needs your approval."
+          cta="Open Settings"
+          onClick={onOpenSettings}
+        />
+      )}
+
       {mode === 'working_pro' && (
         <HomeCard
           icon={Store}

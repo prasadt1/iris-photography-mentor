@@ -105,7 +105,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({ onImageSelected, isAnalyz
                 <Loader2 className="w-16 h-16 text-brand-400 animate-spin relative z-10" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-4">Coach is analyzing…</h3>
-              <div className="w-full mt-2 bg-surface-1 rounded-xl border border-warm p-4 font-mono text-sm text-left shadow-inner">
+              <div className="w-full mt-2 bg-surface-1 rounded-xl border border-warm p-4 text-sm text-left shadow-inner">
                 <div className="space-y-3">
                   {THINKING_STEPS.map((step, index) => {
                     const isActive = index === currentThinkingStep;

@@ -14,7 +14,9 @@ export const ActivePracticeBanner: React.FC<Props> = ({ assignment }) => (
         <p className="text-[10px] font-bold text-brand-400 uppercase tracking-wider mb-1">
           Active practice — uploads count toward this assignment
         </p>
-        <p className="text-xs font-mono text-muted mb-2">{assignment.targetSkill}</p>
+        <p className="text-xs text-muted mb-2 capitalize">
+          {assignment.targetSkill.replace(/_/g, ' ')}
+        </p>
         <p className="text-sm text-stone-200 leading-relaxed">{assignment.brief}</p>
       </div>
     </div>
