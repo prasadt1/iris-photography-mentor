@@ -1,8 +1,7 @@
 import type { PendingApproval, TriageScanResult } from '../types/triage';
 
 import { apiUnreachableMessage } from '../lib/apiHelp';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiFetch } from '../lib/apiFetch';
 
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -20,22 +19,20 @@ export function fetchPendingApprovals(agentName = 'triage'): Promise<{
   total: number;
 }> {
   const q = new URLSearchParams({ status: 'pending', agent_name: agentName });
-  return fetch(`${API_BASE}/api/v1/pending-approvals?${q}`).then(
+  return apiFetch(`/api/v1/pending-approvals?${q}`).then(
     parseJson<{ items: PendingApproval[]; total: number }>,
   );
 }
 
 export function runTriageScan(): Promise<TriageScanResult> {
-  return fetch(`${API_BASE}/api/v1/triage/scan`, { method: 'POST' }).then(
-    parseJson<TriageScanResult>,
-  );
+  return apiFetch('/api/v1/triage/scan', { method: 'POST' }).then(parseJson<TriageScanResult>);
 }
 
 export function decideApproval(
   id: string,
   action: 'approve' | 'reject',
 ): Promise<PendingApproval> {
-  return fetch(`${API_BASE}/api/v1/pending-approvals/${id}`, {
+  return apiFetch(`/api/v1/pending-approvals/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action }),

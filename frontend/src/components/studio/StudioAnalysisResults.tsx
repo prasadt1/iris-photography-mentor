@@ -17,6 +17,7 @@ import type { StudioAnalysis } from '../../types/studio';
 import SpatialOverlay from './SpatialOverlay';
 import DimensionOverlay from './DimensionOverlay';
 import GlassBoxPanel from './GlassBoxPanel';
+import { LearningInsights } from './LearningInsights';
 import { exportXMPSidecar } from '../../services/xmpService';
 
 type TabId = 'overview' | 'glass-box' | 'fix';
@@ -224,6 +225,11 @@ const StudioAnalysisResults: React.FC<Props> = ({
                   </span>
                 </button>
               )}
+
+              <LearningInsights
+                rows={chartData}
+                onViewGlassBox={() => setActiveTab('glass-box')}
+              />
 
               <div className="bg-surface-1 rounded-3xl p-6 border border-warm">
                 <h2 className="text-xl font-bold text-stone-100 flex items-start gap-2 mb-3">

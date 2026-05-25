@@ -2,7 +2,7 @@
  * Mentor Copilot — orchestrator chat API (Phase 2).
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiFetch } from '../lib/apiFetch';
 const SESSION_KEY = 'practice_companion_mentor_session';
 const PERSONA_KEY = 'practice_companion_mentor_persona';
 
@@ -43,9 +43,7 @@ export function rememberPersonaForSession(persona: string): void {
 export async function fetchMentorSuggestedQuestions(
   persona: 'hobbyist' | 'working_pro',
 ): Promise<{ questions: string[]; source: string }> {
-  const res = await fetch(
-    `${API_BASE}/api/v1/mentor/suggested-questions?persona=${persona}`,
-  );
+  const res = await apiFetch(`/api/v1/mentor/suggested-questions?persona=${persona}`);
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(detail || `Suggestions failed (${res.status})`);
@@ -60,7 +58,7 @@ export async function sendMentorMessage(
 ): Promise<ChatResponse> {
   rememberPersonaForSession(persona);
   const sessionId = loadSessionId();
-  const res = await fetch(`${API_BASE}/api/v1/agent/chat`, {
+  const res = await apiFetch('/api/v1/agent/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

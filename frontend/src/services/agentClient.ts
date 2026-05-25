@@ -3,6 +3,7 @@
  */
 
 import type { AnalysisResult } from '../types';
+import { apiFetch } from '../lib/apiFetch';
 
 export interface AnalyzePhotoRequest {
   imageFile: File;
@@ -14,7 +15,6 @@ export interface AnalyzePhotoRequest {
 export type AnalyzePhotoResponse = AnalysisResult;
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 async function analyzePhotoMock(request: AnalyzePhotoRequest): Promise<AnalyzePhotoResponse> {
   console.log('analyzePhoto (mock):', request.imageFile.name);
@@ -123,8 +123,7 @@ export async function analyzePhoto(request: AnalyzePhotoRequest): Promise<Analyz
   if (request.shootId) form.append('shoot_id', request.shootId);
   if (request.assignmentId) form.append('assignment_id', request.assignmentId);
 
-  const url = `${API_BASE}/api/v1/analyze-photo`;
-  const response = await fetch(url, {
+  const response = await apiFetch('/api/v1/analyze-photo', {
     method: 'POST',
     body: form,
   });

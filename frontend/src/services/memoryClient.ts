@@ -7,11 +7,10 @@ import type {
   PortfolioListResponse,
   PortfolioTrendsResponse,
 } from '../types/memory';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiFetch } from '../lib/apiFetch';
 
 async function getJson<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await apiFetch(path);
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(detail || `Request failed: ${res.status}`);

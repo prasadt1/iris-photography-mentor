@@ -1,7 +1,6 @@
 import { apiUnreachableMessage } from '../lib/apiHelp';
+import { apiFetch } from '../lib/apiFetch';
 import type { PendingApproval } from '../types/triage';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -23,14 +22,14 @@ export interface PrintSalesScanResult {
 
 export function fetchPrintPending(): Promise<{ items: PendingApproval[]; total: number }> {
   const q = new URLSearchParams({ status: 'pending', agent_name: 'print_sales' });
-  return fetch(`${API_BASE}/api/v1/pending-approvals?${q}`).then(
+  return apiFetch(`/api/v1/pending-approvals?${q}`).then(
     parseJson<{ items: PendingApproval[]; total: number }>,
   );
 }
 
 export function runPrintSalesScan(marketplace = 'etsy'): Promise<PrintSalesScanResult> {
   const q = new URLSearchParams({ marketplace });
-  return fetch(`${API_BASE}/api/v1/print-sales/scan?${q}`, { method: 'POST' }).then(
+  return apiFetch(`/api/v1/print-sales/scan?${q}`, { method: 'POST' }).then(
     parseJson<PrintSalesScanResult>,
   );
 }
@@ -40,7 +39,7 @@ export function decidePrintApproval(
   action: 'approve' | 'reject' | 'modify',
   overridePayload?: Record<string, unknown>,
 ): Promise<PendingApproval> {
-  return fetch(`${API_BASE}/api/v1/pending-approvals/${id}`, {
+  return apiFetch(`/api/v1/pending-approvals/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

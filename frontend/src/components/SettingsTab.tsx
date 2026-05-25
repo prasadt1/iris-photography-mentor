@@ -1,5 +1,7 @@
 import React from 'react';
-import { Settings } from 'lucide-react';
+import { LogIn, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '../auth/useAuth';
+import { firebaseAuthEnabled } from '../auth/firebaseConfig';
 import { ModeToggle } from './ModeToggle';
 import { clearOnboardingComplete } from '../lib/onboarding';
 import { isLocalDevHost } from '../lib/apiHelp';
@@ -21,6 +23,7 @@ export const SettingsTab: React.FC<Props> = ({
   onRestartOnboarding,
 }) => {
   const isLocal = isLocalDevHost();
+  const auth = useAuth();
 
   return (
     <div className="animate-fadeIn max-w-lg space-y-8">
@@ -35,6 +38,50 @@ export const SettingsTab: React.FC<Props> = ({
           I coach you.
         </p>
       </div>
+
+      <section className="rounded-xl border border-warm bg-surface-1 p-4 space-y-3">
+        <h2 className="text-sm font-semibold text-white">Account</h2>
+        {firebaseAuthEnabled ? (
+          auth.userId ? (
+            <>
+              <p className="text-sm text-muted">
+                Signed in as <span className="text-stone-200">{auth.email ?? auth.userId}</span>.
+                Your library is scoped to this account.
+              </p>
+              <button
+                type="button"
+                onClick={() => void auth.signOut()}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-warm text-sm text-stone-200 hover:bg-surface-2"
+              >
+                <LogOut className="w-4 h-4" aria-hidden />
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted leading-relaxed">
+                Sign in with Google to keep your portfolio and critiques on your own MongoDB user
+                (multi-tenant demo). Without sign-in, the hosted API uses the shared judge demo
+                profile.
+              </p>
+              <button
+                type="button"
+                onClick={() => void auth.signInWithGoogle()}
+                disabled={auth.loading}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold disabled:opacity-50"
+              >
+                <LogIn className="w-4 h-4" aria-hidden />
+                Sign in with Google
+              </button>
+            </>
+          )
+        ) : (
+          <p className="text-sm text-muted leading-relaxed">
+            Firebase web keys are not configured for this build — the API uses the shared demo user.
+            Add <code className="text-brand-400 text-xs">VITE_FIREBASE_*</code> for sign-in.
+          </p>
+        )}
+      </section>
 
       <section className="rounded-xl border border-warm bg-surface-1 p-4">
         <ModeToggle

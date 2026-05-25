@@ -17,10 +17,13 @@ import PhotoUploader from './components/studio/PhotoUploader';
 import StudioAnalysisResults from './components/studio/StudioAnalysisResults';
 import type { AppTab } from './config/navConfig';
 import { isAppTab, setTabHash, tabFromHash } from './config/navConfig';
+import { useAuth } from './auth/useAuth';
+import { setApiUserScope } from './lib/apiFetch';
 import { clearMentorSession } from './services/mentorClient';
 import { analyzePhoto } from './services/agentClient';
 import { fetchActiveAssignment } from './services/practiceClient';
 import { fetchUserProfile, personaToUserMode, updatePersona } from './services/userClient';
+import { Upload, BarChart3, Target } from 'lucide-react';
 import { OfflineBanner } from './components/OfflineBanner';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { isOnboardingComplete, setOnboardingComplete } from './lib/onboarding';
@@ -40,6 +43,7 @@ function App() {
   const [personaError, setPersonaError] = useState<string | null>(null);
   const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
   const online = useOnlineStatus();
+  const auth = useAuth();
 
   const navigate = useCallback((tab: AppTab) => {
     setActiveTab(tab);
@@ -60,11 +64,16 @@ function App() {
     if (hashTab && isAppTab(hashTab)) {
       setActiveTab(hashTab);
     }
-    void fetchUserProfile()
-      .then((p) => setUserMode(personaToUserMode(p.persona)))
-      .catch(() => {});
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (auth.loading) return;
+    setApiUserScope(auth.userId);
+    void fetchUserProfile(auth.userId ?? undefined)
+      .then((p) => setUserMode(personaToUserMode(p.persona)))
+      .catch(() => {});
+  }, [auth.loading, auth.userId]);
 
   useEffect(() => {
     if (!ready) return;
@@ -182,17 +191,36 @@ function App() {
                   {activeAssignment && (
                     <ActivePracticeBanner assignment={activeAssignment} />
                   )}
-                  <div className="text-center max-w-xl space-y-4">
+                  <div className="text-center max-w-2xl space-y-5">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-brand-400/90">
                       Glass Box critique
                     </p>
                     <h2 className="font-serif text-4xl md:text-5xl font-medium text-white leading-[1.15] tracking-tight">
-                      Critique a photo
+                      I&apos;ll remember every photo — and show you why it scored what it did
                     </h2>
-                    <p className="text-muted text-sm md:text-base leading-relaxed max-w-md mx-auto">
-                      Upload once for honest scores, reasoning you can read, and practice tied to
-                      your real work.
+                    <p className="text-muted text-sm md:text-base leading-relaxed max-w-lg mx-auto">
+                      Upload once for five-axis scores, transparent reasoning, and practice tied to
+                      your library — not a one-off chat.
                     </p>
+                    <ol className="grid sm:grid-cols-3 gap-3 text-left max-w-2xl mx-auto pt-2">
+                      <li className="rounded-xl border border-warm bg-surface-1/80 p-4 space-y-2">
+                        <Upload className="w-5 h-5 text-brand-400" aria-hidden />
+                        <p className="text-sm font-semibold text-white">1. Upload</p>
+                        <p className="text-xs text-muted">JPG or RAW from any shoot</p>
+                      </li>
+                      <li className="rounded-xl border border-warm bg-surface-1/80 p-4 space-y-2">
+                        <BarChart3 className="w-5 h-5 text-brand-400" aria-hidden />
+                        <p className="text-sm font-semibold text-white">2. Glass Box</p>
+                        <p className="text-xs text-muted">
+                          Example: lighting 6.2 → 7.8 after you fix backlit faces
+                        </p>
+                      </li>
+                      <li className="rounded-xl border border-warm bg-surface-1/80 p-4 space-y-2">
+                        <Target className="w-5 h-5 text-brand-400" aria-hidden />
+                        <p className="text-sm font-semibold text-white">3. Practice</p>
+                        <p className="text-xs text-muted">Assignments from your real weak spots</p>
+                      </li>
+                    </ol>
                   </div>
                   <PhotoUploader onImageSelected={handleImageSelected} isAnalyzing={analyzing} />
                 </div>

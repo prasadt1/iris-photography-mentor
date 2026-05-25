@@ -3,8 +3,7 @@
  */
 
 import type { UserMode } from '../types/practice';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiFetch } from '../lib/apiFetch';
 
 export interface UserProfile {
   userId: string | null;
@@ -14,9 +13,7 @@ export interface UserProfile {
 
 export async function fetchUserProfile(userId?: string | null): Promise<UserProfile> {
   const q = userId ? `?userId=${encodeURIComponent(userId)}` : '';
-  const res = await fetch(`${API_BASE}/api/v1/users/me${q}`, {
-    headers: userId ? { 'X-User-Id': userId } : {},
-  });
+  const res = await apiFetch(`/api/v1/users/me${q}`);
   if (!res.ok) {
     throw new Error(await res.text());
   }
@@ -24,7 +21,7 @@ export async function fetchUserProfile(userId?: string | null): Promise<UserProf
 }
 
 export async function updatePersona(persona: UserMode): Promise<UserProfile> {
-  const res = await fetch(`${API_BASE}/api/v1/users/me`, {
+  const res = await apiFetch('/api/v1/users/me', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ persona }),
