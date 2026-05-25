@@ -1411,7 +1411,7 @@ Three personas. Same iPhone. Same memory layer (MongoDB Atlas as memory substrat
 Structure (~700-900 words):
 
 1. **The problem (200 words)** — pedagogical gap in photography tools, three populations underserved, AOP 2026 stats on photographer economic pressure
-2. **The product (200 words)** — three personas with structurally different agentic behavior, five agentic features, three channels, persona-switching as the demonstration
+2. **The product (200 words)** — three personas with structurally different agentic behavior, five agentic features, three channels, persona-switching as the demonstration. **Lead metric (Option 3):** hobbyist skill mentor, working-pro listing advisor, vision-impairment capture path — three distinct sub-agent compositions over one MongoDB-backed memory layer (native iOS voice/haptics after submission). **Positioning paragraph:** Iris complements Aftershoot/Imagen/Narrative (cull/edit) — mentor-and-evolve vs cull-and-deliver; see README and `mongodb-story-document.md`.
 3. **The architecture (200 words)** — multi-agent orchestrator + 8 distinct sub-agents (9 total LlmAgents), MongoDB Atlas as memory substrate (link to mongodb-story-document.md), Agent Builder Data Store for principles, Gemini 3 Pro for reasoning, Vertex AI Agent Engine for hosting
 4. **Honest gaps (75 words)** — v3 had agent theater problems explicitly fixed in v5; transparent about deterministic vs agentic flows; prior work attribution (gemini3, gemma4)
 5. **Findings and learnings (150 words)** — what worked (ADK + Agent Engine + MongoDB MCP stack), what surprised (persona-based routing pattern), what we learned (kill-test discipline matters; partner-load-bearing claims need to be operationally honest)

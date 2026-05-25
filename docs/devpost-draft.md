@@ -8,6 +8,12 @@
 
 **Iris** is an AI photography mentor that combines multimodal critique with adaptive practice planning, grounded in each photographer’s persistent aesthetic identity. Unlike single-shot graders, it remembers portfolios, assignments, and improvement over time — then plans what to practice next.
 
+**Value prop:** Iris becomes a structurally different product by persona — hobbyist skill mentor, working-pro listing advisor, and a vision-impairment capture path: three distinct sub-agent compositions over one MongoDB-backed memory layer (native iOS voice/haptics ship after the hackathon submission).
+
+## Positioning
+
+Iris is not a competitor to Aftershoot, Imagen, or Narrative Select. Those tools automate culling, editing, and retouching so pros deliver galleries faster. Iris addresses growth: memory, Glass Box critique, practice loops, and human-in-the-loop agents. Aftershoot fits the cull-and-deliver pipeline; Iris fits the mentor-and-evolve loop. XMP export lets Iris complement Lightroom or Aftershoot rather than replace them.
+
 ## Features
 
 - Glass Box multimodal critique (5-axis scores + spatial overlays)

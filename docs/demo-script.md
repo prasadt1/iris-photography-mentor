@@ -9,9 +9,11 @@
 
 ## 0:00–0:15 — Setup
 
-> “Meet Maya, a hobbyist working on portraiture. Her last three shoots live in **Iris** — an AI mentor that remembers who she is as a photographer.”
+> “Meet Maya, a hobbyist working on portraiture. **Iris** is not a culling tool like Aftershoot — it is an AI mentor with persistent memory. By persona it becomes a different product: hobbyist skill coach, working-pro listing advisor, and a vision-impairment capture path in the agent graph — three sub-agent compositions on one MongoDB memory layer. Native iOS voice and haptics ship after this submission.”
 
-Open **Home** → **My Work** (`#memory`) — seed data timeline.
+> “Maya's library was built over time through Studio uploads and demo prep — watch how Iris remembers her work.”
+
+Open **Home** → **My Work** (`#memory`) — portfolio timeline (seeded / uploaded library).
 
 ---
 

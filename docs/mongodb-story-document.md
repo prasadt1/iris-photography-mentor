@@ -10,6 +10,10 @@ Practice Companion's product premise — *an AI mentor that adapts to who you ar
 
 For a multi-channel, multi-persona AI product where the data primitive is "the creator's evolving identity over time," Atlas's combination of multimodal vector search, flexible documents, full-text search, change streams, and per-tenant isolation is the cleanest operational fit. The MongoDB MCP Server then exposes these primitives as agent-native tools, which makes the orchestrator architecture clean rather than fragmented.
 
+### Positioning (complement, not compete)
+
+Iris is not a competitor to Aftershoot, Imagen, or Narrative Select. Those are workflow accelerators for culling, editing, and retouching. Iris is an AI mentor for photographer growth over months and years. The categories coexist: Aftershoot for cull-and-deliver, Iris for mentor-and-evolve with memory that survives across sessions. Iris does not compete on culling speed; it competes on persistent identity, persona-specific agent routing, and explainable critique grounded in your actual portfolio. XMP sidecar export is intentional so Iris fits existing Lightroom or Aftershoot workflows.
+
 ---
 
 ## The product's data primitive
