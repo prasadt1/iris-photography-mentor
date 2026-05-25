@@ -53,17 +53,14 @@ const GlassBoxPanel: React.FC<Props> = ({
           </button>
 
           {expanded && (
-            <div className="p-5 md:p-6 border-t border-slate-800 bg-slate-950/80 font-mono text-sm space-y-6">
+            <div className="p-5 md:p-6 border-t border-slate-800 bg-slate-950/80 text-sm leading-relaxed space-y-6">
               <div>
                 <h4 className="flex items-center gap-2 text-emerald-400 font-bold mb-3 uppercase text-xs tracking-wider">
                   <Eye className="w-4 h-4" /> Key observations
                 </h4>
-                <ul className="space-y-2 pl-2 border-l border-emerald-500/20">
+                <ul className="space-y-2.5 list-disc list-outside pl-5 marker:text-emerald-500/60">
                   {rationale.observations.map((obs, i) => (
-                    <li
-                      key={i}
-                      className="text-slate-300 pl-4 relative before:content-['>'] before:absolute before:left-0 before:text-emerald-500/50"
-                    >
+                    <li key={i} className="text-slate-200">
                       {obs}
                     </li>
                   ))}
@@ -108,7 +105,7 @@ const GlassBoxPanel: React.FC<Props> = ({
               {(groundingCitations.length > 0 || groundingPrinciples.length > 0) && (
                 <div className="pt-2 border-t border-slate-800">
                   <h4 className="flex items-center gap-2 text-brand-400 font-bold mb-3 uppercase text-xs tracking-wider">
-                    <Database className="w-4 h-4" /> Grounded in Agent Builder
+                    <Database className="w-4 h-4" /> Photography principles I used
                   </h4>
                   <div className="space-y-2">
                     {(groundingCitations.length > 0

@@ -16,7 +16,9 @@ import {
   fetchAssignments,
   proposeAssignment,
 } from '../services/practiceClient';
+import { friendlyErrorMessage } from '../lib/friendlyError';
 import { ShootNowDialog } from './ShootNowDialog';
+import { PracticeCardsSkeleton } from './SkeletonBlocks';
 import type { Assignment, ReflectionResult, UserMode } from '../types/practice';
 
 interface Props {
@@ -51,7 +53,7 @@ export const PracticeTab: React.FC<Props> = ({
       setActive(data.active);
       setCompleted(data.completed);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load assignments');
+      setError(friendlyErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export const PracticeTab: React.FC<Props> = ({
       await proposeAssignment(mode);
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not generate assignment');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -82,7 +84,7 @@ export const PracticeTab: React.FC<Props> = ({
       onAssignmentsChange?.();
       setAcceptedForShoot(accepted);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Accept failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -95,7 +97,7 @@ export const PracticeTab: React.FC<Props> = ({
       await load();
       onAssignmentsChange?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Decline failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -110,7 +112,7 @@ export const PracticeTab: React.FC<Props> = ({
       await load();
       onAssignmentsChange?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not complete assignment');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -118,9 +120,9 @@ export const PracticeTab: React.FC<Props> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-400 mb-3" />
-        <p className="text-sm">Loading practice assignments…</p>
+      <div className="animate-fadeIn space-y-6 max-w-3xl mx-auto">
+        <PracticeCardsSkeleton />
+        <p className="text-sm text-slate-500 text-center">Loading practice assignments…</p>
       </div>
     );
   }

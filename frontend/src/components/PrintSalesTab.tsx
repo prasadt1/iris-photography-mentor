@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, ImageIcon, Loader2, ShoppingBag, X } from 'lucide-react';
+import { HitlReasoningCallout } from './HitlReasoningCallout';
+import { friendlyErrorMessage } from '../lib/friendlyError';
 import { listingFromApproval } from '../lib/printListingPayload';
 import { fetchPortfolio } from '../services/memoryClient';
 import {
@@ -51,7 +53,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       }
       setPrices(nextPrices);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load listings');
+      setError(friendlyErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -82,7 +84,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       setPrices(nextPrices);
       void loadPreviews();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Scan failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setScanning(false);
     }
@@ -106,7 +108,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
           : `Listed on ${draft.marketplace} at $${edited.toFixed(2)}.`,
       );
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Approve failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -118,7 +120,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
       await decidePrintApproval(id, 'reject');
       setItems((prev) => prev.filter((p) => p.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Reject failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -231,7 +233,7 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor }) => {
                   </div>
                   <h3 className="text-sm font-semibold text-white leading-snug">{draft.title}</h3>
                   <p className="text-xs text-slate-400 line-clamp-3">{draft.description}</p>
-                  <p className="text-xs text-slate-500 italic">{item.agentReasoning}</p>
+                  <HitlReasoningCallout reasoning={item.agentReasoning} />
                   <label className="flex items-center gap-2 text-sm text-slate-300">
                     <span className="shrink-0">Price ({draft.currency})</span>
                     <input

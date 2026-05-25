@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, MessageCircle, Send } from 'lucide-react';
+import { Loader2, MessageCircle, Send, X } from 'lucide-react';
+import { ChatErrorBanner } from './ChatErrorBanner';
 import { MentorMarkdown } from './MentorMarkdown';
+import { friendlyErrorMessage } from '../lib/friendlyError';
+import { mentorLoadingStage } from '../lib/mentorLoadingStages';
 import {
   loadSessionId,
   sendMentorMessage,
@@ -31,7 +34,9 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
   const [loading, setLoading] = useState(false);
   const [waitSec, setWaitSec] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedText, setLastFailedText] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,6 +51,12 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
     return () => window.clearInterval(tick);
   }, [loading]);
 
+  const cancelRequest = useCallback(() => {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    setLoading(false);
+  }, []);
+
   const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
@@ -59,9 +70,13 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
     setInput('');
     setLoading(true);
     setError(null);
+    setLastFailedText(null);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
-      const res = await sendMentorMessage(trimmed, mode);
+      const res = await sendMentorMessage(trimmed, mode, { signal: controller.signal });
       setMessages((prev) => [
         ...prev,
         {
@@ -71,14 +86,24 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
         },
       ]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Chat failed');
+      const msg = friendlyErrorMessage(e);
+      if (e instanceof Error && e.name === 'AbortError') {
+        setError(msg);
+      } else {
+        setError(msg);
+        setLastFailedText(trimmed);
+        setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+        setInput(trimmed);
+      }
     } finally {
+      abortRef.current = null;
       setLoading(false);
     }
   }, [loading, mode]);
 
   const hasSession = Boolean(loadSessionId());
   const starters = STARTERS_BY_MODE[mode];
+  const stageMessage = mentorLoadingStage(waitSec, mode);
 
   return (
     <div className="animate-fadeIn max-w-3xl mx-auto flex flex-col min-h-[60vh]">
@@ -87,7 +112,7 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
           <MessageCircle className="w-5 h-5" />
           <span className="text-xs font-bold uppercase tracking-wide">Ask Mentor</span>
         </div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-white">
+        <h1 className="font-serif text-2xl md:text-3xl font-extrabold text-white">
           Ask me about your progress
         </h1>
         <p className="text-slate-400 mt-2 text-sm leading-relaxed">
@@ -127,17 +152,38 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
             </div>
           ))}
           {loading && (
-            <div className="flex flex-col gap-1 text-slate-400 text-sm">
-              <div className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin shrink-0" />
-                {mode === 'working_pro'
-                  ? 'Reviewing your portfolio and print opportunities…'
-                  : 'Reviewing your critiques and portfolio…'}
+            <div
+              className="flex flex-col gap-2 text-slate-300 text-sm rounded-xl border border-slate-600/60 bg-slate-900/50 p-4"
+              role="status"
+              aria-live="polite"
+              aria-busy="true"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Loader2 className="w-4 h-4 animate-spin shrink-0 text-brand-400" />
+                  <span className="font-medium">{stageMessage}</span>
+                </div>
+                {waitSec >= 8 && (
+                  <button
+                    type="button"
+                    onClick={cancelRequest}
+                    className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-slate-400 hover:text-white border border-slate-600 hover:border-slate-500"
+                  >
+                    <X className="w-3 h-3" />
+                    Cancel
+                  </button>
+                )}
               </div>
-              <p className="text-xs text-slate-500 pl-6">
+              <div className="h-1 rounded-full bg-slate-700 overflow-hidden">
+                <div
+                  className="h-full bg-brand-500/80 transition-all duration-1000 ease-out"
+                  style={{ width: `${Math.min(95, 12 + waitSec * 1.2)}%` }}
+                />
+              </div>
+              <p className="text-xs text-slate-500">
                 {mode === 'working_pro'
-                  ? `Often 60–90 seconds; waited ${waitSec}s. Do not refresh.`
-                  : `Usually 20–40 seconds; waited ${waitSec}s.`}
+                  ? `Often 60–90 seconds · ${waitSec}s — keep this tab open`
+                  : `Usually 30–60 seconds · ${waitSec}s — keep this tab open`}
               </p>
             </div>
           )}
@@ -145,9 +191,18 @@ export const MentorTab: React.FC<Props> = ({ mode }) => {
         </div>
 
         {error && (
-          <p className="px-4 pb-2 text-sm text-red-400" role="alert">
-            {error}
-          </p>
+          <ChatErrorBanner
+            message={error}
+            onRetry={
+              lastFailedText
+                ? () => {
+                    setError(null);
+                    void send(lastFailedText);
+                  }
+                : undefined
+            }
+            onDismiss={() => setError(null)}
+          />
         )}
 
         <div className="px-3 py-2 border-t border-slate-700/80 bg-slate-900/40">

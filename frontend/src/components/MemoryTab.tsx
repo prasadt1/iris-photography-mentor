@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { ImageIcon, Loader2, RefreshCw, Sparkles } from 'lucide-react';
+import { ImageIcon, RefreshCw, Sparkles } from 'lucide-react';
 import { apiUnreachableMessage } from '../lib/apiHelp';
+import { friendlyErrorMessage } from '../lib/friendlyError';
+import { MemoryGridSkeleton } from './SkeletonBlocks';
 import { fetchAestheticProfile, fetchPortfolio } from '../services/memoryClient';
 import type { AestheticProfileSummary, PortfolioListItem } from '../types/memory';
 
@@ -31,7 +33,7 @@ export const MemoryTab: React.FC = () => {
       setEntries(portfolio.entries);
       setProfile(aesthetic);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load memory');
+      setError(friendlyErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -43,9 +45,10 @@ export const MemoryTab: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-400 mb-3" />
-        <p className="text-sm">Loading your portfolio…</p>
+      <div className="animate-fadeIn space-y-6 max-w-5xl mx-auto">
+        <div className="h-8 w-48 bg-slate-800 rounded animate-pulse" aria-hidden />
+        <MemoryGridSkeleton />
+        <p className="text-sm text-slate-500 text-center">Loading your portfolio…</p>
       </div>
     );
   }

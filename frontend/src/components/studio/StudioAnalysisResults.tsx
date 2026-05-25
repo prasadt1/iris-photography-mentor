@@ -35,7 +35,7 @@ const StudioAnalysisResults: React.FC<Props> = ({
   originalFilename = 'photo.jpg',
   onReset,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>('glass-box');
   const [activeBoxIndex, setActiveBoxIndex] = useState<number | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [selectedDimension, setSelectedDimension] = useState<string | null>(null);
@@ -80,7 +80,7 @@ const StudioAnalysisResults: React.FC<Props> = ({
 
   const tabs: { id: TabId; label: string; icon: typeof LayoutDashboard }[] = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'glass-box', label: 'Glass Box', icon: Brain },
+    { id: 'glass-box', label: 'Why I scored it', icon: Brain },
     { id: 'fix', label: 'How to Fix', icon: Target },
   ];
 
@@ -200,6 +200,24 @@ const StudioAnalysisResults: React.FC<Props> = ({
 
           {activeTab === 'overview' && (
             <div className="space-y-6 animate-fadeIn">
+              {analysis.rationale.observations[0] && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('glass-box')}
+                  className="w-full text-left rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 transition-colors"
+                >
+                  <p className="text-[10px] font-bold uppercase text-emerald-400/90 tracking-wide mb-1">
+                    Glass Box preview
+                  </p>
+                  <p className="text-sm text-slate-200 line-clamp-2">
+                    {analysis.rationale.observations[0]}
+                  </p>
+                  <span className="text-xs text-brand-400 mt-2 inline-block">
+                    See full reasoning →
+                  </span>
+                </button>
+              )}
+
               <div className="bg-slate-800/50 rounded-3xl p-6 border border-slate-700">
                 <h2 className="text-xl font-bold text-slate-100 flex items-start gap-2 mb-3">
                   <Star className="w-6 h-6 text-brand-400 fill-brand-400 shrink-0" />
@@ -254,6 +272,24 @@ const StudioAnalysisResults: React.FC<Props> = ({
                           </div>
                           <span className="w-8 text-sm font-bold text-slate-100">
                             {item.score.toFixed(1)}
+                          </span>
+                          <span
+                            role="link"
+                            tabIndex={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveTab('glass-box');
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setActiveTab('glass-box');
+                              }
+                            }}
+                            className="text-xs text-brand-400 hover:text-brand-300 shrink-0 cursor-pointer"
+                          >
+                            Why?
                           </span>
                         </button>
                       );

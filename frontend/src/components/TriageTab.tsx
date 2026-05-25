@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Check, ExternalLink, ImageIcon, Layers, Loader2, Trash2, X } from 'lucide-react';
+import { HitlReasoningCallout } from './HitlReasoningCallout';
+import { friendlyErrorMessage } from '../lib/friendlyError';
 import { entryIdsForProposal } from '../lib/triageEntryIds';
 import {
   decideApproval,
@@ -140,7 +142,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
       const data = await fetchPendingApprovals();
       setItems(data.items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load approvals');
+      setError(friendlyErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -168,7 +170,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
       setItems(result.pending?.items ?? []);
       void loadPreviews();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Triage scan failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setScanning(false);
     }
@@ -184,7 +186,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
         void loadPreviews();
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Action failed');
+      setError(friendlyErrorMessage(e));
     } finally {
       setActing(null);
     }
@@ -295,7 +297,7 @@ export const TriageTab: React.FC<Props> = ({ mode, onGoToMemory }) => {
               highlightDeleteId={deleteTarget}
             />
             <p className="text-sm text-white leading-relaxed">{describeProposal(item)}</p>
-            <p className="text-xs text-slate-500 italic">{item.agentReasoning}</p>
+            <HitlReasoningCallout reasoning={item.agentReasoning} />
             {item.proposedAction.type === 'delete_entry' && (
               <p className="text-xs text-red-300/80 flex items-center gap-1">
                 <Trash2 className="w-3 h-3" /> Permanent delete if you approve

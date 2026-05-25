@@ -43,6 +43,7 @@ export function rememberPersonaForSession(persona: string): void {
 export async function sendMentorMessage(
   message: string,
   persona: 'hobbyist' | 'working_pro',
+  options?: { signal?: AbortSignal },
 ): Promise<ChatResponse> {
   rememberPersonaForSession(persona);
   const sessionId = loadSessionId();
@@ -54,6 +55,7 @@ export async function sendMentorMessage(
       sessionId: sessionId ?? undefined,
       persona,
     }),
+    signal: options?.signal,
   });
   if (!res.ok) {
     const detail = await res.text();
