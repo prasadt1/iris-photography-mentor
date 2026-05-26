@@ -365,19 +365,51 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
               </div>
             )}
 
+            {/* Score legend */}
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[10px] pb-2 border-b border-warm/40 mb-3">
+              <span className="text-muted">Score guide:</span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-rose-400" />
+                <span className="text-stone-400">1-4 Needs work</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-amber-400" />
+                <span className="text-stone-400">5-6 Developing</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-sky-400" />
+                <span className="text-stone-400">7-8 Strong</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                <span className="text-stone-400">9-10 Exceptional</span>
+              </span>
+            </div>
+
             {/* Score breakdown with context */}
             <div className="grid grid-cols-5 gap-2 text-center">
               {SCORE_LABELS.map(({ key, label }) => {
                 const val = profile.averageScores[key];
                 const ctx = val != null ? getScoreContext(val) : null;
+                // Distinct colors for each level
+                const colorClass = val == null ? 'text-muted'
+                  : val >= 9 ? 'text-emerald-400'
+                  : val >= 7 ? 'text-sky-400'
+                  : val >= 5 ? 'text-amber-400'
+                  : 'text-rose-400';
+                const bgClass = val == null ? ''
+                  : val >= 9 ? 'bg-emerald-500/10'
+                  : val >= 7 ? 'bg-sky-500/10'
+                  : val >= 5 ? 'bg-amber-500/10'
+                  : 'bg-rose-500/10';
                 return (
-                  <div key={key} className="space-y-1">
+                  <div key={key} className={`space-y-1 rounded-lg p-2 ${bgClass}`}>
                     <p className="text-[9px] text-muted uppercase truncate">{label}</p>
-                    <p className={`text-sm font-bold ${ctx?.color ?? 'text-muted'}`}>
+                    <p className={`text-lg font-bold ${colorClass}`}>
                       {val?.toFixed(1) ?? '—'}
                     </p>
                     {ctx && (
-                      <p className="text-[9px] text-muted">{ctx.label}</p>
+                      <p className={`text-[10px] font-medium ${colorClass}`}>{ctx.label}</p>
                     )}
                   </div>
                 );

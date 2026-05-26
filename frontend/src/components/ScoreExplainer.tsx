@@ -98,9 +98,9 @@ export const ScoreExplainer: React.FC<Props> = ({ isOpen, onClose }) => {
                 <span className="font-bold text-amber-400">5-6</span>
                 <p className="text-amber-300/80 mt-1">Developing</p>
               </div>
-              <div className="flex-1 rounded-lg bg-brand-500/20 border border-brand-500/30 p-2 text-center">
-                <span className="font-bold text-brand-400">7-8</span>
-                <p className="text-brand-300/80 mt-1">Strong</p>
+              <div className="flex-1 rounded-lg bg-sky-500/20 border border-sky-500/30 p-2 text-center">
+                <span className="font-bold text-sky-400">7-8</span>
+                <p className="text-sky-300/80 mt-1">Strong</p>
               </div>
               <div className="flex-1 rounded-lg bg-emerald-500/20 border border-emerald-500/30 p-2 text-center">
                 <span className="font-bold text-emerald-400">9-10</span>

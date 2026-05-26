@@ -27,8 +27,8 @@ export function getScoreContext(score: number): ScoreContext {
     return {
       level: 'strong',
       label: 'Strong',
-      color: 'text-brand-400',
-      bgColor: 'bg-brand-500/20',
+      color: 'text-sky-400',
+      bgColor: 'bg-sky-500/20',
       description: 'Solid execution. Minor refinements possible.',
     };
   }
