@@ -51,18 +51,26 @@ def _format_relative_date(dt: datetime) -> str:
         return dt.strftime("%b %d")
 
 
-def _portfolio_context(user_id: ObjectId, limit: int = 8) -> tuple[dict[str, float], list[dict[str, Any]]]:
+def _portfolio_context(user_id: ObjectId, limit: int = 8) -> tuple[dict[str, float], list[dict[str, Any]], list[dict[str, Any]]]:
+    """Get portfolio context for planner.
+
+    Returns:
+        Tuple of (averages, llm_snapshots, internal_snapshots)
+        - averages: skill dimension averages
+        - llm_snapshots: human-readable snapshots for LLM context (no IDs)
+        - internal_snapshots: full snapshots with shoot_id for baseline tracking
+    """
     docs = list(
         get_db()
         .portfolio_entries.find(
             {"user_id": user_id},
-            projection={"scores": 1, "aesthetic_tags": 1, "created_at": 1}
+            projection={"scores": 1, "shoot_id": 1, "aesthetic_tags": 1, "created_at": 1}
         )
         .sort("created_at", -1)
         .limit(limit)
     )
     if not docs:
-        return {}, []
+        return {}, [], []
 
     sums = {k: 0.0 for k in _SKILL_KEYS}
     for doc in docs:
@@ -72,18 +80,26 @@ def _portfolio_context(user_id: ObjectId, limit: int = 8) -> tuple[dict[str, flo
     n = len(docs)
     averages = {k: round(sums[k] / n, 1) for k in _SKILL_KEYS}
 
-    snapshots = []
+    llm_snapshots = []
+    internal_snapshots = []
     for i, doc in enumerate(docs[:5]):
         created_at = doc.get("created_at")
         when = _format_relative_date(created_at) if created_at else f"photo {i + 1}"
-        snapshots.append(
+        # Human-readable version for LLM (no IDs)
+        llm_snapshots.append(
             {
                 "uploaded": when,
                 "scores": doc.get("scores") or {},
                 "tags": doc.get("aesthetic_tags") or [],
             }
         )
-    return averages, snapshots
+        # Internal version with shoot_id for baseline tracking
+        internal_snapshots.append(
+            {
+                "shootId": str(doc.get("shoot_id", "")),
+            }
+        )
+    return averages, llm_snapshots, internal_snapshots
 
 
 def generate_assignment(
@@ -101,7 +117,7 @@ def generate_assignment(
                      If provided, overrides auto-detection of weakest dimension.
     """
     uid = ObjectId(user_id)
-    averages, snapshots = _portfolio_context(uid)
+    averages, llm_snapshots, internal_snapshots = _portfolio_context(uid)
 
     prompt_path = Path(__file__).parent.parent / "prompts" / "planner.txt"
     system = prompt_path.read_text(encoding="utf-8")
@@ -115,14 +131,14 @@ def generate_assignment(
                 f"Recent average scores (0–10): {averages}\n"
                 f"USER REQUESTED focus on: {target_skill} (score: {target_score})\n"
                 f"Generate an assignment targeting {target_skill}.\n"
-                f"Recent photos: {snapshots}\n"
+                f"Recent photos: {llm_snapshots}\n"
             )
         else:
             weakest = min(averages.items(), key=lambda x: x[1])
             context = (
                 f"Recent average scores (0–10): {averages}\n"
                 f"Weakest dimension: {weakest[0]} ({weakest[1]})\n"
-                f"Recent photos: {snapshots}\n"
+                f"Recent photos: {llm_snapshots}\n"
             )
     else:
         context = "No portfolio yet — assign a foundational exercise (composition or lighting awareness)."
@@ -157,7 +173,7 @@ def generate_assignment(
     planned = PlannerAssignmentOutput.model_validate_json(response.text)
 
     baseline_ids: list[ObjectId] = []
-    for snap in snapshots[:3]:
+    for snap in internal_snapshots[:3]:
         sid = snap.get("shootId")
         if sid:
             try:
