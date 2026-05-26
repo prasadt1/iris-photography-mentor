@@ -35,6 +35,9 @@ def _gemini_client() -> genai.Client:
 def _format_relative_date(dt: datetime) -> str:
     """Format datetime as human-readable relative date (e.g., 'today', '2 days ago')."""
     now = datetime.now(timezone.utc)
+    # Handle timezone-naive datetimes from MongoDB
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     delta = now - dt
     days = delta.days
 
