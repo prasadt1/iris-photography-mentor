@@ -64,10 +64,11 @@ export const HomeTab: React.FC<Props> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
+      // Fetch minimal data: 5 photos (1 best + 4 recent), profile, trends
       const [portfolio, aesthetic, trendData] = await Promise.all([
-        fetchPortfolio(12),
+        fetchPortfolio(5),
         fetchAestheticProfile().catch(() => null),
-        fetchPortfolioTrends(12).catch(() => null),
+        fetchPortfolioTrends(6).catch(() => null),
       ]);
 
       if (portfolio.entries.length > 0) {
