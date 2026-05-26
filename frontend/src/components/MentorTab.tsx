@@ -369,7 +369,7 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
           }`}
         >
           <Layers className="w-4 h-4" />
-          Label Photos
+          Organize
         </button>
       </div>
 
@@ -532,51 +532,50 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
         </div>
       )}
 
-      {/* Label Photos View */}
+      {/* Organize View */}
       {view === 'label' && (
         <div className="space-y-6">
           <div>
             <h1 className="font-serif text-2xl md:text-3xl font-extrabold text-white">
-              Label your photo library
+              Organize your photos
             </h1>
             <p className="text-muted text-sm mt-2 leading-relaxed">
-              You already get tags when you upload. When you have many photos, I can suggest
-              consistent labels across a shoot — like &quot;still life&quot; on a group so you
-              can find them later in My Work.
+              I&apos;ll find similar photos and suggest tags — so you can search
+              &quot;portrait&quot; or &quot;backlit&quot; later and find exactly what you need.
             </p>
           </div>
 
-          <section className="rounded-xl border border-warm bg-surface-1 p-4 text-sm text-stone-300 space-y-3">
-            <p className="font-semibold text-white">What you do here (3 steps)</p>
-            <ol className="list-decimal list-inside space-y-2 text-muted">
-              <li>
-                <span className="text-stone-300">Scan</span> — groups similar photos in your library.
-              </li>
-              <li>
-                <span className="text-stone-300">Review</span> — approve or decline each suggestion
-                (nothing changes until you approve).
-              </li>
-              <li>
-                <span className="text-stone-300">See result</span> — open{' '}
-                {onGoToWork ? (
-                  <button
-                    type="button"
-                    onClick={onGoToWork}
-                    className="text-brand-400 hover:text-brand-300 underline inline-flex items-center gap-0.5"
-                  >
-                    My Work <ExternalLink className="w-3 h-3" />
-                  </button>
-                ) : (
-                  <span className="text-brand-400">My Work</span>
-                )}{' '}
-                → Refresh → tags appear on each photo.
-              </li>
-            </ol>
-            <p className="text-xs text-muted border-t border-warm pt-3">
-              Mentor can also search past critiques by theme (e.g. &quot;backlit&quot;) — tags and
-              Glass Box text make that work better.
-            </p>
-          </section>
+          {/* Visual before/after concept */}
+          <div className="rounded-xl border border-warm bg-surface-1 p-4">
+            <div className="flex items-center gap-6 text-center">
+              <div className="flex-1 space-y-2">
+                <div className="flex justify-center gap-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded bg-surface-3 border border-warm/50"
+                      style={{ transform: `rotate(${(i - 2) * 5}deg)` }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted">Scattered photos</p>
+              </div>
+              <div className="text-brand-400 text-lg">→</div>
+              <div className="flex-1 space-y-2">
+                <div className="flex justify-center gap-1">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded bg-brand-500/20 border border-brand-500/40 flex items-center justify-center"
+                    >
+                      <span className="text-[8px] text-brand-400">#</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-brand-400">Tagged &amp; searchable</p>
+              </div>
+            </div>
+          </div>
 
           <button
             type="button"
@@ -608,22 +607,29 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
             </p>
           )}
 
-          {!labelLoading && labelItems.length === 0 && (
-            <TabEmptyState
-              icon={Layers}
-              title="No label suggestions yet"
-              description="I group similar photos in your library and propose consistent tags — nothing changes until you approve."
-              steps={[
-                'Upload a few photos in My Work first',
-                'Open My Work and confirm they appear',
-                'Tap Scan my library, then approve or decline each suggestion',
-              ]}
-              action={
-                onGoToWork
-                  ? { label: 'Go to My Work', onClick: onGoToWork }
-                  : undefined
-              }
-            />
+          {!labelLoading && labelItems.length === 0 && !scanSummary && (
+            <div className="rounded-xl border border-dashed border-warm/60 bg-surface-1/50 p-6 text-center space-y-3">
+              <Layers className="w-10 h-10 text-muted mx-auto" />
+              <div>
+                <p className="text-white font-medium">Ready to organize</p>
+                <p className="text-sm text-muted mt-1">
+                  Tap the button above to scan your library. I&apos;ll suggest tags
+                  for similar photos — you approve what looks right.
+                </p>
+              </div>
+              {onGoToWork && (
+                <p className="text-xs text-muted">
+                  Need photos first?{' '}
+                  <button
+                    type="button"
+                    onClick={onGoToWork}
+                    className="text-brand-400 hover:text-brand-300 underline"
+                  >
+                    Upload in My Work
+                  </button>
+                </p>
+              )}
+            </div>
           )}
 
           {labelItems.length > 0 && (

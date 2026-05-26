@@ -10,6 +10,7 @@ import { PrintSalesTab } from './components/PrintSalesTab';
 import { SettingsTab } from './components/SettingsTab';
 import { FieldTab } from './components/FieldTab';
 import { ScoreExplainer, ScoreExplainerTrigger } from './components/ScoreExplainer';
+import { OnboardingTour, resetTour } from './components/OnboardingTour';
 import type { AppTab } from './config/navConfig';
 import { isAppTab, setTabHash, tabFromHash } from './config/navConfig';
 import { useAuth } from './auth/useAuth';
@@ -43,6 +44,8 @@ function App() {
   const [pendingAnalysis, setPendingAnalysis] = useState<PendingAnalysis | null>(null);
   // Global score explainer modal
   const [showScoreExplainer, setShowScoreExplainer] = useState(false);
+  // Onboarding tour
+  const [showTour, setShowTour] = useState(false);
   const online = useOnlineStatus();
   const auth = useAuth();
 
@@ -197,6 +200,10 @@ function App() {
                 setShowOnboarding(true);
                 navigate('home');
               }}
+              onRestartTour={() => {
+                resetTour();
+                setShowTour(true);
+              }}
             />
           )}
         </main>
@@ -214,6 +221,12 @@ function App() {
 
       {/* Global Score Explainer Modal */}
       <ScoreExplainer isOpen={showScoreExplainer} onClose={() => setShowScoreExplainer(false)} />
+
+      {/* Onboarding Tour (shows on first visit or when restarted) */}
+      <OnboardingTour
+        forceShow={showTour}
+        onComplete={() => setShowTour(false)}
+      />
     </div>
   );
 }

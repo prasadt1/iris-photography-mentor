@@ -13,6 +13,7 @@ interface Props {
   onPersistPersona: (mode: UserMode) => Promise<void>;
   onPersistError: (message: string) => void;
   onRestartOnboarding: () => void;
+  onRestartTour?: () => void;
 }
 
 export const SettingsTab: React.FC<Props> = ({
@@ -21,6 +22,7 @@ export const SettingsTab: React.FC<Props> = ({
   onPersistPersona,
   onPersistError,
   onRestartOnboarding,
+  onRestartTour,
 }) => {
   const isLocal = isLocalDevHost();
   const auth = useAuth();
@@ -119,16 +121,27 @@ export const SettingsTab: React.FC<Props> = ({
         </section>
       )}
 
-      <button
-        type="button"
-        onClick={() => {
-          clearOnboardingComplete();
-          onRestartOnboarding();
-        }}
-        className="text-sm text-muted hover:text-brand-400 underline"
-      >
-        Show welcome screen again
-      </button>
+      <div className="flex flex-wrap gap-4">
+        <button
+          type="button"
+          onClick={() => {
+            clearOnboardingComplete();
+            onRestartOnboarding();
+          }}
+          className="text-sm text-muted hover:text-brand-400 underline"
+        >
+          Show welcome screen again
+        </button>
+        {onRestartTour && (
+          <button
+            type="button"
+            onClick={onRestartTour}
+            className="text-sm text-muted hover:text-brand-400 underline"
+          >
+            Take a feature tour
+          </button>
+        )}
+      </div>
     </div>
   );
 };
