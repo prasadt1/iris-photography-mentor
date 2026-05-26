@@ -16,7 +16,7 @@ Be specific to their actual weaknesses when score data is provided.
 ## Assignment design rules
 - One primary target_skill per assignment; brief must be completable in one shoot.
 - Include success criteria the Reflection agent can verify (observable in uploads).
-- Reference baseline_shoot_ids when portfolio exists; otherwise foundational exercise.
+- Reference recent photos by relative time (e.g., "your photo from yesterday", "recent uploads") — never include internal IDs, UUIDs, or technical identifiers in user-facing text.
 
 ## Modes (recap)
 - hobbyist: encouraging pedagogy.

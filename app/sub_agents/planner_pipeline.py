@@ -32,10 +32,32 @@ def _gemini_client() -> genai.Client:
     )
 
 
+def _format_relative_date(dt: datetime) -> str:
+    """Format datetime as human-readable relative date (e.g., 'today', '2 days ago')."""
+    now = datetime.now(timezone.utc)
+    delta = now - dt
+    days = delta.days
+
+    if days == 0:
+        return "today"
+    elif days == 1:
+        return "yesterday"
+    elif days < 7:
+        return f"{days} days ago"
+    elif days < 30:
+        weeks = days // 7
+        return f"{weeks} week{'s' if weeks > 1 else ''} ago"
+    else:
+        return dt.strftime("%b %d")
+
+
 def _portfolio_context(user_id: ObjectId, limit: int = 8) -> tuple[dict[str, float], list[dict[str, Any]]]:
     docs = list(
         get_db()
-        .portfolio_entries.find({"user_id": user_id}, projection={"scores": 1, "shoot_id": 1, "aesthetic_tags": 1})
+        .portfolio_entries.find(
+            {"user_id": user_id},
+            projection={"scores": 1, "aesthetic_tags": 1, "created_at": 1}
+        )
         .sort("created_at", -1)
         .limit(limit)
     )
@@ -51,10 +73,12 @@ def _portfolio_context(user_id: ObjectId, limit: int = 8) -> tuple[dict[str, flo
     averages = {k: round(sums[k] / n, 1) for k in _SKILL_KEYS}
 
     snapshots = []
-    for doc in docs[:5]:
+    for i, doc in enumerate(docs[:5]):
+        created_at = doc.get("created_at")
+        when = _format_relative_date(created_at) if created_at else f"photo {i + 1}"
         snapshots.append(
             {
-                "shootId": str(doc.get("shoot_id", "")),
+                "uploaded": when,
                 "scores": doc.get("scores") or {},
                 "tags": doc.get("aesthetic_tags") or [],
             }
@@ -91,14 +115,14 @@ def generate_assignment(
                 f"Recent average scores (0–10): {averages}\n"
                 f"USER REQUESTED focus on: {target_skill} (score: {target_score})\n"
                 f"Generate an assignment targeting {target_skill}.\n"
-                f"Recent shoots: {snapshots}\n"
+                f"Recent photos: {snapshots}\n"
             )
         else:
             weakest = min(averages.items(), key=lambda x: x[1])
             context = (
                 f"Recent average scores (0–10): {averages}\n"
                 f"Weakest dimension: {weakest[0]} ({weakest[1]})\n"
-                f"Recent shoots: {snapshots}\n"
+                f"Recent photos: {snapshots}\n"
             )
     else:
         context = "No portfolio yet — assign a foundational exercise (composition or lighting awareness)."
