@@ -4,7 +4,10 @@ verify-phase1:
 	@bash scripts/verify-phase1-gate.sh
 
 playground:
-	@cd app && uvx google-agents-cli playground
+	@if [ -f gcp-service-account.json ]; then \
+	  export GOOGLE_APPLICATION_CREDENTIALS="$(CURDIR)/gcp-service-account.json"; \
+	fi; \
+	cd app && uvx google-agents-cli playground
 
 agent-import:
 	@cd app && uv run python -c "from orchestrator.agent import root_agent; print(root_agent.name); print('tools:', len(root_agent.tools))"
@@ -30,7 +33,7 @@ api-stop:
 	else echo "Nothing listening on port $(API_PORT)"; fi
 
 api-dev:
-	@if curl -sf "http://127.0.0.1:$(API_PORT)/health" 2>/dev/null | grep -q '"phase":"2"'; then \
+	@if curl -sf "http://127.0.0.1:$(API_PORT)/health" 2>/dev/null | grep -q orchestratorChat; then \
 		echo "Coach API already running at http://127.0.0.1:$(API_PORT) (use make api-stop to restart)"; \
 		exit 0; \
 	fi; \
@@ -53,5 +56,4 @@ deploy-hosting: frontend-build-prod
 	@firebase deploy --only hosting
 
 frontend-build-prod:
-	@if [ -z "$(API_URL)" ]; then echo "Set API_URL=https://your-cloud-run-url"; exit 1; fi
-	@cd frontend && VITE_API_BASE_URL="$(API_URL)" VITE_USE_MOCK=false npm run build
+	@bash scripts/frontend-build-prod.sh

@@ -4,8 +4,7 @@ import type {
   CompleteAssignmentResponse,
   UserMode,
 } from '../types/practice';
-
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
+import { apiFetch } from '../lib/apiFetch';
 
 async function parseJson<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -16,36 +15,36 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 export function fetchAssignments(): Promise<AssignmentsResponse> {
-  return fetch(`${API_BASE}/api/v1/assignments`).then(parseJson<AssignmentsResponse>);
+  return apiFetch('/api/v1/assignments').then(parseJson<AssignmentsResponse>);
 }
 
 export function proposeAssignment(mode: UserMode): Promise<Assignment> {
-  return fetch(`${API_BASE}/api/v1/assignments/propose?mode=${mode}`, {
+  return apiFetch(`/api/v1/assignments/propose?mode=${mode}`, {
     method: 'POST',
   }).then(parseJson<Assignment>);
 }
 
 export function acceptAssignment(id: string): Promise<Assignment> {
-  return fetch(`${API_BASE}/api/v1/assignments/${id}/accept`, { method: 'POST' }).then(
+  return apiFetch(`/api/v1/assignments/${id}/accept`, { method: 'POST' }).then(
     parseJson<Assignment>,
   );
 }
 
 export function declineAssignment(id: string): Promise<Assignment> {
-  return fetch(`${API_BASE}/api/v1/assignments/${id}/decline`, { method: 'POST' }).then(
+  return apiFetch(`/api/v1/assignments/${id}/decline`, { method: 'POST' }).then(
     parseJson<Assignment>,
   );
 }
 
 export async function fetchActiveAssignment(): Promise<Assignment | null> {
-  const res = await fetch(`${API_BASE}/api/v1/assignments/active`).then(parseJson<{
+  const res = await apiFetch('/api/v1/assignments/active').then(parseJson<{
     active: Assignment | null;
   }>);
   return res.active;
 }
 
 export function completeAssignment(id: string): Promise<CompleteAssignmentResponse> {
-  return fetch(`${API_BASE}/api/v1/assignments/${id}/complete`, { method: 'POST' }).then(
+  return apiFetch(`/api/v1/assignments/${id}/complete`, { method: 'POST' }).then(
     parseJson<CompleteAssignmentResponse>,
   );
 }

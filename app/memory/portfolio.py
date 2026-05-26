@@ -9,6 +9,8 @@ from typing import Any
 
 from bson import ObjectId
 
+from memory.user_ids import to_mongo_user_id
+
 from memory.db import get_db
 from tools.gcs import signed_https_url
 
@@ -91,17 +93,21 @@ def list_portfolio_entries(
     query: dict[str, Any] = {}
     demo_user = os.environ.get("DEMO_USER_ID")
     if user_id:
-        query["user_id"] = ObjectId(user_id)
+        query["user_id"] = to_mongo_user_id(user_id)
     elif demo_user:
         query["user_id"] = ObjectId(demo_user)
 
-    cursor = (
-        get_db()
-        .portfolio_entries.find(query, projection={"embedding": 0})
-        .sort("created_at", -1)
-        .limit(max(1, min(limit, 100)))
+    from memory import mcp_reads
+
+    coll = get_db().portfolio_entries
+    docs = mcp_reads.find(
+        coll,
+        query,
+        projection={"embedding": 0},
+        limit=max(1, min(limit, 100)),
+        sort=[("created_at", -1)],
     )
-    entries = [_serialize_entry(doc) for doc in cursor]
+    entries = [_serialize_entry(doc) for doc in docs]
     return {"entries": entries, "total": len(entries)}
 
 
@@ -114,19 +120,28 @@ def compute_aesthetic_summary(
     query: dict[str, Any] = {}
     demo_user = os.environ.get("DEMO_USER_ID")
     if user_id:
-        query["user_id"] = ObjectId(user_id)
+        query["user_id"] = to_mongo_user_id(user_id)
     elif demo_user:
         query["user_id"] = ObjectId(demo_user)
 
-    docs = list(
-        get_db()
-        .portfolio_entries.find(query, projection={"scores": 1, "aesthetic_tags": 1})
-        .sort("created_at", -1)
-        .limit(sample_size)
+    total_photos = (
+        get_db().portfolio_entries.count_documents(query) if query else 0
+    )
+
+    from memory import mcp_reads
+
+    coll = get_db().portfolio_entries
+    docs = mcp_reads.find(
+        coll,
+        query,
+        projection={"scores": 1, "aesthetic_tags": 1},
+        limit=sample_size,
+        sort=[("created_at", -1)],
     )
     if not docs:
         return {
-            "photoCount": 0,
+            "photoCount": total_photos,
+            "profileSampleSize": 0,
             "dominantTags": [],
             "averageScores": {},
             "stylisticConsistencyScore": None,
@@ -152,11 +167,12 @@ def compute_aesthetic_summary(
 
     stored = None
     if demo_user or user_id:
-        uid = ObjectId(user_id) if user_id else ObjectId(demo_user)
+        uid = to_mongo_user_id(user_id) if user_id else ObjectId(demo_user)
         stored = get_db().aesthetic_profile.find_one({"user_id": uid})
 
     return {
-        "photoCount": n,
+        "photoCount": total_photos,
+        "profileSampleSize": n,
         "dominantTags": [t for t, _ in dominant],
         "averageScores": avg_scores,
         "stylisticConsistencyScore": round(consistency, 2),

@@ -1,6 +1,7 @@
 # Demo script (3 minutes)
 
-**Canonical:** [`spec.md`](spec.md) §13–16 · **UI flows:** [`ui-ux-design.md`](ui-ux-design.md)
+**Canonical:** [`spec.md`](spec.md) §13–16 · **UI flows:** [`ui-ux-design.md`](ui-ux-design.md)  
+**App shell (2026-05):** Home hub · bottom nav (Home, Studio, Work, Mentor) · sidebar on desktop · `#studio`, `#memory`, `#triage`, `#print`, `#mentor`
 
 **Trademark:** Say “industry-standard photo management software” for Lightroom; avoid prominent Adobe logos. MongoDB/Google logos OK.
 
@@ -8,44 +9,45 @@
 
 ## 0:00–0:15 — Setup
 
-> “Meet Maya, a hobbyist working on portraiture. Her last three shoots live in Practice Companion — an AI mentor that remembers who she is as a photographer.”
+> “Meet Maya, a hobbyist working on portraiture. **Iris** is not a culling tool like Aftershoot — it is an AI mentor with persistent memory. By persona it becomes a different product: hobbyist skill coach, working-pro listing advisor, and a vision-impairment capture path in the agent graph — three sub-agent compositions on one MongoDB memory layer. Native iOS voice and haptics ship after this submission.”
 
-Show **Memory** tab timeline (seed data).
+> “Maya's library was built over time through Studio uploads and demo prep — watch how Iris remembers her work.”
 
----
-
-## 0:15–0:30 — Practice tab
-
-> “She’s on an active assignment: use rule of thirds deliberately. Baseline: 2 of 15 frames showed intentional thirds.”
-
-Show **Practice** tab: assignment card, baseline thumbnails.
+Open **Home** → **My Work** (`#memory`) — portfolio timeline (seeded / uploaded library).
 
 ---
 
-## 0:30–0:50 — Upload + Coach (Studio)
+## 0:15–0:30 — Practice
 
-Upload one new image (GCS-backed).
+> “She’s on an active assignment: use rule of thirds deliberately.”
+
+**Home** → **My Practice** or sidebar **Practice** (via Home card) — assignment card, baseline.
+
+---
+
+## 0:30–0:50 — Studio critique
+
+Upload one new image in **My Studio** (`#studio`).
 
 > “Coach grounds in curated principles — not a black box.”
 
-Point to **grounding citation** (e.g. `composition.md — rule of thirds`).  
-Show Glass Box + spatial overlay (lighting map, subject relationships).
+Default tab **Why I scored it** (Glass Box) + **Overview** preview. Point to photography principles / evidence sources.
 
 ---
 
-## 0:50–1:10 — Reflection + ISAR
+## 0:50–1:10 — Reflection
 
-> “Reflection compares baseline vs this shoot and computes Intentional Skill Application Rate.”
+> “Reflection compares baseline vs this shoot and how often she applied the target skill.”
 
-Show ISAR delta (e.g. 13% → 67%). Side-by-side baseline vs current.
+Complete assignment in **My Practice** — show plain-language skill improvement (not “ISAR” in UI).
 
 ---
 
 ## 1:10–1:15 — Change stream (background)
 
-> “When a new portfolio entry lands, MongoDB change streams recompute her aesthetic profile — no polling.”
+> “When a new portfolio entry lands, MongoDB change streams recompute her aesthetic profile.”
 
-Flip to **Memory** tab; show `aesthetic_profile` updated (`computed_from_portfolio_size`).
+**My Work** → Refresh → aesthetic snapshot (`computed_from_portfolio_size`).
 
 ---
 
@@ -53,7 +55,7 @@ Flip to **Memory** tab; show `aesthetic_profile` updated (`computed_from_portfol
 
 > “Planner proposes the next assignment from memory + profile.”
 
-Show new assignment `rationale`.
+New assignment rationale on **My Practice**.
 
 ---
 
@@ -61,7 +63,7 @@ Show new assignment `rationale`.
 
 > “Export XMP sidecars for her existing workflow.”
 
-Download ZIP; optional 5s Lightroom import (no sustained branded UI).
+From Studio results → download sidecar.
 
 ---
 
@@ -77,21 +79,29 @@ Download ZIP; optional 5s Lightroom import (no sustained branded UI).
 ## 2:00–2:30 — Judge pitch (Google)
 
 5. Agent Builder Data Store grounds Coach.  
-6. ADK multi-agent + Agent Engine + Gemini 3 Pro multimodal.  
-7. Firebase Hosting + GCP-only stack (rules-compliant).
+6. ADK multi-agent + Agent Engine + Gemini multimodal.  
+7. Glass Box = transparent reasoning in UI.
 
 ---
 
-## 2:30–3:00 — Field Mode (optional)
+## 2:30–3:00 — HITL (choose one)
 
-30s: iPhone on LAN HTTPS, voice hint after capture.  
-“If short on time, cut Field Mode; Studio loop is the core.”
+**Hobbyist — Label Photos** (`#triage` or sidebar): Scan → amber **Why I'm suggesting this** → approve one tag batch.
+
+**Working pro — List for Sale** (`#print`): Settings → Working pro → draft listings → approve one card.
+
+**Ask Mentor** (`#mentor`): One portfolio question — staged loading (30–90s) shows progress.
 
 ---
 
-## Pre-demo checklist
+## Deep links (90s fast path)
 
-- [ ] Seed data loaded (`scripts/seed-demo-data.py`)  
-- [ ] Agent Engine warm (min instances if configured)  
-- [ ] MCP + Atlas reachable from demo network  
-- [ ] Demo images license-cleared (own work or Unsplash/Pexels documented)
+| Step | URL hash |
+|------|----------|
+| Studio upload | `#studio` |
+| Portfolio | `#memory` |
+| Label HITL | `#triage` |
+| Print HITL | `#print` (Working pro in Settings) |
+| Mentor | `#mentor` |
+
+**Production:** https://practice-companion-hackathon.web.app

@@ -9,16 +9,15 @@ from typing import Any
 from bson import ObjectId
 
 from memory.db import get_db
-from planner.service import generate_assignment
-from reflection.service import reflect_assignment
+from memory.user_ids import to_mongo_user_id
 
 
 def _resolve_user_id(user_id: str | None) -> ObjectId | None:
-    if user_id:
-        return ObjectId(user_id)
-    demo = os.environ.get("DEMO_USER_ID")
-    if demo:
-        return ObjectId(demo)
+    from memory.session_context import resolve_effective_user_id
+
+    effective = resolve_effective_user_id(user_id)
+    if effective:
+        return to_mongo_user_id(effective)
     latest = get_db().portfolio_entries.find_one(
         sort=[("created_at", -1)],
         projection={"user_id": 1},
@@ -121,6 +120,8 @@ def link_upload_to_assignment(
 
 
 def complete_assignment(assignment_id: str) -> dict[str, Any]:
+    from sub_agents.reflection_pipeline import reflect_assignment
+
     reflection = reflect_assignment(assignment_id)
     now = datetime.now(timezone.utc)
     coll = get_db().assignments
@@ -173,6 +174,8 @@ def propose_assignment(
     existing = get_db().assignments.find_one({"user_id": uid, "status": "proposed"})
     if existing:
         return _serialize(existing)
+
+    from sub_agents.planner_pipeline import generate_assignment
 
     doc = generate_assignment(str(uid), mode=mode)
     return _serialize(doc)

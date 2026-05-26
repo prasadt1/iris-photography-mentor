@@ -6,7 +6,7 @@ Judges need a **public URL**. The Vite dev proxy only works locally; production 
 
 ```
 Browser → Firebase Hosting (static React)
-       → Cloud Run practice-companion-api (FastAPI / Coach)
+       → Cloud Run practice-companion-api (FastAPI: Coach + Mentor orchestrator chat)
        → MongoDB Atlas · Vertex AI · GCS · Agent Builder
 ```
 
@@ -43,6 +43,10 @@ Cloud Run service account needs roles:
 - `roles/storage.objectAdmin` (portfolio bucket)
 - `roles/discoveryengine.editor` or viewer (Data Store search)
 
+## Phase 2 — Mentor chat on Cloud Run
+
+Mentor Copilot uses `POST /api/v1/agent/chat` on the **same** Cloud Run service as Studio (`api/server.py`). No separate Agent Engine URL is required for the hackathon demo. Persona is stored in `users.persona` (`PATCH /api/v1/users/me`).
+
 ## 1. Deploy Coach API (Cloud Run)
 
 ```bash
@@ -73,12 +77,13 @@ export API_URL=https://YOUR-CLOUD-RUN-URL   # no trailing slash
 make deploy-hosting
 ```
 
+`make deploy-hosting` runs `scripts/frontend-build-prod.sh`, which sets `VITE_API_BASE_URL` and, when present in `.env`, injects `VITE_FIREBASE_*` for Google sign-in on the hosted build.
+
 Or manually:
 
 ```bash
-cd frontend
-VITE_API_BASE_URL=https://YOUR-CLOUD-RUN-URL npm run build
-cd ..
+export API_URL=https://YOUR-CLOUD-RUN-URL
+bash scripts/frontend-build-prod.sh
 firebase deploy --only hosting
 ```
 
@@ -88,6 +93,22 @@ firebase deploy --only hosting
 - or Firebase console → Hosting URL
 
 Ensure `CORS_ORIGINS` on Cloud Run includes your Firebase domain (deploy script adds `*.web.app` and `*.firebaseapp.com`).
+
+### Firebase Google sign-in (multi-user demo)
+
+1. **Web app** (once per project): Firebase console → Project settings → Your apps → Web, or CLI:
+   ```bash
+   firebase apps:create WEB "Iris Practice Companion" --project practice-companion-hackathon
+   ```
+2. **Sync Vite env into `.env`** (does not commit secrets):
+   ```bash
+   bash scripts/sync-firebase-vite-env.sh
+   ```
+   Writes `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`.
+3. **Enable Google provider**: [Firebase Console → Authentication](https://console.firebase.google.com/project/practice-companion-hackathon/authentication/providers) → Sign-in method → **Google** → Enable → Save. Add a support email if prompted.
+4. **Authorized domains** (usually auto): Authentication → Settings → Authorized domains should include `practice-companion-hackathon.web.app` and `localhost`.
+5. **Redeploy hosting** so the build embeds the keys: `API_URL=https://YOUR-RUN-URL make deploy-hosting`.
+6. **Verify**: open Settings on the hosted app → **Sign in with Google** (not “Firebase web keys are not configured”).
 
 ## Local dev (unchanged)
 
@@ -122,7 +143,81 @@ Set `DEMO_USER_ID=6577a1f2b3c4d5e6f7a8b9c0` on Cloud Run env for consistent Memo
 | `nosite name or target name` on `firebase deploy` | Firebase not linked or Hosting never enabled — see Prerequisites above |
 | `projects:addfirebase` 403 | Use Firebase console to add the project, or get Owner on GCP |
 
+## MongoDB MCP Server (consolidation item 3 — hosted reads)
+
+Separate Cloud Run service; Coach API calls it over Streamable HTTP (IAM + API key). **`min_instances=1`** avoids cold-start during demos.
+
+```bash
+chmod +x scripts/deploy-mongodb-mcp.sh scripts/verify_mcp_in_production.sh
+./scripts/deploy-mongodb-mcp.sh
+```
+
+Add printed `MONGODB_MCP_HTTP_URL` and `MONGODB_MCP_API_KEY` to `.env`, then:
+
+```bash
+MONGODB_MCP_ALLOW_PYMONGO_FALLBACK=false
+./scripts/deploy-coach-api.sh
+./scripts/verify_mcp_in_production.sh
+```
+
+Capture a Cloud Trace screenshot with spans `mongodb.mcp.find` / `mongodb.mcp.aggregate` for Devpost.
+
+See [`docs/mcp-primary-judge-path.md`](mcp-primary-judge-path.md).
+
+## Change-stream listener (aesthetic_profile)
+
+Reactive profile updates when `portfolio_entries` change (consolidation item 2).
+
+```bash
+# Local (requires MONGODB_URI + change stream permissions on Atlas)
+cd app && uv run python ../services/change-stream-listener/main.py
+```
+
+**Cloud Run (min_instances=1):**
+
+`gcloud run deploy --source` does **not** support `--dockerfile`. The listener Dockerfile copies `app/` from the **repo root** — build with Cloud Build, then deploy by image:
+
+```bash
+chmod +x scripts/deploy-change-stream-listener.sh
+./scripts/deploy-change-stream-listener.sh
+```
+
+Manual equivalent:
+
+```bash
+gcloud config set project practice-companion-hackathon
+gcloud config set account your.real.email@gmail.com   # not YOUR_USER@gmail.com, not *gserviceaccount.com
+
+gcloud builds submit . \
+  --config=services/change-stream-listener/cloudbuild.yaml
+
+python3 scripts/cloud-run-env-from-dotenv.py .env | grep -E '^(MONGODB_URI|MONGODB_DB_NAME):' > /tmp/listener-env.yaml
+echo 'CHANGE_STREAM_DEBOUNCE_SEC: "5"' >> /tmp/listener-env.yaml
+
+gcloud run deploy change-stream-listener \
+  --image gcr.io/practice-companion-hackathon/change-stream-listener:latest \
+  --region us-central1 \
+  --min-instances 1 \
+  --no-allow-unauthenticated \
+  --env-vars-file=/tmp/listener-env.yaml
+```
+
+Optional Secret Manager (only after `gcloud secrets create mongodb-uri ...`):
+
+```bash
+--set-secrets MONGODB_URI=mongodb-uri:latest
+```
+
+Verify:
+
+```bash
+gcloud run services logs read change-stream-listener --region=us-central1 --limit=30
+```
+
+Upload on prod → within ~10s `aesthetic_profile.computed_at` advances for that `user_id` (one doc per user, not a growing collection).
+
+The listener exposes `GET /health` on `PORT` (8080) so Cloud Run accepts the container; change-stream work runs in a background thread.
+
 ## Not in this deploy
 
 - Vertex Agent Engine (`make deploy` from ADK scaffold) — optional; playground + Cloud Run API suffice for UI demo
-- Change-stream listener — Phase 4 buffer
