@@ -39,10 +39,20 @@ const SCORE_LABELS: { key: keyof AestheticProfileSummary['averageScores']; label
   { key: 'subject_impact', label: 'Subject' },
 ];
 
+/** Pending analysis passed from Home after upload */
+interface PendingAnalysis {
+  result: AnalysisResult;
+  imageUrl: string;
+  filename: string;
+}
+
 interface MyWorkTabProps {
   activeAssignment?: Assignment | null;
   onAssignmentComplete?: () => void;
   onGoHome?: () => void;
+  /** Analysis result from Home upload to show immediately */
+  pendingAnalysis?: PendingAnalysis | null;
+  onClearPendingAnalysis?: () => void;
 }
 
 type ViewMode = 'gallery' | 'upload' | 'analyzing' | 'result';
@@ -51,6 +61,8 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   activeAssignment,
   onAssignmentComplete,
   onGoHome,
+  pendingAnalysis,
+  onClearPendingAnalysis,
 }) => {
   // Gallery state
   const [entries, setEntries] = useState<PortfolioListItem[]>([]);
@@ -65,6 +77,16 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [filename, setFilename] = useState('photo.jpg');
+
+  // Handle pending analysis from Home upload
+  useEffect(() => {
+    if (pendingAnalysis) {
+      setResult(pendingAnalysis.result);
+      setImageUrl(pendingAnalysis.imageUrl);
+      setFilename(pendingAnalysis.filename);
+      setViewMode('result');
+    }
+  }, [pendingAnalysis]);
 
   const loadGallery = useCallback(async () => {
     setLoading(true);
@@ -118,6 +140,8 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
     setImageUrl(null);
     setFilename('photo.jpg');
     setViewMode('gallery');
+    // Clear pending analysis from Home if any
+    onClearPendingAnalysis?.();
     // Refresh gallery to show new photo
     void loadGallery();
   };

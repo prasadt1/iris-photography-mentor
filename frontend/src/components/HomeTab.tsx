@@ -27,6 +27,7 @@ import {
 import { fetchAestheticProfile, fetchPortfolio, fetchPortfolioTrends } from '../services/memoryClient';
 import { analyzePhoto } from '../services/agentClient';
 import type { AppTab } from '../config/navConfig';
+import type { AnalysisResult } from '../types';
 import type { Assignment, UserMode } from '../types/practice';
 import type { AestheticProfileSummary, PortfolioListItem, PortfolioTrendsResponse } from '../types/memory';
 
@@ -35,7 +36,8 @@ interface Props {
   activeAssignment: Assignment | null;
   onNavigate: (tab: AppTab) => void;
   onOpenSettings: () => void;
-  onUploadComplete?: () => void;
+  /** Called when upload + analysis completes, with result to show in My Work */
+  onAnalysisComplete?: (result: AnalysisResult, imageUrl: string, filename: string) => void;
 }
 
 // Example content for new users
@@ -50,7 +52,7 @@ export const HomeTab: React.FC<Props> = ({
   mode,
   activeAssignment,
   onNavigate,
-  onUploadComplete,
+  onAnalysisComplete,
 }) => {
   const [bestPhoto, setBestPhoto] = useState<PortfolioListItem | null>(null);
   const [recentPhotos, setRecentPhotos] = useState<PortfolioListItem[]>([]);
@@ -102,17 +104,16 @@ export const HomeTab: React.FC<Props> = ({
     if (!file) return;
 
     setUploading(true);
+    const previewUrl = URL.createObjectURL(file);
     try {
-      await analyzePhoto({
+      const result = await analyzePhoto({
         imageFile: file,
         assignmentId: activeAssignment?.id,
       });
-      onUploadComplete?.();
-      // Refresh data to show new photo
-      void load();
-      // Navigate to My Work to see the result
-      onNavigate('work');
+      // Pass result to App to show detailed analysis in My Work
+      onAnalysisComplete?.(result, previewUrl, file.name);
     } catch (err) {
+      URL.revokeObjectURL(previewUrl);
       console.error('Upload failed:', err);
       alert('Upload failed. Please try again.');
     } finally {

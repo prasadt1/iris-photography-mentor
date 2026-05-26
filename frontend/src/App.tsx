@@ -19,7 +19,15 @@ import { fetchUserProfile, personaToUserMode, updatePersona } from './services/u
 import { OfflineBanner } from './components/OfflineBanner';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import { isOnboardingComplete, setOnboardingComplete } from './lib/onboarding';
+import type { AnalysisResult } from './types';
 import type { Assignment, UserMode } from './types/practice';
+
+/** Pending analysis result to show in My Work after upload from Home */
+interface PendingAnalysis {
+  result: AnalysisResult;
+  imageUrl: string;
+  filename: string;
+}
 
 function App() {
   const [ready, setReady] = useState(false);
@@ -30,6 +38,8 @@ function App() {
   const [activeAssignment, setActiveAssignment] = useState<Assignment | null>(null);
   // Sub-views within Practice tab
   const [practiceView, setPracticeView] = useState<'list' | 'field'>('list');
+  // Pending analysis result from Home upload (to show in My Work)
+  const [pendingAnalysis, setPendingAnalysis] = useState<PendingAnalysis | null>(null);
   const online = useOnlineStatus();
   const auth = useAuth();
 
@@ -127,7 +137,11 @@ function App() {
               activeAssignment={activeAssignment}
               onNavigate={navigate}
               onOpenSettings={() => navigate('settings')}
-              onUploadComplete={refreshActiveAssignment}
+              onAnalysisComplete={(result, imageUrl, filename) => {
+                setPendingAnalysis({ result, imageUrl, filename });
+                void refreshActiveAssignment();
+                navigate('work');
+              }}
             />
           )}
 
@@ -136,6 +150,8 @@ function App() {
               activeAssignment={activeAssignment}
               onAssignmentComplete={refreshActiveAssignment}
               onGoHome={() => navigate('home')}
+              pendingAnalysis={pendingAnalysis}
+              onClearPendingAnalysis={() => setPendingAnalysis(null)}
             />
           )}
 
