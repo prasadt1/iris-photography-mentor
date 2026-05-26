@@ -17,6 +17,7 @@ Child docs **elaborate** spec sections; on conflict, **spec.md wins**. Update sp
 | [`testing-strategy.md`](testing-strategy.md) | Test pyramid, agent tests, demo QA | Phase gates |
 | [`ui-ux-design.md`](ui-ux-design.md) | IA, flows, components, visual system | §3, Phase 3 UI |
 | [`ios-implementation-plan.md`](ios-implementation-plan.md) | Native iOS / live Field Coach roadmap (post-hackathon) | §3.4, §4.7 |
+| [`ios-phase0-started.md`](ios-phase0-started.md) | iOS Xcode scaffold + Phase 0 scope | — |
 | [`brand-logo-brief.md`](brand-logo-brief.md) | Logo mark, colors, usage rules | — |
 | [`demo-script.md`](demo-script.md) | Timed demo script | §13, §16 |
 | [`devpost-draft.md`](devpost-draft.md) | Submission copy draft | §18 |
