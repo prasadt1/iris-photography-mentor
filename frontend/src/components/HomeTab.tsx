@@ -1,20 +1,32 @@
+/**
+ * HomeTab — Photo-first home with layered context.
+ *
+ * Implements PRODUCT.md principles:
+ * - "Photos are the interface" — hero is user's best photo
+ * - "Show, then tell" — visual proof before explanation
+ * - "Memory makes meaning" — progress and history visible
+ *
+ * Layout:
+ * - Hero: Best recent photo with Glass Box overlay
+ * - Context pills: Progress trend + Active assignment
+ * - CTAs: Upload New + Continue Practice
+ * - Below fold: Recent work strip + Mentor insight
+ */
+
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  Aperture,
-  Focus,
-  LayoutGrid,
-  Layers,
-  MessageCircle,
-  Settings,
-  Store,
+  ArrowRight,
+  Camera,
+  ImageIcon,
+  Plus,
+  Sparkles,
+  Target,
+  TrendingUp,
 } from 'lucide-react';
-import { BRAND } from '../config/brand';
-import { fetchAestheticProfile, fetchPortfolio } from '../services/memoryClient';
-import { fetchPrintPending } from '../services/printSalesClient';
-import { fetchPendingApprovals } from '../services/triageClient';
+import { fetchAestheticProfile, fetchPortfolio, fetchPortfolioTrends } from '../services/memoryClient';
 import type { AppTab } from '../config/navConfig';
 import type { Assignment, UserMode } from '../types/practice';
-import type { AestheticProfileSummary } from '../types/memory';
+import type { AestheticProfileSummary, PortfolioListItem, PortfolioTrendsResponse } from '../types/memory';
 
 interface Props {
   mode: UserMode;
@@ -23,213 +35,356 @@ interface Props {
   onOpenSettings: () => void;
 }
 
+// Example content for new users
+const EXAMPLE_PHOTO = {
+  url: 'https://picsum.photos/seed/iris-home-hero/1200/800',
+  sceneDescription: 'Golden hour light streams through autumn trees, casting long shadows across a winding path.',
+  overallAverage: 7.4,
+  glassBoxSummary: 'Strong leading lines draw the eye through the frame toward the light source.',
+};
+
 export const HomeTab: React.FC<Props> = ({
   mode,
   activeAssignment,
   onNavigate,
-  onOpenSettings,
 }) => {
+  const [bestPhoto, setBestPhoto] = useState<PortfolioListItem | null>(null);
+  const [recentPhotos, setRecentPhotos] = useState<PortfolioListItem[]>([]);
   const [profile, setProfile] = useState<AestheticProfileSummary | null>(null);
-  const [photoCount, setPhotoCount] = useState(0);
-  const [pendingLabels, setPendingLabels] = useState(0);
-  const [pendingListings, setPendingListings] = useState(0);
+  const [trends, setTrends] = useState<PortfolioTrendsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const [portfolio, aesthetic, triage, print] = await Promise.all([
-        fetchPortfolio(48),
+      const [portfolio, aesthetic, trendData] = await Promise.all([
+        fetchPortfolio(12),
         fetchAestheticProfile().catch(() => null),
-        fetchPendingApprovals('triage').catch(() => ({ items: [], total: 0 })),
-        mode === 'working_pro'
-          ? fetchPrintPending().catch(() => ({ items: [], total: 0 }))
-          : Promise.resolve({ items: [], total: 0 }),
+        fetchPortfolioTrends(12).catch(() => null),
       ]);
-      setPhotoCount(aesthetic?.photoCount ?? portfolio.total);
+
+      if (portfolio.entries.length > 0) {
+        // Best photo by score
+        const sorted = [...portfolio.entries].sort(
+          (a, b) => b.overallAverage - a.overallAverage
+        );
+        setBestPhoto(sorted[0]);
+        // Recent photos (most recent first, excluding best)
+        setRecentPhotos(
+          portfolio.entries
+            .filter((e) => e.id !== sorted[0].id)
+            .slice(0, 4)
+        );
+      }
       setProfile(aesthetic);
-      setPendingLabels(triage.total);
-      setPendingListings(print.total);
+      setTrends(trendData);
     } catch {
-      /* home still usable */
+      // Continue with empty state
+    } finally {
+      setLoading(false);
     }
-  }, [mode]);
+  }, []);
 
   useEffect(() => {
     void load();
   }, [load]);
 
-  const consistency =
-    profile?.stylisticConsistencyScore != null
-      ? `${Math.round(profile.stylisticConsistencyScore * 100)}% consistency`
-      : null;
+  const isReturningUser = bestPhoto !== null;
+  const photoCount = profile?.photoCount ?? 0;
+
+  // Find best trend for display
+  const bestTrend = trends?.dimensions?.find(
+    (d) => d.key === 'composition' || d.key === 'lighting' || d.key === 'overall'
+  );
+  const trendPercent = bestTrend?.trend
+    ? Math.round(((bestTrend.trend.end - bestTrend.trend.start) / bestTrend.trend.start) * 100)
+    : null;
+  const trendLabel = bestTrend?.key
+    ? bestTrend.key.charAt(0).toUpperCase() + bestTrend.key.slice(1)
+    : null;
+
+  // Loading skeleton
+  if (loading) {
+    return (
+      <div className="animate-fadeIn max-w-5xl mx-auto space-y-6">
+        <div className="aspect-[16/10] rounded-2xl bg-surface-2 animate-pulse" />
+        <div className="flex gap-4">
+          <div className="h-16 flex-1 rounded-xl bg-surface-2 animate-pulse" />
+          <div className="h-16 flex-1 rounded-xl bg-surface-2 animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  const displayPhoto = isReturningUser
+    ? {
+        url: bestPhoto.imageUrl,
+        sceneDescription: bestPhoto.sceneDescription || 'Your photograph',
+        overallAverage: bestPhoto.overallAverage,
+        glassBoxSummary: bestPhoto.glassBoxSummary?.[0] || '',
+      }
+    : EXAMPLE_PHOTO;
 
   return (
-    <div className="animate-fadeIn space-y-5 max-w-2xl">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-400/90 mb-1">
-            {BRAND.name}
-          </p>
-          <h1 className="font-serif text-2xl md:text-3xl font-medium text-white">Your studio</h1>
-          <p className="text-muted text-sm mt-2 leading-relaxed">
-            {photoCount > 0
-              ? `${photoCount} photo${photoCount === 1 ? '' : 's'} in your library`
-              : 'Upload your first photo to get started'}
-            {consistency ? ` · ${consistency}` : ''}
-          </p>
-          <p className="text-muted/80 text-xs mt-2 leading-relaxed">
-            Built for photographers who want memory, not another chatbot.
-          </p>
+    <div className="animate-fadeIn max-w-5xl mx-auto space-y-8">
+      {/* Hero Photo with Glass Box overlay */}
+      <div className="relative rounded-2xl overflow-hidden border border-warm bg-photo-black shadow-2xl shadow-black/50">
+        <div className="relative aspect-[16/10] md:aspect-[2/1] lg:aspect-[21/9]">
+          {/* Loading placeholder */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-surface-2 animate-pulse flex items-center justify-center">
+              <ImageIcon className="w-12 h-12 text-stone-600" />
+            </div>
+          )}
+
+          {/* Hero image */}
+          <img
+            src={displayPhoto.url}
+            alt={displayPhoto.sceneDescription}
+            className={`w-full h-full object-cover transition-opacity duration-500 ${
+              imageLoaded ? 'opacity-100' : 'opacity-0'
+            }`}
+            onLoad={() => setImageLoaded(true)}
+          />
+
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none" />
+
+          {/* Glass Box panel */}
+          <div className="absolute bottom-4 left-4 right-4 md:right-auto md:max-w-md">
+            <div className="rounded-xl bg-canvas/90 backdrop-blur-md border border-warm/50 p-4 shadow-xl">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-brand-500/15 border border-brand-500/30">
+                  <Sparkles className="w-4 h-4 text-brand-400" aria-hidden />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-white">
+                    {isReturningUser ? 'Your strongest work' : 'Glass Box critique'}
+                  </p>
+                  <p className="text-[10px] text-muted">
+                    {isReturningUser
+                      ? `From ${photoCount} photo${photoCount === 1 ? '' : 's'} in your library`
+                      : 'This is what Iris sees'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/90 shadow-md">
+                  <span className="text-sm font-bold text-on-brand tabular-nums">
+                    {displayPhoto.overallAverage.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+              {displayPhoto.glassBoxSummary && (
+                <p className="text-sm text-stone-300 leading-relaxed line-clamp-2">
+                  {displayPhoto.glassBoxSummary}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
-        <button
-          type="button"
-          onClick={onOpenSettings}
-          className="p-2 rounded-lg border border-warm text-muted hover:text-white hover:bg-surface-2"
-          aria-label="Settings"
-        >
-          <Settings className="w-5 h-5" />
-        </button>
       </div>
 
-      {mode === 'hobbyist' && (
-        <HomeCard
-          icon={Store}
-          title="Selling prints? (Working pro)"
-          description="Switch to Working pro in Settings to draft Etsy-style listings from your portfolio — each one needs your approval."
-          cta="Open Settings"
-          onClick={onOpenSettings}
-        />
-      )}
+      {/* Context pills: Progress + Assignment */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        {/* Progress pill */}
+        <div className="rounded-xl border border-warm bg-surface-1 p-4 flex items-center gap-4">
+          <div className="p-2.5 rounded-lg bg-brand-500/15 border border-brand-500/30 shrink-0">
+            <TrendingUp className="w-5 h-5 text-brand-400" aria-hidden />
+          </div>
+          <div className="flex-1 min-w-0">
+            {trendPercent !== null && trendLabel ? (
+              <>
+                <p className="text-sm font-semibold text-white">
+                  {trendLabel} {trendPercent >= 0 ? '+' : ''}{trendPercent}%
+                </p>
+                <p className="text-xs text-muted">this month</p>
+              </>
+            ) : photoCount > 0 ? (
+              <>
+                <p className="text-sm font-semibold text-white">{photoCount} photos</p>
+                <p className="text-xs text-muted">in your library</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-white">Track your growth</p>
+                <p className="text-xs text-muted">Upload photos to see trends</p>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('work')}
+            className="text-xs text-brand-400 hover:text-brand-300 font-medium shrink-0"
+          >
+            View all →
+          </button>
+        </div>
 
-      {mode === 'working_pro' && (
-        <HomeCard
-          icon={Store}
-          title="Listings to approve"
-          badge={pendingListings > 0 ? pendingListings : undefined}
-          description={
-            pendingListings > 0
-              ? `I drafted ${pendingListings} marketplace listing${pendingListings === 1 ? '' : 's'} for your review.`
-              : 'Draft listing proposals from your portfolio when you are ready.'
-          }
-          cta={pendingListings > 0 ? 'Review now' : 'Draft proposals'}
-          onClick={() => onNavigate('print')}
-          highlight
-        />
-      )}
+        {/* Assignment pill */}
+        <div
+          className={`rounded-xl border p-4 flex items-center gap-4 ${
+            activeAssignment
+              ? 'border-brand-500/40 bg-brand-500/10'
+              : 'border-warm bg-surface-1'
+          }`}
+        >
+          <div
+            className={`p-2.5 rounded-lg shrink-0 ${
+              activeAssignment
+                ? 'bg-brand-500/20 border border-brand-500/40'
+                : 'bg-surface-2 border border-warm'
+            }`}
+          >
+            <Target
+              className={`w-5 h-5 ${activeAssignment ? 'text-brand-400' : 'text-muted'}`}
+              aria-hidden
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            {activeAssignment ? (
+              <>
+                <p className="text-sm font-semibold text-white truncate">
+                  {activeAssignment.title || 'Active Challenge'}
+                </p>
+                <p className="text-xs text-muted truncate">{activeAssignment.brief}</p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-semibold text-white">Start a challenge</p>
+                <p className="text-xs text-muted">Practice with focused assignments</p>
+              </>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => onNavigate('practice')}
+            className={`text-xs font-medium shrink-0 ${
+              activeAssignment
+                ? 'text-brand-400 hover:text-brand-300'
+                : 'text-muted hover:text-white'
+            }`}
+          >
+            {activeAssignment ? 'Continue →' : 'Browse →'}
+          </button>
+        </div>
+      </div>
 
-      {activeAssignment ? (
-        <HomeCard
-          icon={Focus}
-          title="Continue practice"
-          description={activeAssignment.brief}
-          cta="Open assignment"
-          onClick={() => onNavigate('practice')}
-          highlight={mode === 'hobbyist'}
-        />
-      ) : (
-        <HomeCard
-          icon={Focus}
-          title={mode === 'hobbyist' ? 'Start practice' : 'Improve consistency'}
-          description="I'll suggest a focused assignment based on your recent critiques."
-          cta="My Practice"
-          onClick={() => onNavigate('practice')}
-          highlight={mode === 'hobbyist'}
-        />
-      )}
-
-      <HomeCard
-          icon={Aperture}
-          title="Critique a photo"
-        description="Upload for scores and Glass Box reasoning — saved to My Work."
-        cta="My Studio"
-        onClick={() => onNavigate('work')}
-      />
-
-      <HomeCard
-          icon={LayoutGrid}
-          title={mode === 'working_pro' ? 'Portfolio analytics' : 'Your progress'}
-        description={
-          profile && profile.dominantTags.length > 0
-            ? `Dominant themes: ${profile.dominantTags.slice(0, 3).join(', ').replace(/_/g, ' ')}`
-            : 'See scores and tags across everything you have uploaded.'
-        }
-        cta="My Work"
-        onClick={() => onNavigate('work')}
-      />
-
-      <HomeCard
-        icon={Layers}
-        title="Label photos"
-        badge={pendingLabels > 0 ? pendingLabels : undefined}
-        description={
-          pendingLabels > 0
-            ? 'I grouped similar shots — approve labels before they apply.'
-            : 'Scan your library for consistent tags across shoots.'
-        }
-        cta={pendingLabels > 0 ? 'Review suggestions' : 'Scan library'}
-        onClick={() => onNavigate('mentor')}
-      />
-
-      <HomeCard
-        icon={MessageCircle}
-        title={BRAND.mentorLabel}
-        description="Ask how you are improving, what to practice next, or what stands out in your work."
-        cta="Open chat"
-        onClick={() => onNavigate('mentor')}
-      />
-
-      <div className="flex flex-wrap gap-3 text-sm pt-2">
+      {/* Primary CTAs */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
         <button
           type="button"
-          onClick={() => onNavigate('practice')}
-          className="text-brand-400 hover:text-brand-300 font-medium"
+          onClick={() => onNavigate('work')}
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-brand-500 text-on-brand font-semibold text-sm hover:bg-brand-400 transition-colors shadow-lg shadow-brand-500/20 active:scale-[0.98]"
         >
-          Shoot Now →
+          <Plus className="w-4 h-4" aria-hidden />
+          Upload New Photo
         </button>
+        {activeAssignment && (
+          <button
+            type="button"
+            onClick={() => onNavigate('practice')}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-full border border-brand-500/50 text-brand-400 font-semibold text-sm hover:bg-brand-500/10 transition-colors"
+          >
+            <Camera className="w-4 h-4" aria-hidden />
+            Shoot Now
+          </button>
+        )}
       </div>
+
+      {/* Recent Work strip */}
+      {recentPhotos.length > 0 && (
+        <section className="pt-4">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold text-white uppercase tracking-wide">
+              Recent Work
+            </h3>
+            <button
+              type="button"
+              onClick={() => onNavigate('work')}
+              className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+            >
+              See all →
+            </button>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {recentPhotos.map((photo) => (
+              <button
+                key={photo.id}
+                type="button"
+                onClick={() => onNavigate('work')}
+                className="shrink-0 w-32 md:w-40 group"
+              >
+                <div className="aspect-[4/3] rounded-lg overflow-hidden bg-photo-black border border-warm relative">
+                  {photo.imageUrl ? (
+                    <img
+                      src={photo.imageUrl}
+                      alt={photo.sceneDescription?.slice(0, 60) || 'Photo'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-stone-600" />
+                    </div>
+                  )}
+                  <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-amber-500/90 text-[10px] font-bold text-on-brand tabular-nums shadow">
+                    {photo.overallAverage.toFixed(1)}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Mentor insight */}
+      {profile && photoCount >= 3 && (
+        <section className="rounded-xl border border-warm bg-surface-1 p-5">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-brand-500/15 border border-brand-500/30 shrink-0 mt-0.5">
+              <Sparkles className="w-4 h-4 text-brand-400" aria-hidden />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-semibold text-brand-400 uppercase tracking-wider mb-1">
+                Your Mentor
+              </p>
+              <p className="text-sm text-stone-300 leading-relaxed">
+                {profile.dominantTags.length > 0
+                  ? `I notice you're drawn to ${profile.dominantTags.slice(0, 2).join(' and ').replace(/_/g, ' ')} work. ${
+                      trendPercent && trendPercent > 0
+                        ? `Your ${trendLabel?.toLowerCase()} has improved ${trendPercent}% recently.`
+                        : 'Keep uploading to track your growth over time.'
+                    }`
+                  : 'Keep uploading photos and I\'ll help you understand your aesthetic and track your progress.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigate('mentor')}
+                className="inline-flex items-center gap-1 text-sm text-brand-400 hover:text-brand-300 font-medium mt-3"
+              >
+                Ask me anything
+                <ArrowRight className="w-3.5 h-3.5" aria-hidden />
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Empty state for new users */}
+      {!isReturningUser && (
+        <section className="text-center py-8">
+          <p className="text-muted text-sm mb-4">
+            This is what Iris sees in a photo. Upload yours to get started.
+          </p>
+          <button
+            type="button"
+            onClick={() => onNavigate('work')}
+            className="inline-flex items-center gap-2 text-brand-400 hover:text-brand-300 font-medium text-sm"
+          >
+            Upload your first photo
+            <ArrowRight className="w-4 h-4" aria-hidden />
+          </button>
+        </section>
+      )}
     </div>
   );
 };
-
-function HomeCard({
-  icon: Icon,
-  title,
-  description,
-  cta,
-  badge,
-  onClick,
-  highlight,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-  description: string;
-  cta: string;
-  badge?: number;
-  onClick: () => void;
-  highlight?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full text-left rounded-2xl border p-5 transition-all ${
-        highlight
-          ? 'border-brand-500/40 bg-brand-500/8 hover:bg-brand-500/12 shadow-md shadow-black/20'
-          : 'border-warm bg-surface-1 hover:bg-surface-2 shadow-sm shadow-black/10'
-      }`}
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <div className="flex items-center gap-2">
-          <Icon className="w-5 h-5 text-brand-400 shrink-0" />
-          <h2 className="text-base font-bold text-white">{title}</h2>
-        </div>
-        {badge != null && badge > 0 && (
-          <span className="shrink-0 min-w-[1.25rem] h-5 px-1.5 rounded-full bg-brand-500 text-on-brand text-xs font-bold flex items-center justify-center">
-            {badge}
-          </span>
-        )}
-      </div>
-      <p className="text-sm text-muted leading-relaxed mb-3">{description}</p>
-      <span className="text-sm font-semibold text-brand-400">{cta} →</span>
-    </button>
-  );
-}
