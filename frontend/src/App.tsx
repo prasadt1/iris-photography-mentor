@@ -156,6 +156,7 @@ function App() {
               activeAssignment={activeAssignment}
               onAssignmentComplete={refreshActiveAssignment}
               onGoHome={() => navigate('home')}
+              onGoToPractice={() => navigate('practice')}
               pendingAnalysis={pendingAnalysis}
               onClearPendingAnalysis={() => setPendingAnalysis(null)}
             />

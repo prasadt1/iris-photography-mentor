@@ -10,7 +10,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { ArrowLeft, ChevronDown, ChevronLeft, ImageIcon, Plus, RefreshCw, Sparkles, TrendingUp } from 'lucide-react';
 import { FilmGrain } from './FilmGrain';
+import { FocusAreas } from './FocusAreas';
 import { TabEmptyState } from './TabEmptyState';
+import { getScoreContext } from '../lib/scoreContext';
 import { apiUnreachableMessage } from '../lib/apiHelp';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { MemoryGridSkeleton } from './SkeletonBlocks';
@@ -49,6 +51,7 @@ interface MyWorkTabProps {
   activeAssignment?: Assignment | null;
   onAssignmentComplete?: () => void;
   onGoHome?: () => void;
+  onGoToPractice?: () => void;
   /** Analysis result from Home upload to show immediately */
   pendingAnalysis?: PendingAnalysis | null;
   onClearPendingAnalysis?: () => void;
@@ -60,6 +63,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   activeAssignment,
   onAssignmentComplete,
   onGoHome,
+  onGoToPractice,
   pendingAnalysis,
   onClearPendingAnalysis,
 }) => {
@@ -361,14 +365,20 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
               </div>
             )}
 
-            {/* Score breakdown */}
+            {/* Score breakdown with context */}
             <div className="grid grid-cols-5 gap-2 text-center">
               {SCORE_LABELS.map(({ key, label }) => {
                 const val = profile.averageScores[key];
+                const ctx = val != null ? getScoreContext(val) : null;
                 return (
                   <div key={key} className="space-y-1">
                     <p className="text-[9px] text-muted uppercase truncate">{label}</p>
-                    <p className="text-sm font-bold text-amber-400">{val?.toFixed(1) ?? '—'}</p>
+                    <p className={`text-sm font-bold ${ctx?.color ?? 'text-muted'}`}>
+                      {val?.toFixed(1) ?? '—'}
+                    </p>
+                    {ctx && (
+                      <p className="text-[9px] text-muted">{ctx.label}</p>
+                    )}
                   </div>
                 );
               })}
@@ -395,6 +405,12 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
                 </div>
               </div>
             )}
+
+            {/* Focus Area with actionable tips */}
+            <FocusAreas
+              scores={profile.averageScores}
+              onStartPractice={onGoToPractice}
+            />
           </div>
         </details>
       )}
