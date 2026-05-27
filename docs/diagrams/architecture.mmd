@@ -1,0 +1,56 @@
+%% Iris System Architecture
+%% Render with: https://mermaid.live or mmdc CLI
+
+flowchart TB
+    subgraph Client["Client Layer"]
+        WEB[React/Vite Web App]
+        IOS[iOS App - SwiftUI]
+    end
+
+    subgraph API["API Layer"]
+        FASTAPI[FastAPI on Cloud Run]
+    end
+
+    subgraph Agents["Agent Layer - Google ADK"]
+        ORCH[Orchestrator]
+        COACH[Coach Agent]
+        PLANNER[Planner Agent]
+        FIELD[Field Coach]
+        TRIAGE[Triage Agent]
+        PRINT[Print Sales Agent]
+        MENTOR[Mentor Agent]
+    end
+
+    subgraph AI["AI Services"]
+        GEMINI[Gemini 3 Pro]
+        AGENTBUILDER[Agent Builder Data Store]
+    end
+
+    subgraph Storage["Data Layer"]
+        MONGO[(MongoDB Atlas)]
+        GCS[(Google Cloud Storage)]
+    end
+
+    subgraph Auth["Auth"]
+        FIREBASE[Firebase Auth]
+    end
+
+    WEB --> FASTAPI
+    IOS -.->|Phase 1+| FASTAPI
+    FASTAPI --> ORCH
+    ORCH --> COACH
+    ORCH --> PLANNER
+    ORCH --> FIELD
+    ORCH --> TRIAGE
+    ORCH --> PRINT
+    ORCH --> MENTOR
+    COACH --> GEMINI
+    COACH --> AGENTBUILDER
+    COACH --> MONGO
+    FASTAPI --> GCS
+    WEB --> FIREBASE
+    IOS -.-> FIREBASE
+
+    style MONGO fill:#47A248,color:#fff
+    style GEMINI fill:#8E75B2,color:#fff
+    style GCS fill:#4285F4,color:#fff

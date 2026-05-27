@@ -1,0 +1,51 @@
+%% iOS App Architecture
+flowchart TB
+    subgraph App["iOS App (SwiftUI)"]
+        ENTRY[IrisApp Entry]
+        NAV[ContentView - Tab Navigation]
+
+        subgraph Features["Feature Modules"]
+            FIELD[FieldView - Camera]
+            PRACTICE[PracticeView - Assignments]
+            MENTOR[MentorView - Chat]
+            SETTINGS[SettingsView - Profile]
+        end
+
+        subgraph Core["Core Layer"]
+            AUTH[AuthViewModel]
+            API[APIClient]
+            STATE[AppState]
+            CONFIG[AppConfig]
+        end
+
+        subgraph Design["Design System"]
+            COLORS[IrisColors]
+        end
+    end
+
+    subgraph Backend["Backend (Cloud Run)"]
+        FASTAPI[FastAPI]
+    end
+
+    subgraph Auth["Firebase"]
+        FIREBASE[Firebase Auth]
+    end
+
+    ENTRY --> NAV
+    NAV --> FIELD
+    NAV --> PRACTICE
+    NAV --> MENTOR
+    NAV --> SETTINGS
+
+    FIELD --> API
+    PRACTICE --> API
+    MENTOR --> API
+    SETTINGS --> AUTH
+
+    AUTH --> FIREBASE
+    API --> FASTAPI
+    API --> AUTH
+
+    style FIELD fill:#fbbf24,color:#1a1816
+    style PRACTICE fill:#47A248,color:#fff
+    style MENTOR fill:#8E75B2,color:#fff

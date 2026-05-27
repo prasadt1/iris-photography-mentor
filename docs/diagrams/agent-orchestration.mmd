@@ -1,0 +1,19 @@
+%% Agent Orchestration Flow
+flowchart TD
+    REQ[Request] --> ORCH{Orchestrator}
+
+    ORCH -->|analyze_photo| COACH[Coach]
+    ORCH -->|propose_assignment| PLANNER[Planner]
+    ORCH -->|field_capture| FIELD[Field Coach]
+    ORCH -->|triage| TRIAGE[Triage]
+    ORCH -->|draft_listing| PRINT[Print Sales]
+    ORCH -->|chat| MENTOR[Mentor]
+
+    FIELD --> PERSONA{Persona?}
+    PERSONA -->|sighted| VISUAL[Visual Tools]
+    PERSONA -->|vi| VOICE[Voice/Haptic Tools]
+
+    TRIAGE --> PRO{Pro Only}
+    PRINT --> PRO2{Pro Only}
+
+    style ORCH fill:#fbbf24,color:#1a1816

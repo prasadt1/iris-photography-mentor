@@ -1,0 +1,23 @@
+%% Photo Upload Data Flow
+sequenceDiagram
+    participant U as User
+    participant UI as React UI
+    participant API as FastAPI
+    participant GCS as Cloud Storage
+    participant Coach as Coach Agent
+    participant Gemini as Gemini 3
+    participant Mongo as MongoDB
+
+    U->>UI: Select photo
+    UI->>API: POST /analyze-photo
+    API->>GCS: Upload image
+    GCS-->>API: Signed URL
+    API->>Coach: Analyze (URL, context)
+    Coach->>Mongo: Fetch portfolio history
+    Mongo-->>Coach: Recent entries
+    Coach->>Gemini: Multimodal analysis
+    Gemini-->>Coach: Scores, observations
+    Coach->>Mongo: Write portfolio_entry
+    Coach-->>API: Glass Box result
+    API-->>UI: Critique response
+    UI-->>U: Display scores + reasoning
