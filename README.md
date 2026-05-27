@@ -14,7 +14,7 @@
 
 > *"Your composition has improved 23% since you started. You've mastered leading lines. Let's work on backlighting next."*
 
-Built with **Gemini 3**, **Google ADK**, **MongoDB Atlas**, and **Firebase** for the [Google Cloud Rapid Agent Hackathon](https://googlecloudrapidagents2026.devpost.com/).
+Built with **Gemini 3.1 Pro**, **Google ADK**, **MongoDB Atlas**, and **Firebase** for the [Google Cloud Rapid Agent Hackathon](https://googlecloudrapidagents2026.devpost.com/).
 
 ---
 
@@ -43,10 +43,11 @@ Iris and Aftershoot coexist: Aftershoot for the cull-and-deliver pipeline, Iris 
 
 | Surface | URL |
 |---------|-----|
-| **Web App** | [iris-photo.web.app](https://iris-photo.web.app) |
-| **API Health** | `GET /health` returns `{"status": "ok"}` |
+| **Web App** | [practice-companion-hackathon.web.app](https://practice-companion-hackathon.web.app) |
+| **API** | [practice-companion-api-l6kusl5xcq-uc.a.run.app](https://practice-companion-api-l6kusl5xcq-uc.a.run.app) |
+| **Health** | `GET /health` → `status`, `phase`, feature flags (`orchestratorChat`, `triageHitl`, `printSalesHitl`) |
 
-**Test flow:** Upload a photo → see Glass Box critique → accept a practice assignment → complete it → watch your scores trend upward over time.
+**Test flow:** Home or **My Work (Studio)** → upload a photo → Glass Box critique → **Practice** → accept an assignment → shoot via **Field** (browser camera) or Studio → complete assignment → **My Work** trends / focus areas. **Mentor** chat uses the ADK orchestrator; critique upload uses the Coach pipeline over REST.
 
 ---
 
@@ -63,14 +64,16 @@ flowchart TB
         FASTAPI[FastAPI on Cloud Run]
     end
 
-    subgraph Agents["Agent Layer - Google ADK"]
+    subgraph Agents["Agent Layer - Google ADK (9 LlmAgents)"]
         ORCH[Orchestrator]
-        COACH[Coach Agent]
-        PLANNER[Planner Agent]
+        COACH[Coach]
+        MENTOR[Mentor]
+        PLANNER[Planner]
+        REFL[Reflection]
         FIELD[Field Coach]
-        TRIAGE[Triage Agent]
-        PRINT[Print Sales Agent]
-        MENTOR[Mentor Agent]
+        TRIAGE[Triage]
+        PRINT[Print Sales]
+        VD[Visual Describer]
     end
 
     subgraph AI["AI Services"]
@@ -91,17 +94,19 @@ flowchart TB
     IOS -.->|Phase 1+| FASTAPI
     FASTAPI --> ORCH
     ORCH --> COACH
+    ORCH --> MENTOR
     ORCH --> PLANNER
+    ORCH --> REFL
     ORCH --> FIELD
     ORCH --> TRIAGE
     ORCH --> PRINT
-    ORCH --> MENTOR
+    ORCH --> VD
     COACH --> GEMINI
     COACH --> AGENTBUILDER
     COACH --> MONGO
     FASTAPI --> GCS
     WEB --> FIREBASE
-    IOS -.-> FIREBASE
+    IOS -.->|optional| FIREBASE
 
     style MONGO fill:#47A248,color:#fff
     style GEMINI fill:#8E75B2,color:#fff
@@ -113,6 +118,8 @@ flowchart TB
 - MCP Server for agent reads, PyMongo for writes
 - Persona-based tool filtering (VI users get haptics, not visual overlays)
 - Human-in-the-loop for all portfolio mutations
+
+**Production paths:** Web photo critique (`POST /api/v1/analyze-photo`) runs the **Coach pipeline** (Gemini + grounding + GCS + MongoDB). Mentor chat (`POST /api/v1/agent/chat`) runs the **ADK orchestrator** with persona-filtered sub-agents. Triage and Print Sales scans use dedicated REST handlers that invoke their agent logic and HITL queues.
 
 See [`docs/architecture.md`](docs/architecture.md) for detailed component documentation.
 
@@ -128,7 +135,8 @@ See [`docs/architecture.md`](docs/architecture.md) for detailed component docume
 | **Portfolio Memory** | Every photo saved, searchable, never forgotten |
 | **Practice Assignments** | AI proposes challenges targeting your weak areas |
 | **Progress Tracking** | Score trends, focus areas, skill deltas over time |
-| **Mentor Chat** | Ask questions, get portfolio-aware answers |
+| **Mentor Chat** | Ask questions, get portfolio-aware answers (ADK orchestrator) |
+| **XMP Export** | Download Lightroom sidecar from Studio results |
 
 ### Working Professional
 
@@ -204,11 +212,11 @@ sequenceDiagram
     participant API as FastAPI
     participant GCS as Cloud Storage
     participant Coach as Coach Agent
-    participant Gemini as Gemini 3
+    participant Gemini as Gemini 3.1 Pro
     participant Mongo as MongoDB
 
     U->>UI: Select photo
-    UI->>API: POST /analyze-photo
+    UI->>API: POST /api/v1/analyze-photo
     API->>GCS: Upload image
     GCS-->>API: Signed URL
     API->>Coach: Analyze (image URL, user context)
@@ -228,15 +236,15 @@ sequenceDiagram
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
-| **Frontend** | React 18, Vite, Tailwind CSS | Web application |
+| **Frontend** | React 19, Vite, Tailwind CSS | Web application |
 | **iOS** | SwiftUI, AVFoundation | Native camera + live coaching (in development) |
 | **API** | FastAPI, Python 3.11 | REST endpoints |
 | **Agents** | Google ADK, Vertex AI | Agent orchestration |
-| **LLM** | Gemini 3 Pro | Multimodal reasoning |
+| **LLM** | Gemini 3.1 Pro (Vertex AI) | Multimodal reasoning |
 | **Grounding** | Agent Builder Data Store | Photography principles |
 | **Database** | MongoDB Atlas (Flex) | Portfolio, users, assignments |
 | **Images** | Google Cloud Storage | Photo storage |
-| **Auth** | Firebase Authentication | Google sign-in |
+| **Auth** | Firebase Authentication (optional) | Google sign-in when `VITE_FIREBASE_*` is set; otherwise demo `X-User-Id` scope |
 | **Hosting** | Firebase Hosting | Web app CDN |
 | **API Hosting** | Cloud Run | Serverless API |
 
@@ -261,7 +269,7 @@ cd photography-practice-companion
 
 # Environment
 cp .env.example .env
-# Fill in: MONGO_URI, GCP_PROJECT, GEMINI_MODEL, etc.
+# Fill in: MONGODB_URI, GOOGLE_CLOUD_PROJECT, GEMINI_MODEL, etc.
 
 # MongoDB
 python3 scripts/bootstrap-mongodb.py
@@ -284,8 +292,8 @@ make playground       # ADK UI on :8080
 # Deploy API to Cloud Run
 make deploy-api
 
-# Deploy frontend to Firebase
-cd frontend && npm run build && firebase deploy
+# Deploy frontend (embeds API URL in build)
+API_URL=https://YOUR-CLOUD-RUN-URL make deploy-hosting
 ```
 
 See [`docs/deploy.md`](docs/deploy.md) for detailed deployment instructions.
@@ -333,13 +341,13 @@ See [`docs/deploy.md`](docs/deploy.md) for detailed deployment instructions.
 
 ### In Progress
 
-- [ ] **iOS App Phase 0** — Foundation, auth, Practice tab
-- [ ] **iOS App Phase 1** — Capture-then-analyze (parity with web Field)
+- [x] **iOS Phase 0** — Tab shell, API client, Practice list, Field placeholder ([`ios/README.md`](ios/README.md))
+- [ ] **iOS Phase 1** — AVFoundation capture → `POST /api/v1/analyze-photo` (web Field parity)
 
 ### Planned
 
-- [ ] **iOS Phase 2** — Backend live coaching API
-- [ ] **iOS Phase 3** — Real-time viewfinder coaching
+- [ ] **iOS Phase 2** — Backend `field_capture` + `capture_sessions`
+- [ ] **iOS Phase 3** — Live Field Coach (SSE / periodic frames)
 - [ ] **iOS Phase 4** — Vision impairment: voice + haptics
 - [ ] **Offline mode** — Queue uploads, coaching paused UX
 - [ ] **Apple Watch** — Assignment notifications
