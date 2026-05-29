@@ -47,6 +47,9 @@ struct MentorView: View {
                 chatStore.load(forUserId: auth.userId)
                 await loadStarters()
             }
+            .task(id: auth.persona) {
+                await loadStarters()
+            }
         }
     }
 
@@ -57,7 +60,7 @@ struct MentorView: View {
                     Text("Ask Mentor")
                         .font(IrisFont.serif(26))
                         .foregroundStyle(Color.irisTextPrimary)
-                    Text("Portfolio-aware chat — Iris remembers your work.")
+                    Text("Portfolio-aware chat — tuned for \(auth.personaLabel.lowercased()) goals.")
                         .font(IrisFont.sans(14))
                         .foregroundStyle(Color.irisTextMuted)
                 }
@@ -97,9 +100,16 @@ struct MentorView: View {
                         HStack(spacing: 8) {
                             ProgressView()
                                 .tint(Color.irisBrandLight)
-                            Text("Mentor is thinking…")
-                                .font(IrisFont.sans(13))
-                                .foregroundStyle(Color.irisTextMuted)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Mentor is thinking…")
+                                    .font(IrisFont.sans(13))
+                                    .foregroundStyle(Color.irisTextMuted)
+                                Text(auth.isWorkingPro
+                                    ? "Often 60–90 seconds when digging through your library."
+                                    : "Usually 30–60 seconds when digging through your library.")
+                                    .font(IrisFont.sans(11))
+                                    .foregroundStyle(Color.irisTextMuted.opacity(0.85))
+                            }
                         }
                         .padding(.vertical, 8)
                     }

@@ -27,9 +27,14 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(Color.irisCanvas, for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
-            .task(id: auth.userId) { await load() }
-            .task(id: appState.portfolioRevision) { await load() }
-            .refreshable { await load() }
+            .task(id: auth.userId) { await load(force: false) }
+            .task(id: appState.portfolioRevision) {
+                await load(force: true)
+            }
+            .onAppear {
+                Task { await load(force: true) }
+            }
+            .refreshable { await load(force: true) }
             .sheet(item: $selectedEntry) { entry in
                 HomePhotoDetailSheet(entry: entry)
             }
@@ -53,7 +58,7 @@ struct HomeView: View {
                 .foregroundStyle(Color.irisTextMuted)
                 .multilineTextAlignment(.center)
             IrisSecondaryButton(title: "Retry", icon: "arrow.clockwise") {
-                Task { await load() }
+                Task { await load(force: true) }
             }
             emptyFirstShotCard
         }
@@ -80,12 +85,52 @@ struct HomeView: View {
         }
     }
 
+    @ViewBuilder
+    private var openWebWorkLink: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(webPortfolioFootnote)
+                .font(IrisFont.sans(12))
+                .foregroundStyle(Color.irisTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            if auth.isWorkingPro {
+                webLinkRow(title: "My Work on web", url: AppConfig.webWorkURL)
+                webLinkRow(title: "Print Sales on web", url: AppConfig.webPrintURL)
+            } else {
+                webLinkRow(title: "Full portfolio on web", url: AppConfig.webWorkURL)
+            }
+        }
+    }
+
+    private var webPortfolioFootnote: String {
+        if auth.isDemoMode {
+            return "Safari opens a separate session. Complete the welcome once, or sign in with Google on both app and web to share one library."
+        }
+        return "Use the same Google account on web to see these shots in My Work without signing in again."
+    }
+
+    private func webLinkRow(title: String, url: URL) -> some View {
+        Link(destination: url) {
+            HStack {
+                Text(title)
+                    .font(IrisFont.sans(13, weight: .medium))
+                Spacer()
+                Image(systemName: "arrow.up.right")
+            }
+            .foregroundStyle(Color.irisBrandLight)
+            .padding(14)
+            .background(Color.irisSurface2)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
+
     private var header: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Home")
                 .font(IrisFont.serif(28))
                 .foregroundStyle(Color.irisTextPrimary)
-            Text("Memory makes meaning — Iris remembers every frame.")
+            Text(auth.isWorkingPro
+                ? "Field companion for working pros — shoot here, manage listings on Studio."
+                : "Memory makes meaning — Iris remembers every frame.")
                 .font(IrisFont.sans(14))
                 .foregroundStyle(Color.irisTextMuted)
                 .lineSpacing(2)
@@ -172,7 +217,13 @@ struct HomeView: View {
 
     private var recentPhotosSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            IrisSectionLabel(text: "Recent photos")
+            HStack {
+                IrisSectionLabel(text: "Recent photos")
+                Spacer()
+                Text("Pull to refresh")
+                    .font(IrisFont.sans(11))
+                    .foregroundStyle(Color.irisTextMuted)
+            }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(entries) { entry in
@@ -235,25 +286,14 @@ struct HomeView: View {
         .irisCard()
     }
 
-    private var openWebWorkLink: some View {
-        Link(destination: AppConfig.webAppURL) {
-            HStack {
-                Text("Full portfolio on web")
-                    .font(IrisFont.sans(13, weight: .medium))
-                Spacer()
-                Image(systemName: "arrow.up.right")
-            }
-            .foregroundStyle(Color.irisBrandLight)
-            .padding(14)
-            .background(Color.irisSurface2)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    private func load(force: Bool) async {
+        if !force {
+            loading = entries.isEmpty
         }
-    }
-
-    private func load() async {
-        loading = entries.isEmpty
         errorMessage = nil
         defer { loading = false }
+
+        applyPendingToEntries()
 
         APIClient.shared.userId = auth.userId.isEmpty ? nil : auth.userId
         do {
@@ -261,12 +301,24 @@ struct HomeView: View {
             async let trendData = memory.fetchTrends(limit: 12)
             try? await appState.refreshAssignmentsSnapshot()
             let (p, t) = try await (portfolio, trendData)
-            entries = p.entries
+            entries = PortfolioMerge.recentEntries(
+                fetched: p.entries,
+                pending: appState.pendingRecentPortfolioItem
+            )
+            appState.clearPendingRecentIfMatched(fetchedEntries: p.entries)
             trends = t
         } catch is CancellationError {
-            return
+            if force {
+                applyPendingToEntries()
+            }
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func applyPendingToEntries() {
+        if let pending = appState.pendingRecentPortfolioItem {
+            entries = PortfolioMerge.recentEntries(fetched: entries, pending: pending)
         }
     }
 }

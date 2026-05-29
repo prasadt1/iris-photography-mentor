@@ -21,11 +21,15 @@ final class CameraSessionModel: NSObject, ObservableObject {
     @Published private(set) var isConfigured = false
     @Published private(set) var isRunning = false
     @Published private(set) var permissionDenied = false
+    @Published private(set) var zoomFactor: CGFloat = 1
+    @Published private(set) var minZoomFactor: CGFloat = 1
+    @Published private(set) var maxZoomFactor: CGFloat = 1
     @Published var errorMessage: String?
 
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "iris.camera.session")
+    private var captureDevice: AVCaptureDevice?
     private var captureContinuation: CheckedContinuation<Data, Error>?
 
     static var isSimulator: Bool {
@@ -34,6 +38,10 @@ final class CameraSessionModel: NSObject, ObservableObject {
         #else
         false
         #endif
+    }
+
+    var zoomLabel: String {
+        String(format: "%.1f×", zoomFactor)
     }
 
     func prepare() async {
@@ -76,6 +84,35 @@ final class CameraSessionModel: NSObject, ObservableObject {
         }
     }
 
+    /// Pinch-to-zoom target (1× = widest). Captured JPEG uses this zoom level.
+    func setZoomFactor(_ factor: CGFloat, animated: Bool = false) {
+        guard isConfigured, let device = captureDevice else { return }
+        let clamped = min(max(factor, minZoomFactor), maxZoomFactor)
+        sessionQueue.async { [weak self] in
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+                if animated {
+                    device.ramp(toVideoZoomFactor: clamped, withRate: 8)
+                } else {
+                    device.videoZoomFactor = clamped
+                }
+                let applied = device.videoZoomFactor
+                Task { @MainActor in
+                    self?.zoomFactor = applied
+                }
+            } catch {
+                Task { @MainActor in
+                    self?.errorMessage = "Could not adjust zoom."
+                }
+            }
+        }
+    }
+
+    func resetZoom() {
+        setZoomFactor(minZoomFactor, animated: true)
+    }
+
     func captureJPEG() async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             sessionQueue.async { [weak self] in
@@ -106,6 +143,13 @@ final class CameraSessionModel: NSObject, ObservableObject {
                     self.session.commitConfiguration()
                     Task { @MainActor in
                         self.isConfigured = self.session.inputs.isEmpty == false
+                        if let device = self.captureDevice {
+                            let minZ = device.minAvailableVideoZoomFactor
+                            let maxZ = device.maxAvailableVideoZoomFactor
+                            self.minZoomFactor = minZ
+                            self.maxZoomFactor = max(minZ, min(maxZ, 5))
+                            self.zoomFactor = device.videoZoomFactor
+                        }
                         done.resume()
                     }
                 }
@@ -120,6 +164,7 @@ final class CameraSessionModel: NSObject, ObservableObject {
                     }
                     return
                 }
+                self.captureDevice = device
                 self.session.addInput(input)
 
                 guard self.session.canAddOutput(self.photoOutput) else { return }

@@ -109,13 +109,15 @@ def _to_api_payload(
     entry_id: ObjectId,
     output: CoachAnalysisOutput,
     citations: list[GroundingCitation],
+    *,
+    image_url: str | None = None,
 ) -> dict[str, Any]:
     sm = output.spatial_metadata
     if output.bounding_boxes and not sm.annotations:
         sm.annotations = _annotations_from_boxes(output.bounding_boxes)
 
     se = output.settings_estimate
-    return {
+    payload: dict[str, Any] = {
         "portfolioEntryId": str(entry_id),
         "sceneDescription": output.scene_description,
         "colourNotes": output.colour_notes,
@@ -151,6 +153,11 @@ def _to_api_payload(
         },
         "aestheticTags": output.aesthetic_tags,
     }
+    if image_url:
+        from memory.portfolio import _image_url_for_client
+
+        payload["imageUrl"] = _image_url_for_client(image_url)
+    return payload
 
 
 def analyze_photo(
@@ -228,7 +235,7 @@ def analyze_photo(
     if assignment_oid:
         link_upload_to_assignment(assignment_id, result.inserted_id, sid)
 
-    payload = _to_api_payload(result.inserted_id, output, citations)
+    payload = _to_api_payload(result.inserted_id, output, citations, image_url=image_url)
     if assignment_oid:
         payload["assignmentId"] = str(assignment_oid)
     return payload

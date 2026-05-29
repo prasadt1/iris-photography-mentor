@@ -34,6 +34,10 @@ final class AuthViewModel: ObservableObject {
     @Published var isFirebaseAvailable = false
     @Published var authError: String?
 
+    var isWorkingPro: Bool { persona == "working_pro" }
+
+    var personaLabel: String { isWorkingPro ? "Working pro" : "Hobbyist" }
+
     private let users = UserService()
     private var authListenerHandle: Any?
 
@@ -112,9 +116,7 @@ final class AuthViewModel: ObservableObject {
         persona = mode
         APIClient.shared.userId = userId.isEmpty ? nil : userId
         do {
-            if !userId.isEmpty {
-                _ = try await users.updatePersona(mode)
-            }
+            _ = try await users.updatePersona(mode)
             AppConfig.markOnboardingComplete(userId: userId)
             phase = .ready
         } catch {
@@ -157,12 +159,10 @@ final class AuthViewModel: ObservableObject {
         guard chosen != persona else { return }
         persona = chosen
         APIClient.shared.userId = userId.isEmpty ? nil : userId
-        if !userId.isEmpty {
-            do {
-                _ = try await users.updatePersona(chosen)
-            } catch {
-                authError = error.localizedDescription
-            }
+        do {
+            _ = try await users.updatePersona(chosen)
+        } catch {
+            authError = error.localizedDescription
         }
         clearMentorSessionStorage()
     }

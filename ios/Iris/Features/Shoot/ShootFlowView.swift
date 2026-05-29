@@ -8,27 +8,22 @@ struct ShootFlowView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    if let assignment = contextualAssignment {
-                        assignmentBanner(assignment)
-                    } else {
-                        Text("Open shoot — saves to your portfolio with a full critique.")
-                            .font(IrisFont.sans(13))
-                            .foregroundStyle(Color.irisTextMuted)
-                    }
-                    FieldCaptureView {
-                        appState.notifyPortfolioChanged()
-                        Task {
-                            try? await appState.refreshAssignmentsSnapshot()
-                        }
-                    } onFinished: {
-                        dismiss()
-                        appState.closeShoot()
-                    }
+            VStack(spacing: 0) {
+                if let assignment = contextualAssignment {
+                    assignmentBanner(assignment)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
+                        .padding(.bottom, 4)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 24)
+
+                FieldCaptureView {
+                    Task {
+                        try? await appState.refreshAssignmentsSnapshot()
+                    }
+                } onFinished: {
+                    dismiss()
+                    appState.closeShoot()
+                }
             }
             .irisScreen()
             .navigationTitle("Shoot")
@@ -60,10 +55,10 @@ struct ShootFlowView: View {
         VStack(alignment: .leading, spacing: 6) {
             IrisSectionLabel(text: "Linked to practice")
             Text(assignment.brief)
-                .font(IrisFont.sans(14))
+                .font(IrisFont.sans(13))
                 .foregroundStyle(Color.irisTextPrimary.opacity(0.92))
                 .lineSpacing(3)
-                .lineLimit(3)
+                .lineLimit(2)
         }
         .irisCard(borderBrand: true)
     }

@@ -19,6 +19,7 @@
 		57AEA81DFC7690F909ADB52C /* AnalyzeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A196100C05A4E989FB05DC /* AnalyzeService.swift */; };
 		5E38C05F56495BC17DA4EBD1 /* IrisTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E94AD0804D6FB31BD9295C8 /* IrisTheme.swift */; };
 		632E7671FC2B8A6A475EB443 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = E7C7B677466ADD901B91BC90 /* FirebaseCore */; };
+		639015AD5AB82E4A715E62CA /* PortfolioMerge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56DA34B6677D1DC14F7C345 /* PortfolioMerge.swift */; };
 		65AD90A700001E6BC3A85E45 /* MentorChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */; };
 		65B081BF4BA1FCE63523A695 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07FA2FAC55E1836ABC6564DF /* HomeView.swift */; };
 		65BDA932544C990EC36C65D5 /* IrisColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46786EC98C5222D393B8510A /* IrisColors.swift */; };
@@ -39,6 +40,7 @@
 		971181E12A8E6954029C2622 /* MentorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01A99212909D00B43C6A5E26 /* MentorView.swift */; };
 		991710059A9471281F65730D /* ReflectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21FBB204CA2582C957F9081A /* ReflectionSheet.swift */; };
 		9C3CE1B6A2915797A2D49975 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 095834EDA4F47CBA783FBD4A /* ContentView.swift */; };
+		9E1A7325811F44260DDD6A4F /* StudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE601B385EB2EB1AF3C57359 /* StudioView.swift */; };
 		AECCA66F2DE5EED7500CFBB6 /* PersonaOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17508F33E652A2DC9536B1E /* PersonaOnboardingView.swift */; };
 		AED35B43559DB13629C8DE53 /* Assignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 015AE7920B8F0E06403B7CB2 /* Assignment.swift */; };
 		B4D12179C7AC3F6D9BA7E979 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F836D46C148CA762113BF18C /* RootView.swift */; };
@@ -91,7 +93,9 @@
 		BB29DFA434834756CB5154A8 /* IrisFAB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisFAB.swift; sourceTree = "<group>"; };
 		C17508F33E652A2DC9536B1E /* PersonaOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonaOnboardingView.swift; sourceTree = "<group>"; };
 		C2A937B5C33CE80C774148F8 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		C56DA34B6677D1DC14F7C345 /* PortfolioMerge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioMerge.swift; sourceTree = "<group>"; };
 		D274719439AC633F56EC34D5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
+		DE601B385EB2EB1AF3C57359 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
 		E0B30308D08E575D6B0B7371 /* Iris.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Iris.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorChatStore.swift; sourceTree = "<group>"; };
 		E518635186F9D628771F231B /* IrisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisApp.swift; sourceTree = "<group>"; };
@@ -192,6 +196,7 @@
 				5D0477A665FCC232BBF5BFB5 /* ImageUploadPrep.swift */,
 				F129DA1C94A4DEE0F9B75853 /* IrisPlatform.swift */,
 				ED96A7F428A0944200C0855E /* NetworkMonitor.swift */,
+				C56DA34B6677D1DC14F7C345 /* PortfolioMerge.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -209,6 +214,14 @@
 				78064009F91AA2C860BDC041 /* AppTab.swift */,
 			);
 			path = Core;
+			sourceTree = "<group>";
+		};
+		54E41C91EF445A1FA4C3070D /* Studio */ = {
+			isa = PBXGroup;
+			children = (
+				DE601B385EB2EB1AF3C57359 /* StudioView.swift */,
+			);
+			path = Studio;
 			sourceTree = "<group>";
 		};
 		A22904806DE51C63A435890B /* Settings */ = {
@@ -333,6 +346,7 @@
 				C30171F1FE4CA49E21D7613C /* Practice */,
 				A22904806DE51C63A435890B /* Settings */,
 				D96B9A8353F519DC21E50228 /* Shoot */,
+				54E41C91EF445A1FA4C3070D /* Studio */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -448,6 +462,7 @@
 				971181E12A8E6954029C2622 /* MentorView.swift in Sources */,
 				C28DB5DFD721A9B02D5664C3 /* NetworkMonitor.swift in Sources */,
 				AECCA66F2DE5EED7500CFBB6 /* PersonaOnboardingView.swift in Sources */,
+				639015AD5AB82E4A715E62CA /* PortfolioMerge.swift in Sources */,
 				87F2E5DE69937B514699154A /* PracticeService.swift in Sources */,
 				14011EEC1A7067C2C5C5A30C /* PracticeShootBanner.swift in Sources */,
 				7A13733BDA718A37224D75B2 /* PracticeView.swift in Sources */,
@@ -456,6 +471,7 @@
 				702799E78C3A1C6B81257CBD /* SettingsView.swift in Sources */,
 				77A00F7236CB0544A918C3E1 /* ShootFlowView.swift in Sources */,
 				88E7ACC79B0B7C7452D0BDAF /* SignInView.swift in Sources */,
+				9E1A7325811F44260DDD6A4F /* StudioView.swift in Sources */,
 				7C7FC6FF48AD1F20F6357AB3 /* UserService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

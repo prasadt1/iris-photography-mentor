@@ -11,3 +11,10 @@ export function setOnboardingComplete(): void {
 export function clearOnboardingComplete(): void {
   localStorage.removeItem(ONBOARDING_KEY);
 }
+
+/** True when persona was saved on the server (e.g. iOS demo or a prior web visit). */
+export function serverOnboardingComplete(
+  preferences: Record<string, unknown> | undefined
+): boolean {
+  return preferences?.onboardingComplete === true;
+}

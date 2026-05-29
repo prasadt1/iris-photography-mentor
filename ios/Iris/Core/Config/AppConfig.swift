@@ -17,6 +17,9 @@ enum AppConfig {
     private static let onboardingCompleteKeyPrefix = "iris.onboardingComplete"
 
     static let webAppURL = URL(string: "https://practice-companion-hackathon.web.app")!
+    static let webWorkURL = URL(string: "https://practice-companion-hackathon.web.app#work")!
+    static let webPrintURL = URL(string: "https://practice-companion-hackathon.web.app#print")!
+    static let webMentorURL = URL(string: "https://practice-companion-hackathon.web.app#mentor")!
 
     static func isOnboardingComplete(userId: String) -> Bool {
         UserDefaults.standard.bool(forKey: onboardingKey(userId: userId))

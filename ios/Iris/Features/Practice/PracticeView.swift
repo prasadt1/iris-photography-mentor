@@ -77,7 +77,9 @@ struct PracticeView: View {
                     Text("My Practice")
                         .font(IrisFont.serif(28))
                         .foregroundStyle(Color.irisTextPrimary)
-                    Text("Challenges from your portfolio — accept one, then tap Shoot.")
+                    Text(auth.isWorkingPro
+                        ? "Shop-ready drills from your portfolio — accept, shoot, refine listings on Studio."
+                        : "Challenges from your portfolio — accept one, then tap Shoot.")
                         .font(IrisFont.sans(14))
                         .foregroundStyle(Color.irisTextMuted)
                 }
@@ -141,7 +143,9 @@ struct PracticeView: View {
                         Text("Start a new challenge")
                             .font(IrisFont.sans(16, weight: .semibold))
                             .foregroundStyle(Color.irisTextPrimary)
-                        Text("Iris proposes assignments from your weak areas. Accept one, then use Shoot.")
+                        Text(auth.isWorkingPro
+                            ? "Iris proposes assignments tuned for consistency and print potential."
+                            : "Iris proposes assignments from your weak areas. Accept one, then use Shoot.")
                             .font(IrisFont.sans(13))
                             .foregroundStyle(Color.irisTextMuted)
                         IrisPrimaryButton(

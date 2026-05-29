@@ -43,6 +43,7 @@ struct AnalysisResult: Codable {
     let portfolioEntryId: String
     let assignmentId: String?
     let sceneDescription: String?
+    let imageUrl: String?
     let scores: AnalysisScores
     let glassBox: GlassBoxSummary?
     let aestheticTags: [String]?
@@ -51,8 +52,25 @@ struct AnalysisResult: Codable {
         case portfolioEntryId
         case assignmentId
         case sceneDescription
+        case imageUrl
         case scores
         case glassBox
         case aestheticTags
+    }
+
+    func asPortfolioListItem(fallbackImageUrl: String? = nil) -> PortfolioListItem? {
+        let url = imageUrl ?? fallbackImageUrl
+        guard let url, !url.isEmpty else { return nil }
+        return PortfolioListItem(
+            id: portfolioEntryId,
+            userId: "",
+            shootId: "",
+            imageUrl: url,
+            createdAt: ISO8601DateFormatter().string(from: Date()),
+            scores: scores,
+            overallAverage: scores.average,
+            aestheticTags: aestheticTags,
+            glassBoxSummary: glassBox?.observations
+        )
     }
 }

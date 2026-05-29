@@ -94,8 +94,8 @@ struct SettingsView: View {
             }
             .pickerStyle(.segmented)
             .disabled(savingPersona)
-            if auth.persona == "working_pro" {
-                Text("Triage and print sales: use the web studio link below.")
+            if auth.isWorkingPro {
+                Text("Use the Studio tab for My Work, print sales, and batch labeling on web.")
                     .font(IrisFont.sans(12))
                     .foregroundStyle(Color.irisBrandLight.opacity(0.9))
             }
@@ -166,18 +166,37 @@ struct SettingsView: View {
 
     private var webStudioCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            IrisSectionLabel(text: "Web studio")
-            Text("Full portfolio, triage, and print sales live on the web app.")
+            IrisSectionLabel(text: auth.isWorkingPro ? "Web studio" : "Web portfolio")
+            Text(auth.isWorkingPro
+                ? "Full gallery, triage, and print sales — or use the Studio tab above."
+                : "Browse your full gallery and Glass Box history on the web app.")
                 .font(IrisFont.sans(13))
                 .foregroundStyle(Color.irisTextMuted)
-            Link(destination: AppConfig.webAppURL) {
+            Text(auth.isDemoMode
+                ? "Demo on phone uses the shared judge library. In Safari, finish welcome once—or sign in with Google on both app and web for one account."
+                : "Sign in with the same Google account on web to open My Work without choosing your path again.")
+                .font(IrisFont.sans(12))
+                .foregroundStyle(Color.irisTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            Link(destination: AppConfig.webWorkURL) {
                 HStack {
-                    Text("Open Iris on web")
+                    Text(auth.isWorkingPro ? "Open My Work on web" : "Open Iris on web")
                         .font(IrisFont.sans(14, weight: .semibold))
                     Spacer()
                     Image(systemName: "arrow.up.right")
                 }
                 .foregroundStyle(Color.irisBrandLight)
+            }
+            if auth.isWorkingPro {
+                Link(destination: AppConfig.webPrintURL) {
+                    HStack {
+                        Text("Open Print Sales on web")
+                            .font(IrisFont.sans(14, weight: .semibold))
+                        Spacer()
+                        Image(systemName: "arrow.up.right")
+                    }
+                    .foregroundStyle(Color.irisBrandLight)
+                }
             }
         }
         .irisCard()

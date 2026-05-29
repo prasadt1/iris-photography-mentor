@@ -12,6 +12,8 @@ final class AppState: ObservableObject {
     @Published var proposedAssignmentCount = 0
     /// Bumped after a successful analyze so Home refreshes.
     @Published var portfolioRevision = 0
+    /// Optimistic recent photo shown on Home until the next portfolio fetch.
+    @Published var pendingRecentPortfolioItem: PortfolioListItem?
 
     private let practice = PracticeService()
 
@@ -35,6 +37,30 @@ final class AppState: ObservableObject {
 
     func notifyPortfolioChanged() {
         portfolioRevision += 1
+    }
+
+    func registerNewCapture(_ result: AnalysisResult, localPreviewFileURL: URL? = nil) {
+        if let item = result.asPortfolioListItem(
+            fallbackImageUrl: localPreviewFileURL?.absoluteString
+        ) {
+            pendingRecentPortfolioItem = item
+        }
+        notifyPortfolioChanged()
+        Task { await refreshPortfolioFromServer() }
+    }
+
+    func clearPendingRecentIfMatched(fetchedEntries: [PortfolioListItem]) {
+        guard let pending = pendingRecentPortfolioItem else { return }
+        if fetchedEntries.contains(where: { $0.id == pending.id }) {
+            pendingRecentPortfolioItem = nil
+        }
+    }
+
+    private func refreshPortfolioFromServer() {
+        Task {
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            notifyPortfolioChanged()
+        }
     }
 
     func checkAPIHealth(auth: AuthViewModel) async {

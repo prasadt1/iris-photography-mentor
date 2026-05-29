@@ -20,7 +20,11 @@ import { fetchActiveAssignment } from './services/practiceClient';
 import { fetchUserProfile, personaToUserMode, updatePersona } from './services/userClient';
 import { OfflineBanner } from './components/OfflineBanner';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
-import { isOnboardingComplete, setOnboardingComplete } from './lib/onboarding';
+import {
+  isOnboardingComplete,
+  serverOnboardingComplete,
+  setOnboardingComplete,
+} from './lib/onboarding';
 import type { AnalysisResult } from './types';
 import type { Assignment, UserMode } from './types/practice';
 
@@ -80,6 +84,19 @@ function App() {
       .then((p) => setUserMode(personaToUserMode(p.persona)))
       .catch(() => {});
   }, [auth.loading, auth.userId]);
+
+  useEffect(() => {
+    if (!ready || auth.loading || isOnboardingComplete()) return;
+    void fetchUserProfile(auth.userId ?? undefined)
+      .then((profile) => {
+        if (serverOnboardingComplete(profile.preferences)) {
+          setOnboardingComplete();
+          setShowOnboarding(false);
+          setUserMode(personaToUserMode(profile.persona));
+        }
+      })
+      .catch(() => {});
+  }, [ready, auth.loading, auth.userId]);
 
   useEffect(() => {
     if (!ready) return;

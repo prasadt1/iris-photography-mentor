@@ -20,6 +20,7 @@ struct FieldCaptureView: View {
     @State private var showResult = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var tipRotationTask: Task<Void, Never>?
+    @State private var pinchBaseZoom: CGFloat = 1
 
     private let analyzeService = AnalyzeService()
     private let analyzeTips = [
@@ -30,18 +31,28 @@ struct FieldCaptureView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
             viewfinder
-            controls
-            if let successMessage {
-                IrisAlertBanner(message: successMessage, style: .success)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .layoutPriority(1)
+
+            VStack(spacing: 12) {
+                controls
+                if let successMessage {
+                    IrisAlertBanner(message: successMessage, style: .success)
+                }
+                if let errorMessage {
+                    IrisAlertBanner(message: errorMessage, style: .error)
+                }
             }
-            if let errorMessage {
-                IrisAlertBanner(message: errorMessage, style: .error)
-            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+            .padding(.bottom, 16)
+            .background(Color.irisCanvas)
         }
         .task {
             await camera.prepare()
+            pinchBaseZoom = camera.zoomFactor
             camera.start()
         }
         .onDisappear {
@@ -56,7 +67,8 @@ struct FieldCaptureView: View {
             if let lastResult {
                 CritiqueResultsView(result: lastResult, previewImage: lastCaptureImage) {
                     showResult = false
-                    appState.notifyPortfolioChanged()
+                    let previewURL = previewFileURL(image: lastCaptureImage, entryId: lastResult.portfolioEntryId)
+                    appState.registerNewCapture(lastResult, localPreviewFileURL: previewURL)
                     if appState.activeAssignment != nil {
                         successMessage =
                             "Saved and linked to your practice. Mark complete in Practice when you are done, or take another shot."
@@ -77,39 +89,77 @@ struct FieldCaptureView: View {
 
     @ViewBuilder
     private var viewfinder: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.irisPhotoBlack)
-                .aspectRatio(4 / 3, contentMode: .fit)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.irisWarmBorder, lineWidth: 1)
-                )
+        GeometryReader { geo in
+            ZStack(alignment: .topTrailing) {
+                Color.irisPhotoBlack
 
-            if CameraSessionModel.isSimulator || camera.permissionDenied {
-                simulatorPlaceholder
-            } else if camera.isConfigured {
-                CameraPreviewView(session: camera.session)
-                    .aspectRatio(4 / 3, contentMode: .fit)
-                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            } else {
-                ProgressView()
-                    .tint(Color.irisBrandLight)
-            }
+                if CameraSessionModel.isSimulator || camera.permissionDenied {
+                    simulatorPlaceholder
+                } else if camera.isConfigured {
+                    CameraPreviewView(session: camera.session)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
+                        .contentShape(Rectangle())
+                        .gesture(zoomGesture)
+                        .simultaneousGesture(doubleTapResetZoom)
+                } else {
+                    ProgressView()
+                        .tint(Color.irisBrandLight)
+                }
 
-            thirdsGrid
-                .allowsHitTesting(false)
+                thirdsGrid(in: geo.size)
+                    .allowsHitTesting(false)
 
-            if analyzing {
-                analyzingOverlay
+                if camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
+                    zoomIndicator
+                        .padding(12)
+                }
+
+                if analyzing {
+                    analyzingOverlay(in: geo.size)
+                }
             }
         }
     }
 
-    private var analyzingOverlay: some View {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color.irisCanvas.opacity(0.92))
-            .aspectRatio(4 / 3, contentMode: .fit)
+    private var zoomIndicator: some View {
+        Text(camera.zoomLabel)
+            .font(IrisFont.sans(12, weight: .semibold))
+            .foregroundStyle(Color.irisTextPrimary)
+            .monospacedDigit()
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color.black.opacity(0.55))
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            .accessibilityLabel("Zoom \(camera.zoomLabel)")
+    }
+
+    private var zoomGesture: some Gesture {
+        MagnificationGesture()
+            .onChanged { scale in
+                let target = pinchBaseZoom * scale
+                camera.setZoomFactor(target)
+            }
+            .onEnded { _ in
+                pinchBaseZoom = camera.zoomFactor
+            }
+    }
+
+    private var doubleTapResetZoom: some Gesture {
+        TapGesture(count: 2)
+            .onEnded {
+                camera.resetZoom()
+                pinchBaseZoom = camera.minZoomFactor
+            }
+    }
+
+    private func analyzingOverlay(in size: CGSize) -> some View {
+        Color.irisCanvas.opacity(0.92)
+            .frame(width: size.width, height: size.height)
             .overlay {
                 VStack(spacing: 14) {
                     ProgressView()
@@ -191,24 +241,21 @@ struct FieldCaptureView: View {
         }
     }
 
-    private var thirdsGrid: some View {
-        GeometryReader { geo in
-            let w = geo.size.width
-            let h = geo.size.height
-            Path { p in
-                p.move(to: CGPoint(x: w / 3, y: 0))
-                p.addLine(to: CGPoint(x: w / 3, y: h))
-                p.move(to: CGPoint(x: 2 * w / 3, y: 0))
-                p.addLine(to: CGPoint(x: 2 * w / 3, y: h))
-                p.move(to: CGPoint(x: 0, y: h / 3))
-                p.addLine(to: CGPoint(x: w, y: h / 3))
-                p.move(to: CGPoint(x: 0, y: 2 * h / 3))
-                p.addLine(to: CGPoint(x: w, y: 2 * h / 3))
-            }
-            .stroke(Color.white.opacity(0.28), lineWidth: 1)
+    private func thirdsGrid(in size: CGSize) -> some View {
+        let w = size.width
+        let h = size.height
+        return Path { p in
+            p.move(to: CGPoint(x: w / 3, y: 0))
+            p.addLine(to: CGPoint(x: w / 3, y: h))
+            p.move(to: CGPoint(x: 2 * w / 3, y: 0))
+            p.addLine(to: CGPoint(x: 2 * w / 3, y: h))
+            p.move(to: CGPoint(x: 0, y: h / 3))
+            p.addLine(to: CGPoint(x: w, y: h / 3))
+            p.move(to: CGPoint(x: 0, y: 2 * h / 3))
+            p.addLine(to: CGPoint(x: w, y: 2 * h / 3))
         }
-        .aspectRatio(4 / 3, contentMode: .fit)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .stroke(Color.white.opacity(0.28), lineWidth: 1)
+        .frame(width: w, height: h)
     }
 
     private func captureAndAnalyze() async {
@@ -284,6 +331,18 @@ struct FieldCaptureView: View {
         analysisCancelled = true
         analyzing = false
         tipRotationTask?.cancel()
+    }
+
+    private func previewFileURL(image: UIImage?, entryId: String) -> URL? {
+        guard let image, let data = image.jpegData(compressionQuality: 0.85) else { return nil }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("iris-preview-\(entryId).jpg")
+        do {
+            try data.write(to: url)
+            return url
+        } catch {
+            return nil
+        }
     }
 
     private func friendlyNetworkMessage(_ error: Error) -> String {

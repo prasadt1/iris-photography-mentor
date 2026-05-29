@@ -43,6 +43,8 @@ from memory.pending_approvals import apply_decision, list_pending  # noqa: E402
 from memory.users import get_user_profile, set_persona  # noqa: E402
 from api.triage_scan import run_triage_scan  # noqa: E402
 from api.print_sales_scan import run_print_sales_scan  # noqa: E402
+from api.field_capture_service import analyze_field_frame  # noqa: E402
+from memory.capture_sessions import create_capture_session, end_capture_session  # noqa: E402
 from memory.session_context import set_request_user_id  # noqa: E402
 
 
@@ -83,6 +85,15 @@ class ApprovalDecision(BaseModel):
 
     model_config = {"populate_by_name": True}
 
+
+class CaptureSessionCreate(BaseModel):
+    location_description: str = Field(default="", alias="locationDescription")
+    assignment_id: str | None = Field(default=None, alias="assignmentId")
+    persona: Literal["hobbyist", "working_pro", "vision_impairment"] = "hobbyist"
+    user_id: str | None = Field(default=None, alias="userId")
+
+    model_config = {"populate_by_name": True}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.environ.get("CORS_ORIGINS", "http://localhost:5173").split(","),
@@ -100,6 +111,7 @@ def health() -> dict[str, str]:
         "orchestratorChat": "enabled",
         "triageHitl": "enabled",
         "printSalesHitl": "enabled",
+        "fieldCapture": "enabled",
     }
 
 
@@ -324,5 +336,60 @@ def assignments_complete(assignment_id: str) -> dict:
         return complete_assignment(assignment_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/capture_sessions")
+def capture_sessions_create(body: CaptureSessionCreate) -> dict:
+    try:
+        return create_capture_session(
+            user_id=body.user_id,
+            location_description=body.location_description,
+            assignment_id=body.assignment_id,
+            persona=body.persona,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/capture_sessions/{session_id}/end")
+def capture_sessions_end(session_id: str, user_id: str | None = None) -> dict:
+    try:
+        return end_capture_session(session_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/agent/field_capture")
+async def agent_field_capture(
+    image: UploadFile = File(...),
+    session_id: str = Form(..., alias="sessionId"),
+    user_id: str | None = Form(None),
+    persona: Literal["hobbyist", "working_pro", "vision_impairment"] = Form("hobbyist"),
+    assignment_brief: str | None = Form(None, alias="assignmentBrief"),
+) -> dict:
+    if not image.content_type or not image.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+
+    data = await image.read()
+    if len(data) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Frame too large (max 5MB)")
+
+    try:
+        return analyze_field_frame(
+            image_bytes=data,
+            content_type=image.content_type,
+            session_id=session_id,
+            user_id=user_id,
+            persona=persona,
+            assignment_brief=assignment_brief,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=429 if "Rate limited" in str(exc) else 400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc

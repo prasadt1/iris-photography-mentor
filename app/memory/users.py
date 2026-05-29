@@ -63,7 +63,12 @@ def set_persona(persona: str, user_id: str | None = None) -> dict[str, Any]:
     ensure_user(uid, persona=persona)  # type: ignore[arg-type]
     get_db().users.update_one(
         {"_id": uid},
-        {"$set": {"persona": persona}},
+        {
+            "$set": {
+                "persona": persona,
+                "preferences.onboardingComplete": True,
+            }
+        },
         upsert=True,
     )
     return {"userId": str(uid), "persona": persona}

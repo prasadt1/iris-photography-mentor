@@ -27,6 +27,14 @@ struct ContentView: View {
                         Label("Mentor", systemImage: "bubble.left.and.text.bubble.right")
                     }
 
+                if auth.isWorkingPro {
+                    StudioView()
+                        .tag(AppTab.studio)
+                        .tabItem {
+                            Label("Studio", systemImage: "storefront")
+                        }
+                }
+
                 SettingsView()
                     .tag(AppTab.settings)
                     .tabItem {
@@ -34,6 +42,11 @@ struct ContentView: View {
                     }
             }
             .tint(Color.irisBrand)
+            .onChange(of: auth.persona) { _, _ in
+                if !auth.isWorkingPro, appState.selectedTab == .studio {
+                    appState.selectedTab = .home
+                }
+            }
 
             if appState.showsShootFAB {
                 IrisFAB {

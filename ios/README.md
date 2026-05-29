@@ -112,7 +112,9 @@ Dark **canvas** + **amber** brand, serif titles, bordered cards, score bars, and
 ## Shoot (Phase 1)
 
 1. Tap **Shoot** (amber FAB) from Home, Practice, or Mentor — no assignment required.  
-2. Shutter (device) or **Gallery** (simulator).  
+2. **Pinch** the viewfinder to zoom (up to 5×); **double-tap** to reset to 1×. Badge shows current zoom.  
+3. Full-height viewfinder in Shoot — shutter and Gallery sit below.  
+4. Shutter (device) or **Gallery** (simulator).  
 3. Analyze overlay with tips + **Cancel** (~30–90s).  
 4. Critique sheet → optional link to active practice via `assignment_id`.
 
