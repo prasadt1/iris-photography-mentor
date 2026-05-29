@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { ApertureLoader } from './ApertureLoader';
 
 interface Props {
   message: string;
@@ -15,12 +15,12 @@ export const ScanProgressBanner: React.FC<Props> = ({ message, waitSec, hint }) 
     aria-busy="true"
   >
     <div className="flex items-center gap-2 text-stone-300 text-sm">
-      <Loader2 className="w-4 h-4 animate-spin shrink-0 text-brand-400" />
+      <ApertureLoader size={16} blades={6} className="shrink-0" />
       <span className="font-medium">{message}</span>
     </div>
     <div className="h-1 rounded-full bg-surface-3 overflow-hidden">
       <div
-        className="h-full bg-brand-500/80 transition-all duration-1000 ease-out"
+        className="h-full bg-brand-500/80 transition-all duration-1000 ease-out-expo"
         style={{ width: `${Math.min(92, 10 + waitSec * 2)}%` }}
       />
     </div>

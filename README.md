@@ -235,7 +235,7 @@ sequenceDiagram
 
 | Layer | Technology | Purpose |
 |-------|------------|---------|
-| **Frontend** | React 19, Vite, Tailwind CSS | Web application |
+| **Frontend** | React 19, Vite, Tailwind CSS | Web application with photography-inspired UI motifs |
 | **iOS** | SwiftUI, AVFoundation | Native camera + live coaching (in development) |
 | **API** | FastAPI, Python 3.11 | REST endpoints |
 | **Agents** | Google ADK, Vertex AI | Agent orchestration |

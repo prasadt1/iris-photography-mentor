@@ -6,7 +6,6 @@ import React, { useCallback, useState, useEffect } from 'react';
 import {
   Upload,
   Image as ImageIcon,
-  Loader2,
   Aperture,
   ArrowUp,
   BookOpen,
@@ -15,6 +14,7 @@ import {
   Eye,
 } from 'lucide-react';
 import { FilmGrain } from '../FilmGrain';
+import { ApertureLoader } from '../ApertureLoader';
 
 interface PhotoUploaderProps {
   onImageSelected: (file: File, previewUrl: string) => void;
@@ -23,7 +23,7 @@ interface PhotoUploaderProps {
 
 const THINKING_STEPS = [
   { text: 'Grounding in photography principles…', icon: BookOpen },
-  { text: 'Analyzing composition and framing…', icon: Target },
+  { text: 'Looking at your composition…', icon: Target },
   { text: 'Evaluating lighting and exposure…', icon: Zap },
   { text: 'Assessing technique and sharpness…', icon: Eye },
   { text: 'Building Glass Box critique…', icon: Aperture },
@@ -102,7 +102,7 @@ const PhotoUploader: React.FC<PhotoUploaderProps> = ({ onImageSelected, isAnalyz
             <div className="w-full animate-fadeIn flex flex-col items-center" role="status" aria-live="polite">
               <div className="relative mb-8">
                 <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full animate-pulse" />
-                <Loader2 className="w-16 h-16 text-brand-400 animate-spin relative z-10" />
+                <ApertureLoader size={64} blades={8} className="relative z-10" />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-white mb-4">Coach is analyzing…</h3>
               <div className="w-full mt-2 bg-surface-1 rounded-xl border border-warm p-4 text-sm text-left shadow-inner">

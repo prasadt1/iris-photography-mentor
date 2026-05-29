@@ -17,6 +17,8 @@
   --color-brand-500: #f59e0b;
   --color-brand-600: #d97706;
   --color-brand-700: #b45309;
+  --transition-timing-function-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-timing-function-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 @keyframes fadeIn {
@@ -31,8 +33,25 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 0.5s var(--ease-out-expo) forwards;
 }
+
+@keyframes badgeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.score-badge {
+  animation: badgeIn 150ms var(--ease-out-expo) backwards;
+}
+
+.score-badge:nth-child(1) { animation-delay: 0ms; }
+.score-badge:nth-child(2) { animation-delay: 50ms; }
+.score-badge:nth-child(3) { animation-delay: 100ms; }
+.score-badge:nth-child(4) { animation-delay: 150ms; }
+.score-badge:nth-child(5) { animation-delay: 200ms; }
 
 body {
   background-color: var(--color-canvas);
@@ -129,10 +148,131 @@ h3 {
   background: #57534e;
 }
 
+:root {
+  --ease-out-expo: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-expo: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  transition: transform 150ms var(--ease-out-expo);
+}
+
+button:active:not(:disabled),
+[role="button"]:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 [role="tab"]:focus-visible {
   outline: 2px solid var(--color-brand-400);
   outline-offset: 2px;
+}
+
+/* Tab navigation transitions */
+[role="tab"] {
+  transition: all 150ms var(--ease-out-expo);
+}
+
+/* Aperture Loader - Photography equipment-inspired loading indicator */
+@keyframes aperturePulse {
+  0%, 100% {
+    transform: translateY(0) scaleY(0.7);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+  }
+}
+
+.aperture-loader {
+  position: relative;
+  width: var(--aperture-size);
+  height: var(--aperture-size);
+  display: inline-block;
+}
+
+.aperture-blade {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20%;
+  height: 50%;
+  background: linear-gradient(
+    to bottom,
+    var(--color-brand-500),
+    var(--color-brand-400)
+  );
+  transform-origin: center bottom;
+  margin-left: -10%;
+  margin-top: -50%;
+  border-radius: 40% 40% 0 0;
+  animation: aperturePulse 1.5s var(--ease-in-out-expo) infinite;
+  animation-delay: calc(var(--blade-index) * (1.5s / var(--blade-count)));
+  opacity: 0.8;
+}
+
+/* Viewfinder Frame - Camera focusing frame corners */
+.viewfinder-frame-container {
+  position: relative;
+  display: inline-block;
+}
+
+.viewfinder-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.viewfinder-corner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-brand-400);
+  opacity: 0.6;
+  transition: all 300ms var(--ease-out-expo);
+}
+
+.viewfinder-corners-active .viewfinder-corner {
+  opacity: 1;
+  width: 20px;
+  height: 20px;
+  border-color: var(--color-brand-500);
+  box-shadow: 0 0 8px var(--color-brand-500);
+}
+
+.viewfinder-corner-tl {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 2px;
+}
+
+.viewfinder-corner-tr {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 2px;
+}
+
+.viewfinder-corner-bl {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 2px;
+}
+
+.viewfinder-corner-br {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 2px;
 }

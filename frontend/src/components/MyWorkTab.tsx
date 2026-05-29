@@ -179,7 +179,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
           {activeAssignment && <ActivePracticeBanner assignment={activeAssignment} />}
           <div className="text-center max-w-xl">
             <h2 className="font-serif text-2xl md:text-3xl font-medium text-white mb-2">
-              {viewMode === 'analyzing' ? 'Analyzing your photo' : 'Upload a photo'}
+              {viewMode === 'analyzing' ? 'Let me take a close look' : 'Upload a photo'}
             </h2>
             {viewMode === 'upload' && (
               <p className="text-muted text-sm">
@@ -236,7 +236,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
       <div className="animate-fadeIn space-y-6 max-w-5xl mx-auto">
         <div className="h-8 w-48 bg-surface-2 rounded animate-pulse" aria-hidden />
         <MemoryGridSkeleton />
-        <p className="text-sm text-muted text-center">Loading your portfolio…</p>
+        <p className="text-sm text-muted text-center">One moment…</p>
       </div>
     );
   }
@@ -474,7 +474,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
                   : val >= 5 ? 'bg-amber-500/10'
                   : 'bg-rose-500/10';
                 return (
-                  <div key={key} className={`space-y-1 rounded-lg p-2 ${bgClass}`}>
+                  <div key={key} className={`score-badge space-y-1 rounded-lg p-2 ${bgClass}`}>
                     <p className="text-[9px] text-muted uppercase truncate">{label}</p>
                     <p className={`text-lg font-bold ${colorClass}`}>
                       {val?.toFixed(1) ?? '—'}
@@ -530,6 +530,12 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
             'Get detailed critique saved here',
           ]}
           action={{ label: 'Upload your first photo', onClick: () => setViewMode('upload') }}
+          examplePhoto={{
+            url: 'https://picsum.photos/seed/iris-gallery-example/1200/800',
+            sceneDescription: 'A photographer captures the golden hour light streaming through a forest canopy.',
+            overallAverage: 7.8,
+            glassBoxSummary: 'Strong use of natural light creates depth and atmosphere. The composition leads the eye through layers of foliage toward the light source.',
+          }}
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -544,7 +550,8 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
             return (
               <article
                 key={entry.id}
-                className="rounded-2xl bg-surface-1 border border-warm overflow-hidden flex flex-col"
+                className="rounded-2xl bg-surface-1 border border-warm overflow-hidden flex flex-col transition-all duration-[250ms] hover:-translate-y-1 hover:shadow-[0_12px_32px_oklch(0_0_0/0.3)]"
+                style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
               >
                 <button
                   type="button"

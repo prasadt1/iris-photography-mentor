@@ -8,14 +8,15 @@ import {
   Aperture,
   BookOpen,
   Eye,
-  Loader2,
   Target,
   Zap,
 } from 'lucide-react';
+import { ApertureLoader } from './ApertureLoader';
+import { ViewfinderFrame } from './ViewfinderFrame';
 
 const THINKING_STEPS = [
   { text: 'Grounding in photography principles…', icon: BookOpen },
-  { text: 'Analyzing composition and framing…', icon: Target },
+  { text: 'Looking at your composition…', icon: Target },
   { text: 'Evaluating lighting and exposure…', icon: Zap },
   { text: 'Assessing technique and sharpness…', icon: Eye },
   { text: 'Building Glass Box critique…', icon: Aperture },
@@ -39,24 +40,26 @@ export const AnalyzingOverlay: React.FC<Props> = ({ imageUrl }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-canvas/95 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-canvas flex items-center justify-center p-4">
       <div className="max-w-lg w-full animate-fadeIn">
         {/* Photo preview (if available) */}
         {imageUrl && (
-          <div className="mb-6 rounded-2xl overflow-hidden border border-warm bg-photo-black p-2 shadow-2xl">
-            <img
-              src={imageUrl}
-              alt="Photo being analyzed"
-              className="w-full max-h-48 object-contain rounded-xl"
-            />
-          </div>
+          <ViewfinderFrame active={true} className="mb-6">
+            <div className="rounded-2xl overflow-hidden border border-warm bg-photo-black p-2 shadow-2xl">
+              <img
+                src={imageUrl}
+                alt="Photo being analyzed"
+                className="w-full max-h-48 object-contain rounded-xl"
+              />
+            </div>
+          </ViewfinderFrame>
         )}
 
-        {/* Spinner and title */}
+        {/* Aperture loader and title */}
         <div className="flex flex-col items-center mb-6">
           <div className="relative mb-4">
             <div className="absolute inset-0 bg-brand-500/20 blur-xl rounded-full animate-pulse" />
-            <Loader2 className="w-12 h-12 text-brand-400 animate-spin relative z-10" />
+            <ApertureLoader size={48} blades={8} className="relative z-10" />
           </div>
           <h2 className="text-xl font-bold text-white">Iris is analyzing…</h2>
           <p className="text-sm text-muted mt-1">Building your Glass Box critique</p>
@@ -77,7 +80,7 @@ export const AnalyzingOverlay: React.FC<Props> = ({ imageUrl }) => {
               return (
                 <div
                   key={index}
-                  className={`flex items-center gap-3 transition-all duration-300 ${
+                  className={`flex items-center gap-3 transition-all duration-150 ${
                     isPast ? 'opacity-40' : ''
                   }`}
                 >
