@@ -13,7 +13,8 @@ Mobile Iris per **`docs/ios-product-spec.md`**: Home · Practice · Mentor · Se
 | **2.5** | Mentor chat (`POST /api/v1/agent/chat`) |
 | **3** | Firebase Google Sign-In + persona onboarding |
 | **A** | Decline, reflection sheet, persona in Settings, app icon, offline banner |
-| **3.5+** | Live Field Coach — see `docs/ios-product-spec.md` |
+| **3.5+** | Live Field Coach — `capture_sessions` + `field_capture` on API |
+| **4** | iOS live coach: periodic frames, cue overlay, voice, Ask Iris |
 
 Full iOS roadmap: local `docs/ios-implementation-plan.md` (private; see root `.gitignore`).
 
@@ -115,6 +116,11 @@ Dark **canvas** + **amber** brand, serif titles, bordered cards, score bars, and
 2. **Pinch** the viewfinder to zoom (up to 5×); **double-tap** to reset to 1×. Badge shows current zoom.  
 3. Full-height viewfinder in Shoot — shutter and Gallery sit below.  
 4. Shutter (device) or **Gallery** (simulator).  
+5. **Live coach** (device, online): cues every ~3s; **Ask Iris** for immediate feedback; toggle in Settings.
+
+## Live coach (Phase 4)
+
+Requires network. Starts a `capture_sessions` doc, sends preview frames to `POST /api/v1/agent/field_capture`, shows `onScreenHint` and optional voice (`Settings → Live field coach`).
 3. Analyze overlay with tips + **Cancel** (~30–90s).  
 4. Critique sheet → optional link to active practice via `assignment_id`.
 

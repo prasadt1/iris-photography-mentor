@@ -33,4 +33,26 @@ enum AppConfig {
         let scope = userId.isEmpty ? "demo" : userId
         return "\(onboardingCompleteKeyPrefix).\(scope)"
     }
+
+    private static let liveCoachEnabledKey = "iris.liveCoachEnabled"
+    private static let liveCoachVoiceKey = "iris.liveCoachVoice"
+
+    static var liveCoachEnabled: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: liveCoachEnabledKey) == nil { return true }
+            return UserDefaults.standard.bool(forKey: liveCoachEnabledKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: liveCoachEnabledKey) }
+    }
+
+    static var liveCoachVoiceEnabled: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: liveCoachVoiceKey) == nil { return true }
+            return UserDefaults.standard.bool(forKey: liveCoachVoiceKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: liveCoachVoiceKey) }
+    }
+
+    /// AVSpeechUtterance rate (0.0–1.0). Default slightly slower for coaching.
+    static let liveCoachSpeechRate: Float = 0.48
 }

@@ -23,6 +23,8 @@ struct SettingsView: View {
                     accountCard
                     personaCard
 
+                    liveCoachCard
+
                     VStack(alignment: .leading, spacing: 12) {
                         IrisSectionLabel(text: "API")
                         Text(AppConfig.apiBaseURL.absoluteString)
@@ -104,6 +106,34 @@ struct SettingsView: View {
                     .font(IrisFont.sans(12))
                     .foregroundStyle(Color.irisRose)
             }
+        }
+        .irisCard()
+    }
+
+    private var liveCoachCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            IrisSectionLabel(text: "Live field coach")
+            Text("While shooting, Iris sends frames every few seconds for composition cues.")
+                .font(IrisFont.sans(13))
+                .foregroundStyle(Color.irisTextMuted)
+            Toggle(isOn: Binding(
+                get: { AppConfig.liveCoachEnabled },
+                set: { AppConfig.liveCoachEnabled = $0 }
+            )) {
+                Text("Live coach in Shoot")
+                    .font(IrisFont.sans(14, weight: .medium))
+                    .foregroundStyle(Color.irisTextPrimary)
+            }
+            .tint(Color.irisBrand)
+            Toggle(isOn: Binding(
+                get: { AppConfig.liveCoachVoiceEnabled },
+                set: { AppConfig.liveCoachVoiceEnabled = $0 }
+            )) {
+                Text("Speak cues aloud")
+                    .font(IrisFont.sans(14, weight: .medium))
+                    .foregroundStyle(Color.irisTextPrimary)
+            }
+            .tint(Color.irisBrand)
         }
         .irisCard()
     }

@@ -9,6 +9,7 @@ struct FieldCaptureView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var auth: AuthViewModel
     @StateObject private var camera = CameraSessionModel()
+    @StateObject private var liveCoach = LiveFieldCoachModel()
 
     @State private var analyzing = false
     @State private var analysisCancelled = false
@@ -54,8 +55,10 @@ struct FieldCaptureView: View {
             await camera.prepare()
             pinchBaseZoom = camera.zoomFactor
             camera.start()
+            await liveCoach.start(camera: camera, auth: auth, appState: appState)
         }
         .onDisappear {
+            Task { await liveCoach.stop(camera: camera) }
             camera.stop()
             tipRotationTask?.cancel()
         }
@@ -118,8 +121,49 @@ struct FieldCaptureView: View {
                 if analyzing {
                     analyzingOverlay(in: geo.size)
                 }
+
+                liveCoachOverlay
+                    .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
             }
         }
+    }
+
+    @ViewBuilder
+    private var liveCoachOverlay: some View {
+        VStack(spacing: 8) {
+            if liveCoach.isFetching {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .scaleEffect(0.75)
+                        .tint(Color.irisBrandLight)
+                    Text("Coach looking…")
+                        .font(IrisFont.sans(11, weight: .medium))
+                        .foregroundStyle(Color.irisTextPrimary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.black.opacity(0.55))
+                .clipShape(Capsule())
+            }
+
+            if let hint = liveCoach.hint, liveCoach.isEnabled, !analyzing {
+                Text(hint)
+                    .font(IrisFont.sans(14, weight: .medium))
+                    .foregroundStyle(Color.irisTextPrimary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.black.opacity(0.72))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .stroke(Color.irisBrand.opacity(0.45), lineWidth: 1)
+                    )
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.bottom, 12)
     }
 
     private var zoomIndicator: some View {
@@ -195,6 +239,24 @@ struct FieldCaptureView: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
+            if liveCoach.isEnabled, liveCoach.isSessionActive {
+                HStack {
+                    Toggle(isOn: $liveCoach.isEnabled) {
+                        Text("Live coach")
+                            .font(IrisFont.sans(13, weight: .medium))
+                            .foregroundStyle(Color.irisTextPrimary)
+                    }
+                    .tint(Color.irisBrand)
+                    Spacer()
+                    if let status = liveCoach.statusMessage {
+                        Text(status)
+                            .font(IrisFont.sans(11))
+                            .foregroundStyle(Color.irisTextMuted)
+                            .lineLimit(1)
+                    }
+                }
+            }
+
             Button {
                 Task { await captureAndAnalyze() }
             } label: {
@@ -220,6 +282,16 @@ struct FieldCaptureView: View {
             }
             .disabled(analyzing || (!CameraSessionModel.isSimulator && !camera.isConfigured))
             .accessibilityLabel("Capture and analyze")
+
+            if liveCoach.isSessionActive, !CameraSessionModel.isSimulator {
+                IrisSecondaryButton(
+                    title: liveCoach.isFetching ? "Coach thinking…" : "Ask Iris",
+                    icon: "sparkles",
+                    disabled: analyzing || liveCoach.isFetching
+                ) {
+                    Task { await liveCoach.askIrisNow() }
+                }
+            }
 
             PhotosPicker(selection: $pickerItem, matching: .images) {
                 HStack(spacing: 8) {
@@ -290,10 +362,14 @@ struct FieldCaptureView: View {
         analysisCancelled = false
         analyzing = true
         analyzeTipIndex = 0
+        liveCoach.pause()
         startTipRotation()
         defer {
             analyzing = false
             tipRotationTask?.cancel()
+            if liveCoach.isSessionActive {
+                liveCoach.resume(camera: camera)
+            }
         }
 
         APIClient.shared.userId = auth.userId.isEmpty ? nil : auth.userId

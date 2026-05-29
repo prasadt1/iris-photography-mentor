@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		06E08659C9AB70AA08D1A449 /* FieldCoachService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDBF9E3EFAA3E9AE23B92576 /* FieldCoachService.swift */; };
 		0E92002136DF7153D419AB2C /* AppConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D274719439AC633F56EC34D5 /* AppConfig.swift */; };
 		114B0F3C2BA13CD2CE0AEDA2 /* IrisPlatform.swift in Sources */ = {isa = PBXBuildFile; fileRef = F129DA1C94A4DEE0F9B75853 /* IrisPlatform.swift */; };
 		14011EEC1A7067C2C5C5A30C /* PracticeShootBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FBACC575C642B309B7064ED /* PracticeShootBanner.swift */; };
 		14D9D8F103E155B90A758173 /* ImageUploadPrep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D0477A665FCC232BBF5BFB5 /* ImageUploadPrep.swift */; };
 		32083F579283A372D85E155C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = F5648E09ECE4AF7DDFD639BC /* GoogleSignIn */; };
 		37178E579F3DDC5B452D0E6A /* MemoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31761FB8177A033A047BDE36 /* MemoryService.swift */; };
+		3E5CCDF55370B02AF7113B29 /* LiveFieldCoachModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D6445A5756A12FABB3A3946 /* LiveFieldCoachModel.swift */; };
 		42491E4D297A441CD5A54FD0 /* FieldCaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6663E698D0A2E99422D8730C /* FieldCaptureView.swift */; };
 		43A5EC2F4B6D76569C082D3A /* CameraSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502F7A261E8175ED43CEF5F6 /* CameraSessionModel.swift */; };
 		558AC6E84C2EF5C8B2F13F77 /* MentorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CF9E83DCDE9BEBF595B5F7 /* MentorService.swift */; };
@@ -23,6 +25,7 @@
 		65AD90A700001E6BC3A85E45 /* MentorChatStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */; };
 		65B081BF4BA1FCE63523A695 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07FA2FAC55E1836ABC6564DF /* HomeView.swift */; };
 		65BDA932544C990EC36C65D5 /* IrisColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46786EC98C5222D393B8510A /* IrisColors.swift */; };
+		6C16F17BCB30750D9F584C3B /* FieldCoachModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9D50D0185E8020DE25D42A3 /* FieldCoachModels.swift */; };
 		6F19D01785B4D5A21939CB84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 359F683A9B9F0031F9766BE8 /* Assets.xcassets */; };
 		702799E78C3A1C6B81257CBD /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E84837EA0541DD318C54BE65 /* SettingsView.swift */; };
 		7500B969E0DA1E6C8ADD1292 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78064009F91AA2C860BDC041 /* AppTab.swift */; };
@@ -51,8 +54,10 @@
 		C18695211C89B2152C89D844 /* HomePhotoDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72B4DC790877B6CB41E8C363 /* HomePhotoDetailSheet.swift */; };
 		C1A5356C9BC31B8F8E0C0F5E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC2F1571111A4E0ABC1493CB /* AppDelegate.swift */; };
 		C28DB5DFD721A9B02D5664C3 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED96A7F428A0944200C0855E /* NetworkMonitor.swift */; };
+		D135277938BF2130AC4E7A30 /* CameraFrameEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC570417F3DAFFFC35C547A4 /* CameraFrameEncoder.swift */; };
 		D2BD0575E199DB7EE80F671C /* IrisApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E518635186F9D628771F231B /* IrisApp.swift */; };
 		D2D068D2C2974CF5E0E70EBB /* MemoryModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18C22C0B5106782EB7AAE2BC /* MemoryModels.swift */; };
+		DB072F8F3EC95622D50E20EA /* CueSpeaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 900CCCDF3A3C2CCEFA41F9C5 /* CueSpeaker.swift */; };
 		FF1DD15919383F688D8BA757 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = BD6A6497C41280574149BC71 /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
@@ -88,18 +93,23 @@
 		85A6494F5A88B72191434FE3 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
 		8864B7464424C744B7646D1F /* FirebaseBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrap.swift; sourceTree = "<group>"; };
 		8905C5B809E8A86042603FE5 /* AnalysisResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisResult.swift; sourceTree = "<group>"; };
+		900CCCDF3A3C2CCEFA41F9C5 /* CueSpeaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueSpeaker.swift; sourceTree = "<group>"; };
+		9D6445A5756A12FABB3A3946 /* LiveFieldCoachModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveFieldCoachModel.swift; sourceTree = "<group>"; };
 		A3484F46B92D99B0E736FBE6 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		B87D714F47092A711463B0F2 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		BB29DFA434834756CB5154A8 /* IrisFAB.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisFAB.swift; sourceTree = "<group>"; };
 		C17508F33E652A2DC9536B1E /* PersonaOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonaOnboardingView.swift; sourceTree = "<group>"; };
 		C2A937B5C33CE80C774148F8 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		C56DA34B6677D1DC14F7C345 /* PortfolioMerge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioMerge.swift; sourceTree = "<group>"; };
+		CC570417F3DAFFFC35C547A4 /* CameraFrameEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraFrameEncoder.swift; sourceTree = "<group>"; };
+		CDBF9E3EFAA3E9AE23B92576 /* FieldCoachService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCoachService.swift; sourceTree = "<group>"; };
 		D274719439AC633F56EC34D5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		DE601B385EB2EB1AF3C57359 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
 		E0B30308D08E575D6B0B7371 /* Iris.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Iris.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorChatStore.swift; sourceTree = "<group>"; };
 		E518635186F9D628771F231B /* IrisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisApp.swift; sourceTree = "<group>"; };
 		E84837EA0541DD318C54BE65 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		E9D50D0185E8020DE25D42A3 /* FieldCoachModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCoachModels.swift; sourceTree = "<group>"; };
 		ED96A7F428A0944200C0855E /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		F129DA1C94A4DEE0F9B75853 /* IrisPlatform.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisPlatform.swift; sourceTree = "<group>"; };
 		F836D46C148CA762113BF18C /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -125,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				00A196100C05A4E989FB05DC /* AnalyzeService.swift */,
+				CDBF9E3EFAA3E9AE23B92576 /* FieldCoachService.swift */,
 				31761FB8177A033A047BDE36 /* MemoryService.swift */,
 				E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */,
 				79CF9E83DCDE9BEBF595B5F7 /* MentorService.swift */,
@@ -150,6 +161,7 @@
 				502F7A261E8175ED43CEF5F6 /* CameraSessionModel.swift */,
 				35499B61A3CB17EEE301CD2A /* CritiqueResultsView.swift */,
 				6663E698D0A2E99422D8730C /* FieldCaptureView.swift */,
+				9D6445A5756A12FABB3A3946 /* LiveFieldCoachModel.swift */,
 			);
 			path = Field;
 			sourceTree = "<group>";
@@ -177,6 +189,7 @@
 			children = (
 				8905C5B809E8A86042603FE5 /* AnalysisResult.swift */,
 				015AE7920B8F0E06403B7CB2 /* Assignment.swift */,
+				E9D50D0185E8020DE25D42A3 /* FieldCoachModels.swift */,
 				18C22C0B5106782EB7AAE2BC /* MemoryModels.swift */,
 			);
 			path = Models;
@@ -193,6 +206,8 @@
 		4AF67E9F66B7D87E41DDD98D /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				CC570417F3DAFFFC35C547A4 /* CameraFrameEncoder.swift */,
+				900CCCDF3A3C2CCEFA41F9C5 /* CueSpeaker.swift */,
 				5D0477A665FCC232BBF5BFB5 /* ImageUploadPrep.swift */,
 				F129DA1C94A4DEE0F9B75853 /* IrisPlatform.swift */,
 				ED96A7F428A0944200C0855E /* NetworkMonitor.swift */,
@@ -440,11 +455,15 @@
 				7500B969E0DA1E6C8ADD1292 /* AppTab.swift in Sources */,
 				AED35B43559DB13629C8DE53 /* Assignment.swift in Sources */,
 				9015AE0F645578E80DFB39D5 /* AuthViewModel.swift in Sources */,
+				D135277938BF2130AC4E7A30 /* CameraFrameEncoder.swift in Sources */,
 				78390A56ED7399975E86BD3D /* CameraPreviewView.swift in Sources */,
 				43A5EC2F4B6D76569C082D3A /* CameraSessionModel.swift in Sources */,
 				9C3CE1B6A2915797A2D49975 /* ContentView.swift in Sources */,
 				BEBA4CE0059F73883D88817B /* CritiqueResultsView.swift in Sources */,
+				DB072F8F3EC95622D50E20EA /* CueSpeaker.swift in Sources */,
 				42491E4D297A441CD5A54FD0 /* FieldCaptureView.swift in Sources */,
+				6C16F17BCB30750D9F584C3B /* FieldCoachModels.swift in Sources */,
+				06E08659C9AB70AA08D1A449 /* FieldCoachService.swift in Sources */,
 				B6B501DF5F42EFE0A1FDCFDD /* FirebaseBootstrap.swift in Sources */,
 				C18695211C89B2152C89D844 /* HomePhotoDetailSheet.swift in Sources */,
 				65B081BF4BA1FCE63523A695 /* HomeView.swift in Sources */,
@@ -455,6 +474,7 @@
 				827720A8E63D6986BD7EFE79 /* IrisFAB.swift in Sources */,
 				114B0F3C2BA13CD2CE0AEDA2 /* IrisPlatform.swift in Sources */,
 				5E38C05F56495BC17DA4EBD1 /* IrisTheme.swift in Sources */,
+				3E5CCDF55370B02AF7113B29 /* LiveFieldCoachModel.swift in Sources */,
 				D2D068D2C2974CF5E0E70EBB /* MemoryModels.swift in Sources */,
 				37178E579F3DDC5B452D0E6A /* MemoryService.swift in Sources */,
 				65AD90A700001E6BC3A85E45 /* MentorChatStore.swift in Sources */,

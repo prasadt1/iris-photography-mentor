@@ -15,7 +15,14 @@ enum CameraSessionError: LocalizedError {
     }
 }
 
-/// AVFoundation session for rear-camera preview + still capture.
+private final class FrameGate: @unchecked Sendable {
+    var handler: (@Sendable (Data) -> Void)?
+    var interval: TimeInterval = 3.5
+    var lastSampleTime: TimeInterval = 0
+    var pendingOneShot: ((Data?) -> Void)?
+}
+
+/// AVFoundation session for rear-camera preview + still capture + live-coach frame sampling.
 @MainActor
 final class CameraSessionModel: NSObject, ObservableObject {
     @Published private(set) var isConfigured = false
@@ -28,7 +35,9 @@ final class CameraSessionModel: NSObject, ObservableObject {
 
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
+    private let videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "iris.camera.session")
+    private let frameGate = FrameGate()
     private var captureDevice: AVCaptureDevice?
     private var captureContinuation: CheckedContinuation<Data, Error>?
 
@@ -75,6 +84,7 @@ final class CameraSessionModel: NSObject, ObservableObject {
     }
 
     func stop() {
+        disableFrameSampling()
         guard isRunning else { return }
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
@@ -84,7 +94,31 @@ final class CameraSessionModel: NSObject, ObservableObject {
         }
     }
 
-    /// Pinch-to-zoom target (1× = widest). Captured JPEG uses this zoom level.
+    func enableFrameSampling(interval: TimeInterval = 3.5, handler: @escaping @Sendable (Data) -> Void) {
+        sessionQueue.async { [frameGate] in
+            frameGate.handler = handler
+            frameGate.interval = interval
+            frameGate.lastSampleTime = 0
+        }
+    }
+
+    func disableFrameSampling() {
+        sessionQueue.async { [frameGate] in
+            frameGate.handler = nil
+            frameGate.pendingOneShot = nil
+        }
+    }
+
+    func captureSampleFrameNow() async -> Data? {
+        await withCheckedContinuation { continuation in
+            sessionQueue.async { [frameGate] in
+                frameGate.pendingOneShot = { data in
+                    continuation.resume(returning: data)
+                }
+            }
+        }
+    }
+
     func setZoomFactor(_ factor: CGFloat, animated: Bool = false) {
         guard isConfigured, let device = captureDevice else { return }
         let clamped = min(max(factor, minZoomFactor), maxZoomFactor)
@@ -169,6 +203,15 @@ final class CameraSessionModel: NSObject, ObservableObject {
 
                 guard self.session.canAddOutput(self.photoOutput) else { return }
                 self.session.addOutput(self.photoOutput)
+
+                self.videoOutput.alwaysDiscardsLateVideoFrames = true
+                self.videoOutput.videoSettings = [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+                ]
+                self.videoOutput.setSampleBufferDelegate(self, queue: self.sessionQueue)
+                if self.session.canAddOutput(self.videoOutput) {
+                    self.session.addOutput(self.videoOutput)
+                }
             }
         }
     }
@@ -192,6 +235,34 @@ extension CameraSessionModel: AVCapturePhotoCaptureDelegate {
                 return
             }
             continuation.resume(returning: data)
+        }
+    }
+}
+
+extension CameraSessionModel: AVCaptureVideoDataOutputSampleBufferDelegate {
+    nonisolated func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        guard let jpeg = CameraFrameEncoder.jpeg(from: sampleBuffer) else { return }
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            let gate = self.frameGate
+
+            if let oneShot = gate.pendingOneShot {
+                gate.pendingOneShot = nil
+                oneShot(jpeg)
+                return
+            }
+
+            guard let handler = gate.handler else { return }
+            let now = CACurrentMediaTime()
+            if now - gate.lastSampleTime < gate.interval { return }
+            gate.lastSampleTime = now
+            Task { @MainActor in
+                handler(jpeg)
+            }
         }
     }
 }
