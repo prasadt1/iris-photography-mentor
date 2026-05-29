@@ -5,24 +5,19 @@ enum CameraSessionError: LocalizedError {
     case unavailable
     case permissionDenied
     case captureFailed
+    case captureInProgress
 
     var errorDescription: String? {
         switch self {
         case .unavailable: return "Camera not available on this device."
         case .permissionDenied: return "Camera permission denied. Use “Choose photo” instead."
         case .captureFailed: return "Could not capture photo."
+        case .captureInProgress: return "Camera busy — try again in a moment."
         }
     }
 }
 
-private final class FrameGate: @unchecked Sendable {
-    var handler: (@Sendable (Data) -> Void)?
-    var interval: TimeInterval = 3.5
-    var lastSampleTime: TimeInterval = 0
-    var pendingOneShot: ((Data?) -> Void)?
-}
-
-/// AVFoundation session for rear-camera preview + still capture + live-coach frame sampling.
+/// AVFoundation session for rear-camera preview + still capture + live-coach snapshots.
 @MainActor
 final class CameraSessionModel: NSObject, ObservableObject {
     @Published private(set) var isConfigured = false
@@ -35,9 +30,7 @@ final class CameraSessionModel: NSObject, ObservableObject {
 
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
-    private let videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "iris.camera.session")
-    private let frameGate = FrameGate()
     private var captureDevice: AVCaptureDevice?
     private var captureContinuation: CheckedContinuation<Data, Error>?
 
@@ -84,37 +77,11 @@ final class CameraSessionModel: NSObject, ObservableObject {
     }
 
     func stop() {
-        disableFrameSampling()
         guard isRunning else { return }
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
             Task { @MainActor in
                 self?.isRunning = false
-            }
-        }
-    }
-
-    func enableFrameSampling(interval: TimeInterval = 3.5, handler: @escaping @Sendable (Data) -> Void) {
-        sessionQueue.async { [frameGate] in
-            frameGate.handler = handler
-            frameGate.interval = interval
-            frameGate.lastSampleTime = 0
-        }
-    }
-
-    func disableFrameSampling() {
-        sessionQueue.async { [frameGate] in
-            frameGate.handler = nil
-            frameGate.pendingOneShot = nil
-        }
-    }
-
-    func captureSampleFrameNow() async -> Data? {
-        await withCheckedContinuation { continuation in
-            sessionQueue.async { [frameGate] in
-                frameGate.pendingOneShot = { data in
-                    continuation.resume(returning: data)
-                }
             }
         }
     }
@@ -143,11 +110,57 @@ final class CameraSessionModel: NSObject, ObservableObject {
         }
     }
 
+    func stepZoom(by delta: CGFloat) {
+        setZoomFactor(zoomFactor + delta)
+    }
+
     func resetZoom() {
         setZoomFactor(minZoomFactor, animated: true)
     }
 
+    /// Tap-to-focus / exposure at a point in the preview layer's view coordinates.
+    func focus(at viewPoint: CGPoint, previewLayer: AVCaptureVideoPreviewLayer) {
+        guard isConfigured, let device = captureDevice else { return }
+        let devicePoint = previewLayer.captureDevicePointConverted(fromLayerPoint: viewPoint)
+
+        sessionQueue.async { [weak self] in
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+
+                if device.isFocusPointOfInterestSupported {
+                    device.focusPointOfInterest = devicePoint
+                    if device.isFocusModeSupported(.autoFocus) {
+                        device.focusMode = .autoFocus
+                    }
+                }
+                if device.isExposurePointOfInterestSupported {
+                    device.exposurePointOfInterest = devicePoint
+                    if device.isExposureModeSupported(.continuousAutoExposure) {
+                        device.exposureMode = .continuousAutoExposure
+                    } else if device.isExposureModeSupported(.autoExpose) {
+                        device.exposureMode = .autoExpose
+                    }
+                }
+            } catch {
+                Task { @MainActor in
+                    self?.errorMessage = "Could not adjust focus."
+                }
+            }
+        }
+    }
+
+    /// Still capture for shutter + live coach (photo output only — no video pipeline).
     func captureJPEG() async throws -> Data {
+        try await capturePhoto(fast: false)
+    }
+
+    /// Lower-latency still for periodic coach sampling.
+    func captureCoachSnapshot() async throws -> Data {
+        try await capturePhoto(fast: true)
+    }
+
+    private func capturePhoto(fast: Bool) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             sessionQueue.async { [weak self] in
                 guard let self else {
@@ -155,9 +168,16 @@ final class CameraSessionModel: NSObject, ObservableObject {
                     return
                 }
                 Task { @MainActor in
+                    if self.captureContinuation != nil {
+                        continuation.resume(throwing: CameraSessionError.captureInProgress)
+                        return
+                    }
                     self.captureContinuation = continuation
                 }
                 let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
+                if fast {
+                    settings.photoQualityPrioritization = .speed
+                }
                 self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
         }
@@ -201,17 +221,22 @@ final class CameraSessionModel: NSObject, ObservableObject {
                 self.captureDevice = device
                 self.session.addInput(input)
 
+                do {
+                    try device.lockForConfiguration()
+                    if device.isFocusModeSupported(.continuousAutoFocus) {
+                        device.focusMode = .continuousAutoFocus
+                    }
+                    if device.isExposureModeSupported(.continuousAutoExposure) {
+                        device.exposureMode = .continuousAutoExposure
+                    }
+                    device.unlockForConfiguration()
+                } catch {
+                    // Non-fatal — tap-to-focus may still work per-shot.
+                }
+
                 guard self.session.canAddOutput(self.photoOutput) else { return }
                 self.session.addOutput(self.photoOutput)
-
-                self.videoOutput.alwaysDiscardsLateVideoFrames = true
-                self.videoOutput.videoSettings = [
-                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                ]
-                self.videoOutput.setSampleBufferDelegate(self, queue: self.sessionQueue)
-                if self.session.canAddOutput(self.videoOutput) {
-                    self.session.addOutput(self.videoOutput)
-                }
+                self.photoOutput.isHighResolutionCaptureEnabled = false
             }
         }
     }
@@ -235,34 +260,6 @@ extension CameraSessionModel: AVCapturePhotoCaptureDelegate {
                 return
             }
             continuation.resume(returning: data)
-        }
-    }
-}
-
-extension CameraSessionModel: AVCaptureVideoDataOutputSampleBufferDelegate {
-    nonisolated func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        guard let jpeg = CameraFrameEncoder.jpeg(from: sampleBuffer) else { return }
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            let gate = self.frameGate
-
-            if let oneShot = gate.pendingOneShot {
-                gate.pendingOneShot = nil
-                oneShot(jpeg)
-                return
-            }
-
-            guard let handler = gate.handler else { return }
-            let now = CACurrentMediaTime()
-            if now - gate.lastSampleTime < gate.interval { return }
-            gate.lastSampleTime = now
-            Task { @MainActor in
-                handler(jpeg)
-            }
         }
     }
 }

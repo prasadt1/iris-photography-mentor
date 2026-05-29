@@ -17,4 +17,12 @@ struct CaptureSessionCreateBody: Encodable {
     let locationDescription: String
     let assignmentId: String?
     let persona: String
+    let userId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case locationDescription
+        case assignmentId
+        case persona
+        case userId
+    }
 }

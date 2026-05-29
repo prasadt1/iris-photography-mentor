@@ -105,7 +105,7 @@
 		CDBF9E3EFAA3E9AE23B92576 /* FieldCoachService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldCoachService.swift; sourceTree = "<group>"; };
 		D274719439AC633F56EC34D5 /* AppConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfig.swift; sourceTree = "<group>"; };
 		DE601B385EB2EB1AF3C57359 /* StudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StudioView.swift; sourceTree = "<group>"; };
-		E0B30308D08E575D6B0B7371 /* Iris.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Iris.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0B30308D08E575D6B0B7371 /* Iris.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Iris.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		E2F807858AE7567BAB8A95E2 /* MentorChatStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MentorChatStore.swift; sourceTree = "<group>"; };
 		E518635186F9D628771F231B /* IrisApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IrisApp.swift; sourceTree = "<group>"; };
 		E84837EA0541DD318C54BE65 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -401,7 +401,6 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					DA6B0FE32874865F8A6DAF74 = {
-						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -565,6 +564,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P93883WKK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Iris/Info.plist;
 				INFOPLIST_KEY_APIBaseURL = "$(API_BASE_URL)";
@@ -579,7 +579,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.2.0;
-				OTHER_LDFLAGS = "$(inherited) -ObjC";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.prasadtilloo.practicecompanion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -593,6 +596,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = P93883WKK6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Iris/Info.plist;
 				INFOPLIST_KEY_APIBaseURL = "$(API_BASE_URL)";
@@ -607,7 +611,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.2.0;
-				OTHER_LDFLAGS = "$(inherited) -ObjC";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.prasadtilloo.practicecompanion;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";

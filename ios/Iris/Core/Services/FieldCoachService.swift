@@ -18,7 +18,8 @@ final class FieldCoachService {
             body: CaptureSessionCreateBody(
                 locationDescription: locationDescription,
                 assignmentId: assignmentId,
-                persona: persona
+                persona: persona,
+                userId: client.userId
             ),
             timeout: 30
         )
@@ -42,6 +43,9 @@ final class FieldCoachService {
             "sessionId": sessionId,
             "persona": persona,
         ]
+        if let userId = client.userId, !userId.isEmpty {
+            fields["userId"] = userId
+        }
         if let assignmentBrief, !assignmentBrief.isEmpty {
             fields["assignmentBrief"] = assignmentBrief
         }

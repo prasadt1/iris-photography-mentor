@@ -13,6 +13,13 @@ from memory.db import get_db
 SESSION_MAX_MINUTES = 15
 
 
+def _as_utc(dt: datetime) -> datetime:
+    """MongoDB may return naive UTC datetimes — normalize before comparisons."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
 def create_capture_session(
     *,
     user_id: str | None = None,
@@ -58,7 +65,8 @@ def assert_active_session(session_id: str, user_id: str | None = None) -> dict[s
         raise ValueError("Capture session already ended")
     started = doc.get("started_at")
     if isinstance(started, datetime):
-        if datetime.now(timezone.utc) - started > timedelta(minutes=SESSION_MAX_MINUTES):
+        started_utc = _as_utc(started)
+        if datetime.now(timezone.utc) - started_utc > timedelta(minutes=SESSION_MAX_MINUTES):
             raise ValueError("Capture session expired (15 minute limit)")
     return doc
 

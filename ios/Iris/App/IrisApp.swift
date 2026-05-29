@@ -8,6 +8,7 @@ struct IrisApp: App {
     @StateObject private var appState = AppState()
 
     init() {
+        _ = FirebaseBootstrap.configureIfPossible()
         IrisTabBarAppearance.apply()
     }
 

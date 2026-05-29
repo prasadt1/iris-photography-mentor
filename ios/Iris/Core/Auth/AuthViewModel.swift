@@ -99,10 +99,8 @@ final class AuthViewModel: ObservableObject {
 
     func continueInDemoMode() {
         isDemoMode = true
-        userId = ""
+        ensureDemoUserId()
         email = nil
-        APIClient.shared.userId = nil
-        UserDefaults.standard.removeObject(forKey: AppConfig.demoUserIdKey)
         if AppConfig.isOnboardingComplete(userId: userId) {
             phase = .ready
         } else {
@@ -112,6 +110,7 @@ final class AuthViewModel: ObservableObject {
 
     func completePersonaSelection(_ chosen: String) async {
         authError = nil
+        ensureDemoUserId()
         let mode = chosen == "working_pro" ? "working_pro" : "hobbyist"
         persona = mode
         APIClient.shared.userId = userId.isEmpty ? nil : userId
@@ -144,6 +143,20 @@ final class AuthViewModel: ObservableObject {
         email = nil
         APIClient.shared.userId = nil
         UserDefaults.standard.removeObject(forKey: AppConfig.demoUserIdKey)
+    }
+
+    /// Stable scope for demo API calls (capture sessions, analyze, coach).
+    func ensureDemoUserId() {
+        guard userId.isEmpty else {
+            APIClient.shared.userId = userId
+            return
+        }
+        if let stored = UserDefaults.standard.string(forKey: AppConfig.demoUserIdKey), !stored.isEmpty {
+            userId = stored
+            return
+        }
+        let generated = "demo-ios-\(UUID().uuidString.lowercased())"
+        userId = generated
     }
 
     func applyFirebaseUser(_ uid: String, email: String?) {

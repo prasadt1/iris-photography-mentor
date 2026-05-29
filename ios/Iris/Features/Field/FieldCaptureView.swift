@@ -21,7 +21,6 @@ struct FieldCaptureView: View {
     @State private var showResult = false
     @State private var pickerItem: PhotosPickerItem?
     @State private var tipRotationTask: Task<Void, Never>?
-    @State private var pinchBaseZoom: CGFloat = 1
 
     private let analyzeService = AnalyzeService()
     private let analyzeTips = [
@@ -45,6 +44,9 @@ struct FieldCaptureView: View {
                 if let errorMessage {
                     IrisAlertBanner(message: errorMessage, style: .error)
                 }
+                if let coachError = liveCoach.lastError, coachError != errorMessage {
+                    IrisAlertBanner(message: coachError, style: .error)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -52,10 +54,7 @@ struct FieldCaptureView: View {
             .background(Color.irisCanvas)
         }
         .task {
-            await camera.prepare()
-            pinchBaseZoom = camera.zoomFactor
-            camera.start()
-            await liveCoach.start(camera: camera, auth: auth, appState: appState)
+            await startCameraAndCoach()
         }
         .onDisappear {
             Task { await liveCoach.stop(camera: camera) }
@@ -99,12 +98,9 @@ struct FieldCaptureView: View {
                 if CameraSessionModel.isSimulator || camera.permissionDenied {
                     simulatorPlaceholder
                 } else if camera.isConfigured {
-                    CameraPreviewView(session: camera.session)
+                    CameraPreviewView(session: camera.session, camera: camera)
                         .frame(width: geo.size.width, height: geo.size.height)
                         .clipped()
-                        .contentShape(Rectangle())
-                        .gesture(zoomGesture)
-                        .simultaneousGesture(doubleTapResetZoom)
                 } else {
                     ProgressView()
                         .tint(Color.irisBrandLight)
@@ -114,16 +110,24 @@ struct FieldCaptureView: View {
                     .allowsHitTesting(false)
 
                 if camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
-                    zoomIndicator
-                        .padding(12)
+                    VStack(alignment: .trailing, spacing: 8) {
+                        zoomIndicator
+                        zoomStepper
+                    }
+                    .padding(12)
+                    .allowsHitTesting(true)
                 }
 
                 if analyzing {
                     analyzingOverlay(in: geo.size)
+                        .allowsHitTesting(true)
                 }
-
+            }
+            .overlay(alignment: .bottom) {
                 liveCoachOverlay
-                    .frame(width: geo.size.width, height: geo.size.height, alignment: .bottom)
+                    .allowsHitTesting(false)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 12)
             }
         }
     }
@@ -131,7 +135,7 @@ struct FieldCaptureView: View {
     @ViewBuilder
     private var liveCoachOverlay: some View {
         VStack(spacing: 8) {
-            if liveCoach.isFetching {
+            if liveCoach.isFetching, liveCoach.isEnabled {
                 HStack(spacing: 6) {
                     ProgressView()
                         .scaleEffect(0.75)
@@ -162,8 +166,33 @@ struct FieldCaptureView: View {
                     )
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.bottom, 12)
+    }
+
+    private var zoomStepper: some View {
+        HStack(spacing: 8) {
+            Button {
+                camera.stepZoom(by: -0.5)
+            } label: {
+                Image(systemName: "minus")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(width: 32, height: 32)
+                    .background(Color.black.opacity(0.55))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Zoom out")
+
+            Button {
+                camera.stepZoom(by: 0.5)
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 13, weight: .bold))
+                    .frame(width: 32, height: 32)
+                    .background(Color.black.opacity(0.55))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Zoom in")
+        }
+        .foregroundStyle(Color.irisTextPrimary)
     }
 
     private var zoomIndicator: some View {
@@ -182,48 +211,29 @@ struct FieldCaptureView: View {
             .accessibilityLabel("Zoom \(camera.zoomLabel)")
     }
 
-    private var zoomGesture: some Gesture {
-        MagnificationGesture()
-            .onChanged { scale in
-                let target = pinchBaseZoom * scale
-                camera.setZoomFactor(target)
-            }
-            .onEnded { _ in
-                pinchBaseZoom = camera.zoomFactor
-            }
-    }
-
-    private var doubleTapResetZoom: some Gesture {
-        TapGesture(count: 2)
-            .onEnded {
-                camera.resetZoom()
-                pinchBaseZoom = camera.minZoomFactor
-            }
-    }
-
     private func analyzingOverlay(in size: CGSize) -> some View {
         Color.irisCanvas.opacity(0.92)
-            .frame(width: size.width, height: size.height)
-            .overlay {
-                VStack(spacing: 14) {
-                    ProgressView()
-                        .tint(Color.irisBrandLight)
-                        .scaleEffect(1.2)
-                    Text("Analyzing your shot…")
-                        .font(IrisFont.sans(15, weight: .semibold))
-                        .foregroundStyle(Color.irisTextPrimary)
-                    Text(analyzeTips[analyzeTipIndex % analyzeTips.count])
-                        .font(IrisFont.sans(13))
-                        .foregroundStyle(Color.irisTextMuted)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                    Button("Cancel") {
-                        cancelAnalysis()
-                    }
-                    .font(IrisFont.sans(14, weight: .semibold))
-                    .foregroundStyle(Color.irisBrandLight)
+        .frame(width: size.width, height: size.height)
+        .overlay {
+            VStack(spacing: 14) {
+                ProgressView()
+                    .tint(Color.irisBrandLight)
+                    .scaleEffect(1.2)
+                Text("Analyzing your shot…")
+                    .font(IrisFont.sans(15, weight: .semibold))
+                    .foregroundStyle(Color.irisTextPrimary)
+                Text(analyzeTips[analyzeTipIndex % analyzeTips.count])
+                    .font(IrisFont.sans(13))
+                    .foregroundStyle(Color.irisTextMuted)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+                Button("Cancel") {
+                    cancelAnalysis()
                 }
+                .font(IrisFont.sans(14, weight: .semibold))
+                .foregroundStyle(Color.irisBrandLight)
             }
+        }
     }
 
     private var simulatorPlaceholder: some View {
@@ -239,9 +249,12 @@ struct FieldCaptureView: View {
 
     private var controls: some View {
         VStack(spacing: 12) {
-            if liveCoach.isEnabled, liveCoach.isSessionActive {
+            if !CameraSessionModel.isSimulator, camera.isConfigured {
                 HStack {
-                    Toggle(isOn: $liveCoach.isEnabled) {
+                    Toggle(isOn: Binding(
+                        get: { liveCoach.isEnabled },
+                        set: { liveCoach.setEnabled($0, camera: camera, auth: auth, appState: appState) }
+                    )) {
                         Text("Live coach")
                             .font(IrisFont.sans(13, weight: .medium))
                             .foregroundStyle(Color.irisTextPrimary)
@@ -252,7 +265,8 @@ struct FieldCaptureView: View {
                         Text(status)
                             .font(IrisFont.sans(11))
                             .foregroundStyle(Color.irisTextMuted)
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.trailing)
                     }
                 }
             }
@@ -283,7 +297,7 @@ struct FieldCaptureView: View {
             .disabled(analyzing || (!CameraSessionModel.isSimulator && !camera.isConfigured))
             .accessibilityLabel("Capture and analyze")
 
-            if liveCoach.isSessionActive, !CameraSessionModel.isSimulator {
+            if liveCoach.isEnabled, liveCoach.isSessionActive, !CameraSessionModel.isSimulator {
                 IrisSecondaryButton(
                     title: liveCoach.isFetching ? "Coach thinking…" : "Ask Iris",
                     icon: "sparkles",
@@ -330,6 +344,32 @@ struct FieldCaptureView: View {
         .frame(width: w, height: h)
     }
 
+    private func startCameraAndCoach() async {
+        guard !CameraSessionModel.isSimulator else { return }
+
+        auth.ensureDemoUserId()
+        await camera.prepare()
+        guard camera.isConfigured else {
+            if let msg = camera.errorMessage {
+                errorMessage = msg
+            }
+            return
+        }
+
+        camera.start()
+        for _ in 0 ..< 50 {
+            if camera.isRunning { break }
+            try? await Task.sleep(nanoseconds: 100_000_000)
+        }
+
+        guard camera.isRunning else {
+            errorMessage = "Camera didn’t start. Close Shoot and try again."
+            return
+        }
+
+        await liveCoach.start(camera: camera, auth: auth, appState: appState)
+    }
+
     private func captureAndAnalyze() async {
         if CameraSessionModel.isSimulator {
             errorMessage = "Use Gallery on the simulator."
@@ -367,7 +407,7 @@ struct FieldCaptureView: View {
         defer {
             analyzing = false
             tipRotationTask?.cancel()
-            if liveCoach.isSessionActive {
+            if liveCoach.isEnabled, liveCoach.isSessionActive {
                 liveCoach.resume(camera: camera)
             }
         }
@@ -407,6 +447,9 @@ struct FieldCaptureView: View {
         analysisCancelled = true
         analyzing = false
         tipRotationTask?.cancel()
+        if liveCoach.isEnabled, liveCoach.isSessionActive {
+            liveCoach.resume(camera: camera)
+        }
     }
 
     private func previewFileURL(image: UIImage?, entryId: String) -> URL? {

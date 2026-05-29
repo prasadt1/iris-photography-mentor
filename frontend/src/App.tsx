@@ -19,6 +19,8 @@ import { clearMentorSession } from './services/mentorClient';
 import { fetchActiveAssignment } from './services/practiceClient';
 import { fetchUserProfile, personaToUserMode, updatePersona } from './services/userClient';
 import { OfflineBanner } from './components/OfflineBanner';
+import { FilmGrain } from './components/FilmGrain';
+import { DecorativePhotos } from './components/DecorativePhotos';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import {
   isOnboardingComplete,
@@ -138,7 +140,11 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-canvas text-stone-200 font-sans selection:bg-brand-500/30 flex">
+    <div className="min-h-screen bg-canvas text-stone-200 font-sans selection:bg-brand-500/30 flex relative">
+      {/* Darkroom aesthetic overlays */}
+      <DecorativePhotos />
+      <div className="darkroom-vignette" aria-hidden="true" />
+      <FilmGrain className="fixed inset-0 z-0" />
       <a href="#main-content" className="sr-only">
         Skip to main content
       </a>
