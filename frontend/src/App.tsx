@@ -20,6 +20,7 @@ import { fetchActiveAssignment } from './services/practiceClient';
 import { fetchUserProfile, personaToUserMode, updatePersona } from './services/userClient';
 import { OfflineBanner } from './components/OfflineBanner';
 import { FilmGrain } from './components/FilmGrain';
+import { PhotoParallax } from './components/PhotoParallax';
 import { useOnlineStatus } from './hooks/useOnlineStatus';
 import {
   isOnboardingComplete,
@@ -140,8 +141,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-canvas text-stone-200 font-sans selection:bg-brand-500/30 flex relative">
+      {/* Parallax photography background */}
+      <PhotoParallax className="z-0" />
       {/* Subtle film grain texture */}
-      <FilmGrain className="fixed inset-0 z-0" />
+      <FilmGrain className="fixed inset-0 z-[1]" />
       <a href="#main-content" className="sr-only">
         Skip to main content
       </a>
