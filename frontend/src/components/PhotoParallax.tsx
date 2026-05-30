@@ -33,24 +33,24 @@ interface ParallaxLayer {
 const generateLayers = (): ParallaxLayer[] => {
   const layers: ParallaxLayer[] = [];
   const positions = [
-    { x: 5, y: 10 },
-    { x: 75, y: 5 },
-    { x: 85, y: 45 },
-    { x: 10, y: 70 },
-    { x: 70, y: 75 },
-    { x: 40, y: 85 },
+    { x: 2, y: 8 },
+    { x: 78, y: 3 },
+    { x: 88, y: 40 },
+    { x: 5, y: 55 },
+    { x: 75, y: 70 },
+    { x: 45, y: 85 },
   ];
 
   PARALLAX_IMAGES.forEach((src, i) => {
     const pos = positions[i % positions.length];
     layers.push({
       src,
-      x: pos.x + (Math.random() * 10 - 5),
-      y: pos.y + (Math.random() * 10 - 5),
-      size: 180 + Math.random() * 120, // 180-300px
-      speed: 0.05 + Math.random() * 0.15, // 0.05-0.2
-      rotation: Math.random() * 20 - 10, // -10 to 10 degrees
-      opacity: 0.06 + Math.random() * 0.06, // 0.06-0.12
+      x: pos.x + (Math.random() * 8 - 4),
+      y: pos.y + (Math.random() * 8 - 4),
+      size: 280 + Math.random() * 180, // 280-460px (much larger)
+      speed: 0.03 + Math.random() * 0.12, // 0.03-0.15
+      rotation: Math.random() * 12 - 6, // -6 to 6 degrees (less rotation)
+      opacity: 0.35 + Math.random() * 0.15, // 0.35-0.50 (much more visible)
     });
   });
 
@@ -97,11 +97,11 @@ export const PhotoParallax: React.FC<{ className?: string }> = ({ className = ''
       className={`pointer-events-none fixed inset-0 overflow-hidden ${className}`}
       aria-hidden="true"
     >
-      {/* Vignette overlay - darkens edges */}
+      {/* Vignette overlay - very soft edge fade */}
       <div
         className="absolute inset-0 z-10"
         style={{
-          background: `radial-gradient(ellipse at center, transparent 20%, var(--color-canvas) 70%)`,
+          background: `radial-gradient(ellipse at center, transparent 60%, var(--color-canvas) 95%)`,
         }}
       />
 
@@ -125,7 +125,7 @@ export const PhotoParallax: React.FC<{ className?: string }> = ({ className = ''
                 rotate(${layer.rotation}deg)
               `,
               opacity: layer.opacity,
-              filter: 'blur(2px) saturate(0.3) brightness(0.7)',
+              filter: 'saturate(0.7) brightness(0.9)',
               willChange: 'transform',
             }}
           >
@@ -139,17 +139,7 @@ export const PhotoParallax: React.FC<{ className?: string }> = ({ className = ''
         ))}
       </div>
 
-      {/* Subtle gradient overlay for depth */}
-      <div
-        className="absolute inset-0 z-5"
-        style={{
-          background: `linear-gradient(180deg,
-            transparent 0%,
-            rgba(26, 24, 22, 0.3) 50%,
-            rgba(26, 24, 22, 0.6) 100%
-          )`,
-        }}
-      />
+{/* Gradient overlay removed for better visibility */}
     </div>
   );
 };
