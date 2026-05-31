@@ -6,6 +6,7 @@ import { TabEmptyState } from './TabEmptyState';
 import { printScanStage } from '../lib/scanLoadingStages';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { friendlyErrorMessage } from '../lib/friendlyError';
+import { dedupePrintProposals } from '../lib/dedupePrintProposals';
 import { listingFromApproval } from '../lib/printListingPayload';
 import { fetchPortfolio } from '../services/memoryClient';
 import {
@@ -115,10 +116,10 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
   const [feedback, setFeedback] = useState<PrintFeedback | null>(null);
   const [showRejected, setShowRejected] = useState(false);
 
-  const loadPreviews = useCallback(async () => {
+  const loadPreviews = useCallback(async (): Promise<Map<string, PortfolioListItem>> => {
+    const map = new Map<string, PortfolioListItem>();
     try {
       const data = await fetchPortfolio({ limit: 100 });
-      const map = new Map<string, PortfolioListItem>();
       for (const e of data.entries) {
         map.set(e.id, e);
       }
@@ -126,22 +127,25 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
     } catch {
       /* optional */
     }
+    return map;
   }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [pending, saved, rejectedItems] = await Promise.all([
+      const [pending, saved, rejectedItems, previewMap] = await Promise.all([
         fetchPrintPending(),
         fetchSavedPrintListings(),
         fetchPrintRejected(),
+        loadPreviews(),
       ]);
-      setItems(pending.items);
+      const deduped = dedupePrintProposals(pending.items, previewMap);
+      setItems(deduped);
       setSavedListings(saved.items);
       setRejected(rejectedItems.items);
       const nextPrices: Record<string, number> = {};
-      for (const item of pending.items) {
+      for (const item of deduped) {
         nextPrices[item.id] = listingFromApproval(item).suggestedListPrice;
       }
       setPrices(nextPrices);
@@ -150,12 +154,11 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loadPreviews]);
 
   useEffect(() => {
     void refresh();
-    void loadPreviews();
-  }, [refresh, loadPreviews]);
+  }, [refresh]);
 
   useEffect(() => {
     if (!scanning) {
@@ -174,13 +177,14 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
       const created = result.proposalsCreated?.length ?? 0;
       const cleared = result.supersededPending ?? 0;
       setFeedback({ kind: 'scan', created, superseded: cleared });
-      setItems(result.pending?.items ?? []);
+      const previewMap = await loadPreviews();
+      const deduped = dedupePrintProposals(result.pending?.items ?? [], previewMap);
+      setItems(deduped);
       const nextPrices: Record<string, number> = {};
-      for (const item of result.pending?.items ?? []) {
+      for (const item of deduped) {
         nextPrices[item.id] = listingFromApproval(item).suggestedListPrice;
       }
       setPrices(nextPrices);
-      void loadPreviews();
     } catch (e) {
       setError(friendlyErrorMessage(e));
     } finally {
@@ -207,7 +211,6 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
         title: draft.title,
       });
       await refresh();
-      void loadPreviews();
     } catch (e) {
       setError(friendlyErrorMessage(e));
     } finally {

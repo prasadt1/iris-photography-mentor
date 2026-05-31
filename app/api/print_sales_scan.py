@@ -43,6 +43,30 @@ def _entry_already_pending(uid: str, entry_id: str) -> bool:
     )
 
 
+def _entry_already_listed(uid: str, entry_id: str) -> bool:
+    return (
+        get_db().print_sales.find_one(
+            {
+                "user_id": uid,
+                "portfolio_entry_id": entry_id,
+                "status": "listed",
+            }
+        )
+        is not None
+    )
+
+
+def _dedupe_key(doc: dict[str, Any]) -> str:
+    """One listing proposal per logical upload (shoot), not per duplicate portfolio row."""
+    shoot = doc.get("shoot_id")
+    if shoot:
+        return f"shoot:{shoot}"
+    image = doc.get("image_url") or doc.get("thumbnail_url") or ""
+    if image:
+        return f"image:{image}"
+    return f"entry:{doc['_id']}"
+
+
 def run_print_sales_scan(
     user_id: str | None = None,
     *,
@@ -72,11 +96,18 @@ def run_print_sales_scan(
     )
 
     proposals: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for doc in ranked:
         if len(proposals) >= limit:
             break
         eid = str(doc["_id"])
+        key = _dedupe_key(doc)
+        if key in seen:
+            continue
+        seen.add(key)
         if _entry_already_pending(str(uid), eid):
+            continue
+        if _entry_already_listed(str(uid), eid):
             continue
 
         meta = print_sales_tools.generate_listing_metadata(eid, marketplace=marketplace)
