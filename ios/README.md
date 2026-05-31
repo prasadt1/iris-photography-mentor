@@ -2,7 +2,7 @@
 
 **Display name:** Iris · **Bundle ID:** `com.prasadtilloo.practicecompanion`
 
-Mobile Iris per **`docs/ios-product-spec.md`**: Home · Practice · Mentor · Settings + **Shoot FAB**. Shares Cloud Run API with web.
+**IA:** Home · Practice · Mentor · Settings + **Shoot FAB**. Shares Cloud Run API with web. Detailed product notes: local `docs/ios-product-spec.md` (gitignored).
 
 | Phase | Status |
 |-------|--------|

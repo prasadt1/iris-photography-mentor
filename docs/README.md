@@ -10,7 +10,11 @@ Published docs for contributors and judges.
 | `docs/PENDING-AND-SCOPE.md` | Done / pending / out of scope |
 | `docs/superpowers/` | Polish specs, plans, phase reviews |
 | `docs/devpost-article-draft.md` | Devpost narrative draft |
+| `docs/devpost-visual-prompts.md` | Devpost image/diagram AI prompts |
 | `docs/ios-demo-video-script.md` | Recording script |
+| `docs/ios-product-spec.md` | iOS product / IA planning |
+| `docs/ui-ux-design.md` | Pre-polish UI spec (superseded by shipped UI + `spec.md`) |
+| `docs/diagrams/user-journey-*.mmd` | Devpost journey diagrams |
 
 | Document | Purpose |
 |----------|---------|
@@ -22,8 +26,6 @@ Published docs for contributors and judges.
 | [`infrastructure-deployment.md`](infrastructure-deployment.md) | GCP costs, CI/CD |
 | [`decisions.md`](decisions.md) | Architecture decision records |
 | [`testing-strategy.md`](testing-strategy.md) | Test pyramid, QA |
-| [`ui-ux-design.md`](ui-ux-design.md) | IA, flows, visual system |
-| [`diagrams/`](diagrams/) | Architecture and journey diagrams (Mermaid) |
-| [`devpost-visual-prompts.md`](devpost-visual-prompts.md) | Copy-paste image/diagram prompts for Devpost |
+| [`diagrams/`](diagrams/) | Architecture diagrams (Mermaid) — `architecture`, `agent-orchestration`, `data-flow`, `ios-architecture` |
 
 **iOS:** [`../ios/README.md`](../ios/README.md) — native app scaffold and setup.
