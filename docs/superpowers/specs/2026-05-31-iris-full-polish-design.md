@@ -29,7 +29,7 @@ The homepage adapts based on user state (empty library vs. returning user) while
 - Headline: "Your AI photography mentor — that remembers every shot you upload."
 - Subhead: "Glass Box critiques on five dimensions, a private library that grows with you, practice assignments, and mentor chat."
 - Primary CTA: "Upload your first photo" (amber, prominent)
-- Secondary CTA: "See demo critique" (outline, amber border)
+- Secondary CTA: "See demo critique" (outline, amber border) → scrolls to Example Glass Box section + focus animation
 - No backdrop-blur on hero card; clean gradient only
 
 **Example Glass Box:**
@@ -58,7 +58,7 @@ The homepage adapts based on user state (empty library vs. returning user) while
   - Label: "Best in your library"
   - Score badge: overall average (e.g., "8.7")
   - Scene description or photo title
-  - Stats: "47 photos · Member since Mar 2024"
+  - Stats: "47 photos · Member since Mar 2024" (first upload date from portfolio, or omit if unavailable)
   - Dominant aesthetic tags as chips
 - Photo must be real (from portfolio), not placeholder
 - Backend fix required: query for true highest-scoring photo, real portfolio count
@@ -75,7 +75,13 @@ The homepage adapts based on user state (empty library vs. returning user) while
 - 2-3 lines of profile-driven insight (patterns + recent improvement)
 - Optional sparkline or delta indicator
 - Primary CTA: "Ask me anything" → Mentor tab
-- Show when photoCount >= 3; softer threshold for demo accounts
+- Threshold: photoCount >= 3 for regular users, >= 1 for demo users (check user mode)
+
+**Then/Now Growth Section:**
+- Positioned below mentor card when library has enough history (>= 6 photos)
+- Shows portfolio-wide growth trends (composition, lighting, technique over time)
+- Sparkline visualization with before/after comparison
+- Keep as long-term view separate from assignment-specific wins
 
 **Latest Assignment Card (when applicable):**
 - Shows most recent completed assignment
@@ -196,7 +202,8 @@ Built by a fellow photographer — for the work you do between workshops, critiq
 - Border-top: 1px solid warm-border
 - Background: bg-canvas
 - Links: amber color (#fbbf24), no underline, underline on hover
-- Mobile: stack lines, reduce padding to 16px
+- **Visible on all viewports** (remove `hidden lg:block` from current implementation)
+- Mobile: stack lines, reduce padding to 16px, ensure adequate spacing above bottom nav
 
 **Constraints:**
 - No emoji
@@ -229,12 +236,19 @@ Built by a fellow photographer — for the work you do between workshops, critiq
 ### 1.6 Backend/Data Fixes for Phase 1
 
 **True Strongest Photo:**
-- Query portfolio for entry with highest `overallAverage`, not most recent
+- Use `sort_by=score&limit=1` API parameter (or equivalent MongoDB sort)
+- Query: `collection.find().sort({overallAverage: -1}).limit(1)`
 - Display in personal hero with real score
 
 **Real Portfolio Count:**
-- Count actual portfolio entries, not hardcoded
+- Use `collection.count_documents({})`, not `len(entries)`
+- More efficient for large portfolios
 - Display in personal hero stats
+
+**First Upload Date ("Member since"):**
+- Query earliest portfolio entry: `collection.find().sort({created_at: 1}).limit(1)`
+- Extract date, format as "Mar 2024"
+- Omit if no entries or date unavailable
 
 **Dismissible Pitch Band:**
 - Persist dismissal to localStorage
@@ -249,7 +263,8 @@ Built by a fellow photographer — for the work you do between workshops, critiq
 **Discoverability:**
 - Badge on Mentor nav: "Organize · N" when pending proposals exist
 - Sidebar contextual block on Mentor tab: "Organize · N pending"
-- Consider outcome-based label: "Tag & tidy library" instead of "Organize"
+- **Label decision:** Rename to "Tag & tidy" OR keep "Organize" with subtitle "Tag & tidy your library"
+  - Recommendation: Keep "Organize" as nav label (short), add subtitle in the tab content header
 - Do NOT require discovery only via toggle inside Mentor
 
 **Value Proposition Messaging:**
@@ -362,13 +377,19 @@ Backend persists all data; UX must make this visible.
 
 ### 3.2 My Work Visibility for Listings
 
+**Data Source (required for badges):**
+- On approve: add `listed_for_sale` to portfolio entry's `user_tags` array
+- OR: create API endpoint to check print_sales collection for portfolio_entry_id
+- Recommendation: user_tag approach for simplicity (single query, existing filter infrastructure)
+
 **Gallery Badges:**
 - Approved listings show badge on thumbnail: "Listed" or marketplace indicator
 - Visual distinction from non-listed photos
+- Badge data comes from user_tags or print_sales lookup
 
 **Filter Option:**
 - Add "Listed for sale" to filter dropdown
-- Optional user_tag on approve (e.g., `listed_for_sale`) for consistency
+- Filter by `user_tags.includes('listed_for_sale')`
 
 ### 3.3 Performance Improvements
 
@@ -403,10 +424,11 @@ Backend persists all data; UX must make this visible.
 - `app/memory/portfolio.py` — true strongest photo query, real count
 
 **Phase 2:**
-- `frontend/src/components/MentorTab.tsx` — Organize elevation, messaging
-- `frontend/src/components/PracticeTab.tsx` — Field Camera desktop behavior, back nav
-- `frontend/src/components/studio/StudioAnalysisResults.tsx` — assignment link visibility
-- Navigation components — contextual back affordance
+- `frontend/src/components/MentorTab.tsx` — Organize elevation, messaging, label/subtitle
+- `frontend/src/components/PracticeTab.tsx` — back nav, routing to Field
+- `frontend/src/components/FieldTab.tsx` — desktop upload behavior (file picker), mobile camera, assignment linking
+- `frontend/src/components/studio/StudioAnalysisResults.tsx` — assignment link visibility ("Submitted for: X")
+- Navigation components — contextual back affordance ("← Practice", "← My Work")
 
 **Phase 3:**
 - `frontend/src/components/PrintSalesTab.tsx` — save states, skeleton loading
@@ -435,6 +457,18 @@ Backend persists all data; UX must make this visible.
 ## Approval
 
 - [x] Phase 1 mockups reviewed and approved with revisions
-- [ ] Spec review loop
-- [ ] User spec review
+- [x] Spec review loop — passed
+- [x] User spec review — approved with amendments (2026-05-31)
 - [ ] Implementation plan (writing-plans skill)
+
+### Amendments (2026-05-31)
+
+1. portfolio.py: `count_documents()` for total, `sort_by=score&limit=1` for hero
+2. "See demo critique" CTA scrolls to Example Glass Box + focus
+3. "Member since" = first upload date from portfolio or omit
+4. Then/Now growth section below mentor card when >= 6 photos
+5. Footer visible on mobile (remove `hidden lg:block`)
+6. Phase 2: add `FieldTab.tsx` for desktop upload behavior
+7. Organize label: keep "Organize" nav label, add subtitle in content header
+8. Mentor card threshold: >= 3 photos, >= 1 for demo user
+9. Phase 3: add `listed_for_sale` user_tag on approve for My Work badges
