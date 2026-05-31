@@ -27,3 +27,7 @@
 
 - Live Etsy publishing
 - Full light mode / breadcrumbs
+
+## Consolidated review
+
+See `docs/superpowers/reviews/2026-05-31-phases-1-3-review-for-claude.md` (includes post-close fixes: listing dedupe, growth caption).

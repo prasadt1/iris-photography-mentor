@@ -34,4 +34,4 @@ cd .. && app/.venv/bin/python -m pytest app/tests/ -q
 
 ## Next phase gate
 
-Phase 2 closed in `docs/superpowers/reviews/2026-05-31-phase2-closed.md`. Phase 3 gate applies before Print Sales / tour polish.
+Phases 2–3 closed. Consolidated handoff: `docs/superpowers/reviews/2026-05-31-phases-1-3-review-for-claude.md`.
