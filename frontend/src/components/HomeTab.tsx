@@ -253,6 +253,15 @@ export const HomeTab: React.FC<Props> = ({
     bestPhoto &&
     earliestPhoto.id !== bestPhoto.id;
 
+  /** Delta between the two frames shown in Then/Now (not the portfolio trend series). */
+  const growthFrameOverallDelta = bestPhoto && earliestPhoto
+    ? bestPhoto.overallAverage - earliestPhoto.overallAverage
+    : null;
+  const growthFrameCompositionDelta =
+    bestPhoto && earliestPhoto
+      ? bestPhoto.scores.composition - earliestPhoto.scores.composition
+      : null;
+
   const avgLibraryScore = (() => {
     const scores = profile?.averageScores;
     if (!scores) return null;
@@ -710,7 +719,7 @@ export const HomeTab: React.FC<Props> = ({
             <div className="mb-4">
               <h2 className="font-serif text-xl md:text-2xl text-white mb-1">Your growth</h2>
               <p className="text-stone-400 text-xs md:text-sm">
-                Early frame vs strongest · {portfolioTotal} photos
+                Your oldest upload vs highest-scoring photo · {portfolioTotal} photos in library
               </p>
             </div>
             <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-8">
@@ -751,10 +760,16 @@ export const HomeTab: React.FC<Props> = ({
                 </p>
               </div>
             </div>
-            {trendDelta != null && trendDelta > 0 && (
+            {growthFrameOverallDelta != null && growthFrameOverallDelta > 0 && (
               <p className="text-center mt-4 text-brand-400 font-medium text-sm">
                 <TrendingUp className="w-4 h-4 inline mr-1.5" />
-                +{trendDelta.toFixed(1)} in {trendLabel?.toLowerCase()}
+                +{growthFrameOverallDelta.toFixed(1)} overall between these two frames
+                {growthFrameCompositionDelta != null && growthFrameCompositionDelta > 0 && (
+                  <span className="text-stone-400 font-normal">
+                    {' '}
+                    (composition +{growthFrameCompositionDelta.toFixed(1)})
+                  </span>
+                )}
               </p>
             )}
           </section>
