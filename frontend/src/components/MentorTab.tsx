@@ -31,7 +31,7 @@ import {
   fetchPendingApprovals,
   runTriageScan,
 } from '../services/triageClient';
-import { fetchPortfolio } from '../services/memoryClient';
+import { fetchPortfolio, fetchPortfolioStats } from '../services/memoryClient';
 import type { UserMode } from '../types/practice';
 import type { PendingApproval } from '../types/triage';
 import type { PortfolioListItem } from '../types/memory';
@@ -171,6 +171,8 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   const [labelError, setLabelError] = useState<string | null>(null);
   const [scanSummary, setScanSummary] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Map<string, EntryPreview>>(new Map());
+  const [libraryCount, setLibraryCount] = useState(0);
+  const [pendingOrganizeCount, setPendingOrganizeCount] = useState(0);
 
   useEffect(() => {
     setStarters(STARTERS_BY_MODE[mode]);
@@ -285,11 +287,21 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   }, []);
 
   useEffect(() => {
+    void refreshLabelItems();
+  }, [refreshLabelItems]);
+
+  useEffect(() => {
+    setPendingOrganizeCount(labelItems.length);
+  }, [labelItems.length]);
+
+  useEffect(() => {
     if (view === 'label') {
-      void refreshLabelItems();
       void loadPreviews();
+      void fetchPortfolioStats()
+        .then((s) => setLibraryCount(s.total))
+        .catch(() => setLibraryCount(0));
     }
-  }, [view, refreshLabelItems, loadPreviews]);
+  }, [view, loadPreviews]);
 
   useEffect(() => {
     if (!scanning) {
@@ -362,7 +374,7 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
         <button
           type="button"
           onClick={() => setView('label')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+          className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
             view === 'label'
               ? 'bg-brand-500 text-on-brand'
               : 'text-muted hover:text-white'
@@ -370,6 +382,16 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
         >
           <Layers className="w-4 h-4" />
           Organize
+          {pendingOrganizeCount > 0 && (
+            <span
+              className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
+                view === 'label' ? 'bg-white text-brand-600' : 'bg-brand-500 text-on-brand'
+              }`}
+              aria-label={`${pendingOrganizeCount} pending proposals`}
+            >
+              {pendingOrganizeCount}
+            </span>
+          )}
         </button>
       </div>
 
@@ -546,11 +568,12 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
         <div className="space-y-6">
           <div>
             <h1 className="font-serif text-2xl md:text-3xl font-extrabold text-white">
-              Organize your photos
+              Organize
             </h1>
-            <p className="text-muted text-sm mt-2 leading-relaxed">
-              I&apos;ll find similar photos and suggest tags — so you can search
-              &quot;portrait&quot; or &quot;backlit&quot; later and find exactly what you need.
+            <p className="text-brand-400/90 text-sm mt-1">Tag &amp; tidy your library</p>
+            <p className="text-muted text-sm mt-3 leading-relaxed">
+              I group similar shots, flag near-duplicates, surface hidden gems, and suggest
+              searchable tags — you approve every change before it sticks.
             </p>
           </div>
 
@@ -620,23 +643,31 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
             <div className="rounded-xl border border-dashed border-warm/60 bg-surface-1/50 p-6 text-center space-y-3">
               <Layers className="w-10 h-10 text-muted mx-auto" />
               <div>
-                <p className="text-white font-medium">Ready to organize</p>
+                <p className="text-white font-medium">
+                  {libraryCount === 0 ? 'Add photos first' : 'Ready to scan'}
+                </p>
                 <p className="text-sm text-muted mt-1">
-                  Tap the button above to scan your library. I&apos;ll suggest tags
-                  for similar photos — you approve what looks right.
+                  {libraryCount === 0 ? (
+                    <>
+                      Upload a few shots on Home or My Work — then come back and I&apos;ll group
+                      them, suggest tags, and help you spot duplicates.
+                    </>
+                  ) : (
+                    <>
+                      Tap &quot;Scan my library&quot; above. I&apos;ll propose tags and tidy-ups
+                      for {libraryCount} photo{libraryCount === 1 ? '' : 's'} — you approve each one.
+                    </>
+                  )}
                 </p>
               </div>
-              {onGoToWork && (
-                <p className="text-xs text-muted">
-                  Need photos first?{' '}
-                  <button
-                    type="button"
-                    onClick={onGoToWork}
-                    className="text-brand-400 hover:text-brand-300 underline"
-                  >
-                    Upload in My Work
-                  </button>
-                </p>
+              {libraryCount === 0 && onGoToWork && (
+                <button
+                  type="button"
+                  onClick={onGoToWork}
+                  className="text-sm text-brand-400 hover:text-brand-300 font-medium"
+                >
+                  Upload in My Work →
+                </button>
               )}
             </div>
           )}

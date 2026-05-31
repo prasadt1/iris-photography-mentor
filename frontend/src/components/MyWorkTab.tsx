@@ -8,7 +8,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowLeft, ArrowUpDown, ChevronDown, ChevronLeft, ImageIcon, Plus, RefreshCw, Sparkles, Tag, TrendingUp, X } from 'lucide-react';
+import { ArrowUpDown, ChevronDown, ChevronLeft, ImageIcon, Plus, RefreshCw, Sparkles, Tag, TrendingUp, X } from 'lucide-react';
+import { SubViewBack } from './SubViewBack';
 import { FilmGrain } from './FilmGrain';
 import { FocusAreas } from './FocusAreas';
 import { InlineAlertBanner } from './InlineAlertBanner';
@@ -16,6 +17,7 @@ import { TabEmptyState } from './TabEmptyState';
 import { getScoreContext } from '../lib/scoreContext';
 import { apiUnreachableMessage } from '../lib/apiHelp';
 import { friendlyErrorMessage } from '../lib/friendlyError';
+import { formatSkillLabel } from '../lib/formatSkillLabel';
 import { MemoryGridSkeleton } from './SkeletonBlocks';
 import PhotoUploader from './studio/PhotoUploader';
 import StudioAnalysisResults from './studio/StudioAnalysisResults';
@@ -90,6 +92,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   const [filename, setFilename] = useState('photo.jpg');
   const [analysisError, setAnalysisError] = useState<string | null>(null);
   const [analyzeWaitSec, setAnalyzeWaitSec] = useState(0);
+  const [submittedAssignment, setSubmittedAssignment] = useState<Assignment | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   // Handle pending analysis from Home upload
@@ -162,6 +165,9 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
     setImageUrl(previewUrl);
     setFilename(file.name);
     setAnalysisError(null);
+    if (activeAssignment) {
+      setSubmittedAssignment(activeAssignment);
+    }
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -195,6 +201,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
     setResult(null);
     setImageUrl(null);
     setFilename('photo.jpg');
+    setSubmittedAssignment(null);
     setViewMode('gallery');
     // Clear pending analysis from Home if any
     onClearPendingAnalysis?.();
@@ -226,13 +233,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
             onCancel={cancelAnalysis}
           />
           {viewMode === 'upload' && (
-            <button
-              type="button"
-              onClick={() => setViewMode('gallery')}
-              className="text-sm text-muted hover:text-white underline underline-offset-2"
-            >
-              Back to gallery
-            </button>
+            <SubViewBack label="My Work" onClick={() => setViewMode('gallery')} />
           )}
         </div>
       </div>
@@ -243,14 +244,12 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   if (viewMode === 'result' && result && imageUrl) {
     return (
       <div className="animate-fadeIn relative space-y-4">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-white transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          Back to gallery
-        </button>
+        <SubViewBack label="My Work" onClick={handleReset} />
+        {submittedAssignment && (
+          <p className="text-sm text-brand-400 bg-brand-500/10 border border-brand-500/30 rounded-lg px-3 py-2">
+            Submitted for: {formatSkillLabel(submittedAssignment.targetSkill)}
+          </p>
+        )}
         <div className="relative">
           <FilmGrain className="rounded-2xl" />
           <StudioAnalysisResults

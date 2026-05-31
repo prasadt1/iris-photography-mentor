@@ -24,6 +24,7 @@ import {
   fetchPortfolioTrends,
 } from '../services/memoryClient';
 import { analyzePhoto } from '../services/agentClient';
+import { fetchAssignments } from '../services/practiceClient';
 import type { AppTab } from '../config/navConfig';
 import type { AnalysisResult } from '../types';
 import type { Assignment, UserMode } from '../types/practice';
@@ -45,6 +46,17 @@ interface Props {
 }
 
 const PITCH_DISMISS_KEY = 'iris:pitchBandDismissed';
+const PRACTICE_WIN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function pickLatestPracticeWin(completed: Assignment[]): Assignment | null {
+  const cutoff = Date.now() - PRACTICE_WIN_WINDOW_MS;
+  for (const a of completed) {
+    if (!a.completedAt || a.skillDelta == null || a.skillDelta.delta <= 0) continue;
+    if (new Date(a.completedAt).getTime() < cutoff) continue;
+    return a;
+  }
+  return null;
+}
 
 const EXAMPLE_PHOTO = {
   url: 'https://picsum.photos/seed/iris-home-hero/1200/800',
@@ -103,6 +115,7 @@ export const HomeTab: React.FC<Props> = ({
   const [pitchDismissed, setPitchDismissed] = useState(
     () => localStorage.getItem(PITCH_DISMISS_KEY) === 'true',
   );
+  const [latestPracticeWin, setLatestPracticeWin] = useState<Assignment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const exampleGlassBoxRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -110,12 +123,14 @@ export const HomeTab: React.FC<Props> = ({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [portfolioStats, recentPhotos, oldestPortfolio, aesthetic, trendData] = await Promise.all([
+      const [portfolioStats, recentPhotos, oldestPortfolio, aesthetic, trendData, assignments] =
+        await Promise.all([
         fetchPortfolioStats(),
         fetchPortfolio({ limit: 10, sortBy: 'date', sortOrder: 'desc' }),
         fetchPortfolio({ limit: 5, sortOrder: 'asc' }).catch(() => ({ entries: [], total: 0 })),
         fetchAestheticProfile().catch(() => null),
         fetchPortfolioTrends(6).catch(() => null),
+        fetchAssignments().catch(() => ({ proposed: [], active: [], completed: [] })),
       ]);
 
       setStats(portfolioStats);
@@ -124,6 +139,7 @@ export const HomeTab: React.FC<Props> = ({
       setContactSheet(recentPhotos.entries);
       setProfile(aesthetic);
       setTrends(trendData);
+      setLatestPracticeWin(pickLatestPracticeWin(assignments.completed));
 
       const validOldest = oldestPortfolio.entries.find(
         (e) => e.imageUrl && e.overallAverage > 0,
@@ -412,6 +428,26 @@ export const HomeTab: React.FC<Props> = ({
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-500 text-on-brand font-semibold hover:bg-brand-400 transition-colors"
             >
               Ask me anything
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </section>
+        )}
+
+        {/* Practice win (recent completed assignment) */}
+        {isReturning && latestPracticeWin?.skillDelta && (
+          <section className="rounded-xl border border-brand-500/30 bg-brand-500/10 p-6 max-w-4xl mx-auto">
+            <p className="text-xs uppercase tracking-widest text-brand-400 mb-2">Practice win</p>
+            <p className="font-serif text-lg text-white mb-1">
+              {formatSkillLabel(latestPracticeWin.targetSkill)} up +
+              {latestPracticeWin.skillDelta.delta.toFixed(1)} pts
+            </p>
+            <p className="text-sm text-stone-400 mb-4 line-clamp-2">{latestPracticeWin.brief}</p>
+            <button
+              type="button"
+              onClick={() => onNavigate('practice')}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-400 hover:text-brand-300"
+            >
+              Take another assignment
               <ArrowRight className="w-4 h-4" />
             </button>
           </section>
