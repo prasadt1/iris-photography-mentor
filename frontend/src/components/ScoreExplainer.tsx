@@ -166,14 +166,32 @@ export const ScoreExplainer: React.FC<Props> = ({ isOpen, onClose }) => {
 };
 
 /** Trigger button to open the explainer */
-export const ScoreExplainerTrigger: React.FC<{ onClick: () => void }> = ({ onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="inline-flex items-center gap-1 text-xs text-muted hover:text-brand-400 transition-colors"
-    aria-label="Learn how scores work"
-  >
-    <HelpCircle className="w-3.5 h-3.5" />
-    <span>How we score</span>
-  </button>
-);
+export const ScoreExplainerTrigger: React.FC<{
+  onClick: () => void;
+  /** Footer-style link: no icon, matches other footer actions */
+  variant?: 'default' | 'footer';
+}> = ({ onClick, variant = 'default' }) => {
+  if (variant === 'footer') {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="text-brand-400 hover:text-brand-300 hover:underline transition-colors"
+        aria-label="Learn how scores work"
+      >
+        How we score
+      </button>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 text-xs text-muted hover:text-brand-400 transition-colors"
+      aria-label="Learn how scores work"
+    >
+      <HelpCircle className="w-3.5 h-3.5" />
+      <span>How we score</span>
+    </button>
+  );
+};

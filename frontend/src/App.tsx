@@ -373,18 +373,22 @@ function App() {
             <p className="text-sm text-stone-300">
               Iris — your AI photography mentor that remembers every shot you upload.
             </p>
-            <p className="text-xs text-stone-400">
-              Your photos stay in your private library. You approve every tag and listing.
-              <span className="mx-2 text-warm">·</span>
-              <ScoreExplainerTrigger onClick={() => setShowScoreExplainer(true)} />
-              <span className="mx-2 text-warm">·</span>
+            <p className="text-xs text-stone-400 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+              <span>Your photos stay in your private library. You approve every tag and listing.</span>
+              <span className="text-warm" aria-hidden>
+                ·
+              </span>
+              <ScoreExplainerTrigger variant="footer" onClick={() => setShowScoreExplainer(true)} />
+              <span className="text-warm" aria-hidden>
+                ·
+              </span>
               <button
                 type="button"
                 onClick={() => {
                   resetTour();
                   setShowTour(true);
                 }}
-                className="text-brand-400 hover:text-brand-300 hover:underline"
+                className="text-brand-400 hover:text-brand-300 hover:underline transition-colors"
               >
                 How it works
               </button>
