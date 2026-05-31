@@ -153,6 +153,7 @@ Claude reviewer pass (2026-05-31): **0 material gaps** vs Phases 1–3 spec.
 | [`ios-demo-video-script.md`](ios-demo-video-script.md) | Short iPhone script |
 | [`devpost-article-draft.md`](devpost-article-draft.md) | Submission narrative (draft) |
 | [`deploy.md`](deploy.md) | Push + deploy commands |
+| [`HACKATHON-11DAY-STRATEGY-FOR-CLAUDE.md`](HACKATHON-11DAY-STRATEGY-FOR-CLAUDE.md) | 11-day plan + Claude perspective prompt |
 
 ---
 
