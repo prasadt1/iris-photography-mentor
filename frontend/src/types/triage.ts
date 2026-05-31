@@ -13,6 +13,11 @@ export interface PendingApproval {
   agentReasoning: string;
   status: ApprovalStatus;
   createdAt: string;
+  decidedAt?: string | null;
+  userDecision?: {
+    action: string;
+    decided_at?: string;
+  } | null;
 }
 
 export interface TriageScanResult {

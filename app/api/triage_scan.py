@@ -6,10 +6,38 @@ from typing import Any
 
 from datetime import datetime, timezone
 
+from bson import ObjectId
+
 from memory.assignments import _resolve_user_id
 from memory.db import get_db
 from memory.pending_approvals import list_pending
 from sub_agents.tools import triage_tools
+
+
+def _dedupe_key_for_entry(uid: ObjectId, entry_id: str) -> str:
+    """One Organize proposal per logical shoot (parity with print_sales_scan)."""
+    try:
+        doc = get_db().portfolio_entries.find_one(
+            {"_id": ObjectId(entry_id), "user_id": uid},
+            projection={"shoot_id": 1, "image_url": 1, "thumbnail_url": 1},
+        )
+    except Exception:
+        return f"entry:{entry_id}"
+    if not doc:
+        return f"entry:{entry_id}"
+    shoot = doc.get("shoot_id")
+    if shoot:
+        return f"shoot:{shoot}"
+    image = doc.get("image_url") or doc.get("thumbnail_url") or ""
+    if image:
+        return f"image:{image}"
+    return f"entry:{entry_id}"
+
+
+def _dedupe_key_for_shoot(shoot_id: str | None, fallback_entry_id: str) -> str:
+    if shoot_id:
+        return f"shoot:{shoot_id}"
+    return f"entry:{fallback_entry_id}"
 
 
 def _supersede_pending_triage(uid) -> int:
@@ -46,48 +74,64 @@ def run_triage_scan(user_id: str | None = None) -> dict[str, Any]:
     gems = triage_tools.surface_top_scoring_untouched_photos(str(uid), limit=3)
 
     proposals: list[dict[str, Any]] = []
+    seen_keys: set[str] = set()
+
+    def _try_propose(key: str, factory) -> None:
+        if key in seen_keys:
+            return
+        seen_keys.add(key)
+        proposals.append(factory())
+
+    # Near-duplicates first (clearer demo than bulk tag on a broad cluster).
+    for dup in (duplicates.get("candidates") or [])[:3]:
+        ids = dup.get("entryIds") or []
+        if len(ids) >= 2:
+            target = ids[-1]
+            key = _dedupe_key_for_shoot(dup.get("shootId"), target)
+            _try_propose(
+                key,
+                lambda t=target, n=len(ids): triage_tools.propose_photo_deletion(
+                    t,
+                    reasoning=(
+                        f"This shoot has {n} portfolio copies of the same session; "
+                        "removing the weakest duplicate keeps one frame for memory and search."
+                    ),
+                ),
+            )
 
     cluster_list = clusters.get("clusters") or []
     if cluster_list:
         top = cluster_list[0]
         entry_ids = top.get("entryIds") or []
         if entry_ids:
-            proposals.append(
-                triage_tools.propose_bulk_tag_application(
+            lead = entry_ids[0]
+            key = _dedupe_key_for_entry(uid, lead)
+            _try_propose(
+                key,
+                lambda: triage_tools.propose_bulk_tag_application(
                     entry_ids[:5],
                     tags=[top.get("label", "portfolio"), "triage_reviewed"],
                     reasoning=(
                         f"Triage clustered {top.get('count', 0)} photos under '{top.get('label')}'. "
                         "Harmonizing tags improves Memory search and aesthetic profile."
                     ),
-                )
-            )
-
-    for dup in (duplicates.get("candidates") or [])[:1]:
-        ids = dup.get("entryIds") or []
-        if len(ids) > 4:
-            proposals.append(
-                triage_tools.propose_photo_deletion(
-                    ids[-1],
-                    reasoning=(
-                        f"This batch has {len(ids)} very similar frames from the same shoot; "
-                        "removing the weakest duplicate frees library space."
-                    ),
-                )
+                ),
             )
 
     for photo in (gems.get("photos") or [])[:1]:
         pid = photo.get("id")
         if pid:
-            proposals.append(
-                triage_tools.propose_bulk_tag_application(
-                    [pid],
+            key = _dedupe_key_for_entry(uid, pid)
+            _try_propose(
+                key,
+                lambda p=pid, score=photo.get("averageScore"): triage_tools.propose_bulk_tag_application(
+                    [p],
                     tags=["portfolio_gem", "high_score"],
                     reasoning=(
-                        f"Strong score ({photo.get('averageScore')}) but no tags yet — "
+                        f"Strong score ({score}) but no tags yet — "
                         "mark as a portfolio gem for Memory and Print Sales."
                     ),
-                )
+                ),
             )
 
     pending = list_pending(str(uid), status="pending", agent_name="triage")

@@ -12,7 +12,7 @@ Run **after** `python3 scripts/bootstrap-mongodb.py` succeeds.
 2. **Atlas Search** (left nav) → **Create Search Index**.
 3. Choose **Atlas Vector Search** (not classic full-text only).
 4. **Database:** `practice_companion` · **Collection:** `portfolio_entries`.
-5. **Index name:** `portfolio_embedding_vector` (any name is fine; use this in code/docs).
+5. **Index name:** `portfolio_embedding_vector` — must match `ATLAS_VECTOR_INDEX` in `.env` (default in code).
 6. **Configuration** → JSON Editor, paste:
 
 ```json

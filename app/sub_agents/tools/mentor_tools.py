@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 from orchestrator.memory_tools import (
@@ -40,11 +41,12 @@ def vector_search_similar_photos(
             "matches": [],
             "message": "Source entry has no embedding; upload via Coach first.",
         }
+    index_name = os.environ.get("ATLAS_VECTOR_INDEX", "portfolio_embedding_vector")
     try:
         pipeline = [
             {
                 "$vectorSearch": {
-                    "index": "portfolio_vector",
+                    "index": index_name,
                     "path": "embedding",
                     "queryVector": source["embedding"],
                     "numCandidates": max(limit * 10, 50),

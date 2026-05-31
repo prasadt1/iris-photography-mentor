@@ -65,6 +65,7 @@ struct AnalysisResult: Codable {
     let critique: CritiqueBreakdown?
     let glassBox: GlassBoxSummary?
     let aestheticTags: [String]?
+    let spatialMetadata: SpatialMetadata?
 
     enum CodingKeys: String, CodingKey {
         case portfolioEntryId
@@ -75,6 +76,7 @@ struct AnalysisResult: Codable {
         case critique
         case glassBox
         case aestheticTags
+        case spatialMetadata = "spatial_metadata"
     }
 
     func asPortfolioListItem(fallbackImageUrl: String? = nil) -> PortfolioListItem? {

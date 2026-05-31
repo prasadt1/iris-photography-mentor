@@ -52,6 +52,9 @@ def main() -> None:
         ),
         "GCS_PORTFOLIO_PREFIX": os.getenv("GCS_PORTFOLIO_PREFIX", "originals"),
         "DEMO_USER_ID": os.getenv("DEMO_USER_ID", ""),
+        "ATLAS_VECTOR_INDEX": os.getenv(
+            "ATLAS_VECTOR_INDEX", "portfolio_embedding_vector"
+        ),
         "CORS_ORIGINS": cors_full,
         "MONGODB_URI": mongodb_uri,
         "ORCHESTRATOR_USE_MCP": os.getenv("ORCHESTRATOR_USE_MCP", "true"),

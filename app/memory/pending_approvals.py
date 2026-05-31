@@ -35,6 +35,31 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+_DECIDED_STATUSES = ("approved", "rejected", "modified")
+
+
+def list_decided(
+    user_id: str | None = None,
+    *,
+    agent_name: str | None = None,
+    limit: int = 50,
+) -> dict[str, Any]:
+    """HITL activity history — approvals the user already decided."""
+    uid = _resolve_user_id(user_id)
+    if not uid:
+        return {"items": [], "total": 0}
+    query: dict[str, Any] = {"user_id": uid, "status": {"$in": list(_DECIDED_STATUSES)}}
+    if agent_name:
+        query["agent_name"] = agent_name
+    docs = list(
+        get_db()
+        .pending_approvals.find(query)
+        .sort("created_at", -1)
+        .limit(max(1, min(limit, 100)))
+    )
+    return {"items": [_serialize(d) for d in docs], "total": len(docs)}
+
+
 def list_pending(
     user_id: str | None = None,
     *,

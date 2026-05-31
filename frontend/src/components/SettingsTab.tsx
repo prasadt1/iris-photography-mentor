@@ -3,7 +3,9 @@ import { LogIn, LogOut, Settings } from 'lucide-react';
 import { useAuth } from '../auth/useAuth';
 import { firebaseAuthEnabled } from '../auth/firebaseConfig';
 import { ModeToggle } from './ModeToggle';
+import { ThemeToggle } from './ThemeToggle';
 import { clearOnboardingComplete } from '../lib/onboarding';
+import { applyTheme, type ThemeMode } from '../lib/theme';
 import { isLocalDevHost } from '../lib/apiHelp';
 import type { UserMode } from '../types/practice';
 
@@ -14,6 +16,8 @@ interface Props {
   onPersistError: (message: string) => void;
   onRestartOnboarding: () => void;
   onRestartTour?: () => void;
+  theme: ThemeMode;
+  onThemeChange: (mode: ThemeMode) => void;
 }
 
 export const SettingsTab: React.FC<Props> = ({
@@ -23,6 +27,8 @@ export const SettingsTab: React.FC<Props> = ({
   onPersistError,
   onRestartOnboarding,
   onRestartTour,
+  theme,
+  onThemeChange,
 }) => {
   const isLocal = isLocalDevHost();
   const auth = useAuth();
@@ -83,6 +89,16 @@ export const SettingsTab: React.FC<Props> = ({
             Add <code className="text-brand-400 text-xs">VITE_FIREBASE_*</code> for sign-in.
           </p>
         )}
+      </section>
+
+      <section className="rounded-xl border border-warm bg-surface-1 p-4">
+        <ThemeToggle
+          theme={theme}
+          onChange={(mode) => {
+            applyTheme(mode);
+            onThemeChange(mode);
+          }}
+        />
       </section>
 
       <section className="rounded-xl border border-warm bg-surface-1 p-4">

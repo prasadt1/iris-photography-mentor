@@ -368,3 +368,38 @@ input:focus-visible,
 .sidebar-logo-zone {
   background: var(--color-canvas);
 }
+
+/* Light mode (E6) — warm paper gallery */
+html[data-theme='light'] {
+  --color-canvas: #f5f0ea;
+  --color-canvas-elevated: #ebe4db;
+  --color-surface-1: #e8e0d6;
+  --color-surface-2: #ddd4c8;
+  --color-surface-3: #d0c6b8;
+  --color-warm-border: #c4b8a8;
+}
+
+html[data-theme='light'] body {
+  color: #292524;
+}
+
+html[data-theme='light'] .text-white {
+  color: #1c1917;
+}
+
+html[data-theme='light'] .text-stone-200,
+html[data-theme='light'] .text-stone-300 {
+  color: #44403c;
+}
+
+html[data-theme='light'] .text-muted {
+  color: #78716c;
+}
+
+html[data-theme='light'] .bg-photo-black {
+  background-color: #1c1917;
+}
+
+html[data-theme='light'] .text-on-brand {
+  color: #1a1816;
+}

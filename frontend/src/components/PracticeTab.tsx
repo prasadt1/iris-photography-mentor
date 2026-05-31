@@ -19,6 +19,7 @@ import {
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { formatSkillApplicationDelta } from '../lib/formatSkillDelta';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
+import { AssignmentDetailView } from './AssignmentDetailView';
 import { PracticeInlineShootBanner } from './PracticeInlineShootBanner';
 import { PracticeCardsSkeleton } from './SkeletonBlocks';
 import type { Assignment, ReflectionResult, UserMode } from '../types/practice';
@@ -32,6 +33,10 @@ interface Props {
   onGoToStudio: () => void;
   onGoToField: () => void;
   onAssignmentsChange?: () => void;
+  /** When set, show assignment detail sub-route (A6) */
+  detailAssignmentId?: string | null;
+  onOpenAssignmentDetail?: (id: string) => void;
+  onCloseAssignmentDetail?: () => void;
 }
 
 export const PracticeTab: React.FC<Props> = ({
@@ -41,6 +46,9 @@ export const PracticeTab: React.FC<Props> = ({
   onGoToStudio,
   onGoToField,
   onAssignmentsChange,
+  detailAssignmentId,
+  onOpenAssignmentDetail,
+  onCloseAssignmentDetail,
 }) => {
   const [proposed, setProposed] = useState<Assignment[]>([]);
   const [active, setActive] = useState<Assignment[]>([]);
@@ -134,6 +142,15 @@ export const PracticeTab: React.FC<Props> = ({
       setActing(null);
     }
   };
+
+  if (detailAssignmentId && onCloseAssignmentDetail) {
+    return (
+      <AssignmentDetailView
+        assignmentId={detailAssignmentId}
+        onBack={onCloseAssignmentDetail}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -235,6 +252,9 @@ export const PracticeTab: React.FC<Props> = ({
             onGoToField={onGoToField}
             onComplete={() => void handleComplete(a.id)}
             completing={acting === `complete-${a.id}`}
+            onViewDetails={
+              onOpenAssignmentDetail ? () => onOpenAssignmentDetail(a.id) : undefined
+            }
           />
         ))}
 
@@ -274,6 +294,9 @@ export const PracticeTab: React.FC<Props> = ({
                 onToggle={() =>
                   setExpandedCompletedId((id) => (id === a.id ? null : a.id))
                 }
+                onViewDetails={
+                  onOpenAssignmentDetail ? () => onOpenAssignmentDetail(a.id) : undefined
+                }
               />
             ))}
           </ul>
@@ -288,10 +311,12 @@ function CompletedCard({
   assignment,
   expanded,
   onToggle,
+  onViewDetails,
 }: {
   assignment: Assignment;
   expanded: boolean;
   onToggle: () => void;
+  onViewDetails?: () => void;
 }) {
   const long = assignment.brief.length > 160;
   return (
@@ -320,6 +345,18 @@ function CompletedCard({
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" aria-hidden />
             {formatSkillApplicationDelta(assignment.skillDelta.delta)}
           </p>
+        )}
+        {onViewDetails && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails();
+            }}
+            className="text-[10px] text-brand-400 mt-2 hover:text-brand-300 underline"
+          >
+            View details &amp; compare
+          </button>
         )}
       </button>
       {expanded && assignment.rationale && (
@@ -386,12 +423,14 @@ function ActiveCard({
   onGoToField,
   onComplete,
   completing,
+  onViewDetails,
 }: {
   assignment: Assignment;
   onGoToStudio: () => void;
   onGoToField: () => void;
   onComplete: () => void;
   completing: boolean;
+  onViewDetails?: () => void;
 }) {
   let when = '';
   try {
@@ -448,6 +487,15 @@ function ActiveCard({
         <p className="text-xs text-muted w-full">
           Shoot in Field or upload in Studio — then Mark complete for Reflection.
         </p>
+        {onViewDetails && (
+          <button
+            type="button"
+            onClick={onViewDetails}
+            className="text-xs text-brand-400 hover:text-brand-300 underline"
+          >
+            View challenge details
+          </button>
+        )}
       </div>
     </section>
   );

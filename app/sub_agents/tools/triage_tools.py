@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -90,10 +91,11 @@ def find_duplicate_portfolio_entries(user_id: str | None = None, limit: int = 10
     for d in docs:
         sid = str(d.get("shoot_id", ""))
         by_shoot.setdefault(sid, []).append(str(d["_id"]))
+    min_dupes = max(2, int(os.environ.get("TRIAGE_MIN_DUPLICATE_ENTRIES", "2")))
     candidates = [
         {"shootId": sid, "entryIds": ids}
         for sid, ids in by_shoot.items()
-        if len(ids) > 3
+        if len(ids) >= min_dupes
     ][:limit]
     return {"candidates": candidates}
 

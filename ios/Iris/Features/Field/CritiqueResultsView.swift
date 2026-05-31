@@ -28,15 +28,20 @@ struct CritiqueResultsView: View {
                 VStack(alignment: .leading, spacing: 20) {
                     header
                     if let previewImage {
-                        Image(uiImage: previewImage)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxHeight: 220)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color.irisWarmBorder, lineWidth: 1)
-                            )
+                        ZStack {
+                            Image(uiImage: previewImage)
+                                .resizable()
+                                .scaledToFit()
+                            if let annotations = result.spatialMetadata?.annotations, !annotations.isEmpty {
+                                SpatialAnnotationOverlay(annotations: annotations)
+                            }
+                        }
+                        .frame(maxHeight: 220)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                .stroke(Color.irisWarmBorder, lineWidth: 1)
+                        )
                     }
                     IrisTabPicker(selection: $tab, labels: tabLabels)
                     Group {
@@ -120,6 +125,9 @@ struct CritiqueResultsView: View {
 
     private var overviewTab: some View {
         VStack(alignment: .leading, spacing: 14) {
+            ScoreRadarChart(scores: result.scores)
+                .irisCard()
+
             IrisScoreBar(title: "Composition", score: result.scores.composition)
             IrisScoreBar(title: "Lighting", score: result.scores.lighting)
             IrisScoreBar(title: "Technique", score: result.scores.technique)

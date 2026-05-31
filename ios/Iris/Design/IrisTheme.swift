@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Colors (frontend/src/index.css)
 
@@ -12,12 +13,30 @@ extension Color {
 }
 
 enum IrisFont {
+    private static func customOrSystem(
+        _ name: String,
+        size: CGFloat,
+        weight: Font.Weight,
+        design: Font.Design
+    ) -> Font {
+        if UIFont(name: name, size: size) != nil {
+            return .custom(name, size: size)
+        }
+        return .system(size: size, weight: weight, design: design)
+    }
+
     static func serif(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        .system(size: size, weight: weight, design: .serif)
+        customOrSystem("Newsreader-Bold", size: size, weight: weight, design: .serif)
     }
 
     static func sans(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .system(size: size, weight: weight, design: .default)
+        let name: String
+        switch weight {
+        case .semibold, .bold: name = "DMSans-SemiBold"
+        case .medium: name = "DMSans-Medium"
+        default: name = "DMSans-Regular"
+        }
+        return customOrSystem(name, size: size, weight: weight, design: .default)
     }
 }
 

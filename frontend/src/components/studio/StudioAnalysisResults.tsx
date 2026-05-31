@@ -38,7 +38,9 @@ const StudioAnalysisResults: React.FC<Props> = ({
   originalFilename = 'photo.jpg',
   onReset,
 }) => {
-  const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [activeTab, setActiveTab] = useState<TabId>(() =>
+    analysis.groundingPrinciples.length > 0 ? 'glass-box' : 'overview',
+  );
   const [activeBoxIndex, setActiveBoxIndex] = useState<number | null>(null);
   const [showOverlays, setShowOverlays] = useState(true);
   const [selectedDimension, setSelectedDimension] = useState<string | null>(null);

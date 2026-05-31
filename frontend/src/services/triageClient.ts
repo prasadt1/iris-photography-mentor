@@ -28,6 +28,28 @@ export function runTriageScan(): Promise<TriageScanResult> {
   return apiFetch('/api/v1/triage/scan', { method: 'POST' }).then(parseJson<TriageScanResult>);
 }
 
+export function fetchHitlHistory(agentName?: string, limit = 50): Promise<{
+  items: PendingApproval[];
+  total: number;
+}> {
+  const q = new URLSearchParams({ limit: String(limit) });
+  if (agentName) q.set('agent_name', agentName);
+  return apiFetch(`/api/v1/pending-approvals/history?${q}`).then(
+    parseJson<{ items: PendingApproval[]; total: number }>,
+  );
+}
+
+export function runTriageBacklog(persona: 'hobbyist' | 'working_pro' = 'hobbyist'): Promise<{
+  reply: string;
+  sessionId: string;
+  intent: string;
+}> {
+  const q = new URLSearchParams({ persona });
+  return apiFetch(`/api/v1/triage/backlog?${q}`, { method: 'POST' }).then(
+    parseJson<{ reply: string; sessionId: string; intent: string }>,
+  );
+}
+
 export function decideApproval(
   id: string,
   action: 'approve' | 'reject',

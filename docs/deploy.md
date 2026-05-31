@@ -117,6 +117,7 @@ Ensure `CORS_ORIGINS` on Cloud Run includes your Firebase domain (deploy script 
 | API | `make api-dev` | http://127.0.0.1:8081 |
 | UI | `make frontend-dev` | http://localhost:5173 |
 | Playground | `make playground` | http://localhost:8080 |
+| Playground + checklist | `make playground-demo` | Same (optional 30s Devpost clip) |
 
 `VITE_API_BASE_URL` empty → Vite proxies `/api` to 8081.
 
@@ -218,6 +219,36 @@ Upload on prod → within ~10s `aesthetic_profile.computed_at` advances for that
 
 The listener exposes `GET /health` on `PORT` (8080) so Cloud Run accepts the container; change-stream work runs in a background thread.
 
+## Agent Engine (optional — E1)
+
+Cloud Run remains production for Mentor + Coach. To scaffold Vertex Agent Engine:
+
+```bash
+chmod +x scripts/deploy-agent-engine.sh
+./scripts/deploy-agent-engine.sh
+```
+
+Local smoke: `cd app && uv run python -c "from orchestrator.agent_runtime_app import agent_runtime; print('ok')"`
+
+## MCP on production Mentor path (E2)
+
+Mentor chat uses **two** MongoDB access paths:
+
+1. **`memory.mcp_reads`** — always on in Cloud Run (FunctionTools + portfolio API).
+2. **ADK `McpToolset`** — when `ORCHESTRATOR_USE_MCP` is not `false` and `MONGODB_MCP_HTTP_URL` or `mcp-config.json` is set.
+
+Prod checklist:
+
+```bash
+# After deploy-coach-api.sh — ensure MCP vars are in the revision:
+python3 scripts/cloud-run-env-from-dotenv.py .env | grep -E 'ORCHESTRATOR_USE_MCP|MONGODB_MCP'
+
+curl -s "$API_URL/health" | jq .
+# Expect mentorMcpReads=enabled, mentorMcpToolset=enabled, mongodbMcpHttp=<url or stdio>
+```
+
+Deploy MCP sidecar / HTTP bridge: `./scripts/deploy-mongodb-mcp.sh` (see that script for Cloud Run pairing).
+
 ## Not in this deploy
 
-- Vertex Agent Engine (`make deploy` from ADK scaffold) — optional; playground + Cloud Run API suffice for UI demo
+- Full Vertex Agent Engine cutover — optional; playground + Cloud Run API suffice for UI demo

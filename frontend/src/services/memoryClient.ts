@@ -54,3 +54,43 @@ export function fetchAestheticProfile(): Promise<AestheticProfileSummary> {
 export function fetchPortfolioTrends(limit = 12): Promise<PortfolioTrendsResponse> {
   return getJson(`/api/v1/portfolio/trends?limit=${limit}`);
 }
+
+export function fetchPortfolioByShoots(shootIds: string[]): Promise<PortfolioListResponse> {
+  if (shootIds.length === 0) {
+    return Promise.resolve({ entries: [], total: 0 });
+  }
+  const params = new URLSearchParams({ shoot_ids: shootIds.join(',') });
+  return getJson(`/api/v1/portfolio/by-shoots?${params}`);
+}
+
+export function deletePortfolioEntry(entryId: string): Promise<{ deleted: boolean; id: string }> {
+  return apiFetch(`/api/v1/portfolio/${entryId}`, { method: 'DELETE' }).then(async (res) => {
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(detail || `Delete failed: ${res.status}`);
+    }
+    return res.json() as Promise<{ deleted: boolean; id: string }>;
+  });
+}
+
+export function deletePortfolioEntries(entryIds: string[]): Promise<{
+  deleted: string[];
+  skipped: { id: string; reason: string }[];
+  deletedCount: number;
+}> {
+  return apiFetch('/api/v1/portfolio/delete-batch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ entryIds }),
+  }).then(async (res) => {
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(detail || `Batch delete failed: ${res.status}`);
+    }
+    return res.json() as Promise<{
+      deleted: string[];
+      skipped: { id: string; reason: string }[];
+      deletedCount: number;
+    }>;
+  });
+}

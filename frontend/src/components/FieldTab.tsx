@@ -5,6 +5,7 @@ import { friendlyErrorMessage } from '../lib/friendlyError';
 import { analyzeLoadingStage, analyzeWaitHint } from '../lib/analyzeWaitCopy';
 import { usePreferUploadCapture } from '../hooks/usePreferUploadCapture';
 import { analyzePhoto } from '../services/agentClient';
+import { ContinueOnPhoneQr } from './ContinueOnPhoneQr';
 import type { Assignment } from '../types/practice';
 
 interface Props {
@@ -196,6 +197,8 @@ export const FieldTab: React.FC<Props> = ({
           </button>
         )}
       </div>
+
+      <ContinueOnPhoneQr />
 
       {showCamera ? (
         <div className="relative rounded-2xl overflow-hidden bg-photo-black border border-warm min-h-[320px] md:min-h-[420px] sm:aspect-[4/3]">

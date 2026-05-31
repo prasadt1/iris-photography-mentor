@@ -18,6 +18,10 @@ export function fetchAssignments(): Promise<AssignmentsResponse> {
   return apiFetch('/api/v1/assignments').then(parseJson<AssignmentsResponse>);
 }
 
+export function fetchAssignment(id: string): Promise<Assignment> {
+  return apiFetch(`/api/v1/assignments/${id}`).then(parseJson<Assignment>);
+}
+
 export function proposeAssignment(mode: UserMode, focusSkill?: string): Promise<Assignment> {
   const params = new URLSearchParams({ mode });
   if (focusSkill) {

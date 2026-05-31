@@ -9,6 +9,14 @@ playground:
 	fi; \
 	cd app && uvx google-agents-cli playground
 
+# Opens playground + prints 30s recording checklist (docs/playground-demo-recording.md)
+playground-demo:
+	@echo "=== Playground 30s clip ==="
+	@sed -n '1,999p' docs/playground-demo-recording.md
+	@echo ""
+	@echo "Launching playground on http://127.0.0.1:8080 ..."
+	@$(MAKE) playground
+
 agent-import:
 	@cd app && uv run python -c "from orchestrator.agent import root_agent; print(root_agent.name); print('tools:', len(root_agent.tools))"
 

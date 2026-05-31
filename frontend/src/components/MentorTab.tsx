@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Check,
   ImageIcon,
@@ -14,8 +14,8 @@ import { ChatErrorBanner } from './ChatErrorBanner';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { ScanProgressBanner } from './ScanProgressBanner';
 import { TabEmptyState } from './TabEmptyState';
-import { MentorMarkdown } from './MentorMarkdown';
-import { IrisMark } from './IrisMark';
+import { MentorChatTurn } from './MentorChatTurn';
+import { groupMessagesIntoTurns } from '../lib/mentorChatTurns';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { mentorLoadingStage } from '../lib/mentorLoadingStages';
 import { triageScanStage } from '../lib/scanLoadingStages';
@@ -29,8 +29,10 @@ import {
 import {
   decideApproval,
   fetchPendingApprovals,
+  runTriageBacklog,
   runTriageScan,
 } from '../services/triageClient';
+import { HitlHistoryPanel } from './HitlHistoryPanel';
 import { fetchPortfolio, fetchPortfolioStats } from '../services/memoryClient';
 import type { UserMode } from '../types/practice';
 import type { PendingApproval } from '../types/triage';
@@ -266,6 +268,28 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   const [previews, setPreviews] = useState<Map<string, EntryPreview>>(new Map());
   const [libraryCount, setLibraryCount] = useState(0);
   const [pendingOrganizeCount, setPendingOrganizeCount] = useState(0);
+  const [backlogRunning, setBacklogRunning] = useState(false);
+  const [expandedTurnIds, setExpandedTurnIds] = useState<Set<string>>(new Set());
+
+  const chatTurns = useMemo(() => groupMessagesIntoTurns(messages), [messages]);
+
+  // Auto-collapse older exchanges; keep only the latest turn expanded.
+  useEffect(() => {
+    if (chatTurns.length === 0) {
+      setExpandedTurnIds(new Set());
+      return;
+    }
+    setExpandedTurnIds(new Set([chatTurns[chatTurns.length - 1].id]));
+  }, [chatTurns.length, chatTurns[chatTurns.length - 1]?.assistant?.id]);
+
+  const toggleTurn = useCallback((turnId: string) => {
+    setExpandedTurnIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(turnId)) next.delete(turnId);
+      else next.add(turnId);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     setStarters(STARTERS_BY_MODE[mode]);
@@ -429,6 +453,32 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
     }
   };
 
+  const handleBacklogTriage = async () => {
+    setBacklogRunning(true);
+    setLabelError(null);
+    try {
+      const result = await runTriageBacklog(mode);
+      setView('chat');
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `user-${Date.now()}`,
+          role: 'user',
+          content: 'Run backlog triage on my portfolio.',
+        },
+        {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: result.reply || 'Backlog triage finished — check Organize for pending approvals.',
+        },
+      ]);
+    } catch (e) {
+      setLabelError(friendlyErrorMessage(e));
+    } finally {
+      setBacklogRunning(false);
+    }
+  };
+
   const handleDecision = async (id: string, action: 'approve' | 'reject') => {
     const item = labelItems.find((p) => p.id === id);
     setActing(id);
@@ -534,71 +584,29 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
                   />
                 </div>
               )}
-              {messages.map((m) => (
-                <article
-                  key={m.id}
-                  className={
-                    m.role === 'user'
-                      ? 'ml-auto max-w-xl border-l-2 border-brand-500/50 pl-4 py-1'
-                      : 'max-w-3xl rounded-xl border border-warm bg-surface-1/90 p-5'
-                  }
-                >
-                  {m.role === 'user' ? (
-                    <>
-                      <p className="text-[10px] uppercase tracking-widest text-muted mb-1.5">You asked</p>
-                      <p className="text-sm text-stone-200 whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 mb-3 pb-3 border-b border-warm/60">
-                        <IrisMark size={22} />
-                        <p className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</p>
-                      </div>
-                      <div className="font-serif text-stone-100 text-sm leading-relaxed">
-                        <MentorMarkdown content={m.content} />
-                      </div>
-                    </>
-                  )}
-                </article>
-              ))}
-              {loading && (
-                <article
-                  className="max-w-3xl rounded-xl border border-warm bg-surface-1/90 p-5"
-                  role="status"
-                  aria-live="polite"
-                  aria-busy="true"
-                >
-                  <div className="flex items-center gap-2 mb-3">
-                    <IrisMark size={22} className="animate-pulse" />
-                    <span className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-serif text-brand-300 animate-pulse">Reading your library…</span>
-                    {waitSec >= 8 && (
-                      <button
-                        type="button"
-                        onClick={cancelRequest}
-                        className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs text-muted hover:text-white border border-warm"
-                      >
-                        <X className="w-3 h-3" />
-                        Cancel
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted font-sans">{stageMessage}</p>
-                  <div className="mt-3 h-1 rounded-full bg-surface-3 overflow-hidden">
-                    <div
-                      className="h-full bg-brand-500/80 transition-all duration-1000 ease-out-expo"
-                      style={{ width: `${Math.min(95, 12 + waitSec * 1.2)}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted mt-2 font-sans">
-                    {mode === 'working_pro'
-                      ? `Often 60–90 seconds · ${waitSec}s — keep this tab open`
-                      : `Usually 30–60 seconds · ${waitSec}s — keep this tab open`}
-                  </p>
-                </article>
+              {chatTurns.length > 1 && (
+                <p className="text-[10px] text-muted uppercase tracking-wide px-1">
+                  {chatTurns.length - 1} earlier exchange{chatTurns.length - 1 === 1 ? '' : 's'} — tap to
+                  expand
+                </p>
               )}
+              {chatTurns.map((turn, index) => {
+                const isLatest = index === chatTurns.length - 1;
+                const isPendingLatest = isLatest && loading && !turn.assistant;
+                return (
+                  <MentorChatTurn
+                    key={turn.id}
+                    turn={turn}
+                    expanded={expandedTurnIds.has(turn.id) || isPendingLatest}
+                    onToggle={() => toggleTurn(turn.id)}
+                    loading={isPendingLatest}
+                    loadingStage={isPendingLatest ? stageMessage : undefined}
+                    waitSec={isPendingLatest ? waitSec : 0}
+                    onCancel={isPendingLatest ? cancelRequest : undefined}
+                    isLatest={isLatest}
+                  />
+                );
+              })}
               <div ref={bottomRef} />
             </div>
 
@@ -616,6 +624,40 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
                 onDismiss={() => setError(null)}
               />
             )}
+
+            <div className="px-3 py-2 border-t border-warm/80 bg-canvas-elevated/30">
+              <p className="text-[10px] text-muted uppercase tracking-wide mb-2">Quick actions</p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => setView('label')}
+                  className="text-xs px-3 py-1.5 rounded-full border border-brand-500/40 bg-brand-500/10 text-brand-300 hover:bg-brand-500/20 disabled:opacity-40"
+                >
+                  Organize library
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void send('What patterns do you see in my recent critiques?')}
+                  className="text-xs px-3 py-1.5 rounded-full border border-warm text-stone-300 hover:border-brand-500 hover:text-brand-300 disabled:opacity-40"
+                >
+                  Review progress
+                </button>
+                {mode === 'working_pro' && (
+                  <button
+                    type="button"
+                    disabled={loading}
+                    onClick={() =>
+                      void send('Which of my recent photos are strongest candidates for print sales?')
+                    }
+                    className="text-xs px-3 py-1.5 rounded-full border border-warm text-stone-300 hover:border-brand-500 hover:text-brand-300 disabled:opacity-40"
+                  >
+                    Print candidates
+                  </button>
+                )}
+              </div>
+            </div>
 
             <div className="px-3 py-2 border-t border-warm/80 bg-canvas-elevated/40">
               <p className="text-[10px] text-muted uppercase tracking-wide mb-2">
@@ -719,12 +761,28 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
           <button
             type="button"
             onClick={() => void handleScan()}
-            disabled={scanning}
+            disabled={scanning || backlogRunning}
             className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-brand-500 text-on-brand font-semibold hover:bg-brand-400 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {!scanning && <Layers className="w-4 h-4" />}
             {scanning ? 'Scanning…' : 'Scan my library'}
           </button>
+
+          <button
+            type="button"
+            onClick={() => void handleBacklogTriage()}
+            disabled={scanning || backlogRunning}
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg border border-warm text-stone-200 font-semibold hover:bg-surface-2 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {backlogRunning ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            {backlogRunning ? 'Agent triage…' : 'Backlog triage (agent)'}
+          </button>
+
+          <HitlHistoryPanel agentName="triage" className="mt-4" />
 
           {scanning && (
             <ScanProgressBanner

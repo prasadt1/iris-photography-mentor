@@ -112,6 +112,10 @@ struct FieldCaptureView: View {
                     .allowsHitTesting(false)
 
                 if camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
+                    HorizonLevelOverlay()
+                }
+
+                if camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
                     VStack(alignment: .trailing, spacing: 8) {
                         zoomIndicator
                         zoomStepper

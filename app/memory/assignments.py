@@ -89,6 +89,22 @@ def accept_assignment(assignment_id: str, user_id: str | None = None) -> dict[st
     return _serialize(updated)
 
 
+def get_assignment(assignment_id: str, user_id: str | None = None) -> dict[str, Any]:
+    uid = _resolve_user_id(user_id)
+    try:
+        oid = ObjectId(assignment_id)
+    except Exception as exc:
+        raise ValueError("Invalid assignment id") from exc
+
+    query: dict[str, Any] = {"_id": oid}
+    if uid:
+        query["user_id"] = uid
+    doc = get_db().assignments.find_one(query)
+    if not doc:
+        raise ValueError("Assignment not found")
+    return _serialize(doc)
+
+
 def get_active_assignment(user_id: str | None = None) -> dict[str, Any] | None:
     uid = _resolve_user_id(user_id)
     if not uid:

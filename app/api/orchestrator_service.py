@@ -219,3 +219,27 @@ async def _run_orchestrator_turn(
             len(events),
         )
     return reply, sid
+
+
+TRIAGE_BACKLOG_PROMPT = (
+    "Run backlog triage on my portfolio: cluster similar work, flag near-duplicates, "
+    "suggest harmonized tags, and surface forgotten gems. Use the triage agent tools "
+    "to create pending_approvals for every bulk tag or delete — never apply changes "
+    "without my explicit approval."
+)
+
+
+async def invoke_triage_backlog(
+    *,
+    user_id: str | None = None,
+    persona: str | None = None,
+) -> dict[str, Any]:
+    """Route a standard backlog triage request through the orchestrator → triage agent."""
+    result = await invoke_orchestrator_chat(
+        TRIAGE_BACKLOG_PROMPT,
+        user_id=user_id,
+        session_id=None,
+        persona=persona,
+    )
+    result["intent"] = "triage_backlog"
+    return result

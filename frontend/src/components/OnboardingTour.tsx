@@ -1,14 +1,16 @@
 /**
- * OnboardingTour — Lightweight feature walkthrough (3 steps, warm darkroom palette).
+ * OnboardingTour v2 — feature walkthrough with tab highlights (B7).
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ArrowRight,
+  Camera,
   Home,
   Images,
   MessageCircle,
   Sparkles,
+  Target,
   X,
 } from 'lucide-react';
 
@@ -17,6 +19,7 @@ interface TourStep {
   icon: React.ElementType;
   title: string;
   description: string;
+  tabHint?: string;
 }
 
 const TOUR_STEPS: TourStep[] = [
@@ -26,24 +29,50 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Your darkroom home',
     description:
       'Your best work up front — scores, Glass Box reasoning, and progress at a glance.',
+    tabHint: 'Home tab',
   },
   {
     id: 'work',
     icon: Images,
     title: 'My Work',
     description:
-      'Upload for critique. Every photo gets scores, tags, and expandable Glass Box reasoning.',
+      'Upload for critique. Search your library, delete or bulk-select photos, and expand any tile for Glass Box reasoning.',
+    tabHint: 'My Work tab',
+  },
+  {
+    id: 'practice',
+    icon: Target,
+    title: 'Practice challenges',
+    description:
+      'I propose focused assignments — you accept, shoot in Field or Studio, then compare before & after when complete.',
+    tabHint: 'Practice tab',
+  },
+  {
+    id: 'field',
+    icon: Camera,
+    title: 'Field capture',
+    description:
+      'Shoot with live horizon guidance and get a full critique on device — same Glass Box memory as web.',
+    tabHint: 'Practice → Field',
   },
   {
     id: 'mentor',
     icon: MessageCircle,
-    title: 'Ask your mentor',
+    title: 'Mentor & Organize',
     description:
-      'I search your library and past critiques — honest replies, not generic chat.',
+      'Ask about your library, run organize scans, and approve every tag or delete — nothing changes without you.',
+    tabHint: 'Mentor tab',
+  },
+  {
+    id: 'finish',
+    icon: Sparkles,
+    title: 'You are set',
+    description:
+      'Upload a photo to start. Restart this tour anytime from Settings.',
   },
 ];
 
-const STORAGE_KEY = 'iris-tour-completed';
+const STORAGE_KEY = 'iris-tour-completed-v2';
 
 interface Props {
   forceShow?: boolean;
@@ -112,6 +141,11 @@ export const OnboardingTour: React.FC<Props> = ({ forceShow, onComplete }) => {
 
           <div className="p-6 text-center space-y-3">
             <h2 className="font-serif text-xl text-white">{step.title}</h2>
+            {step.tabHint && (
+              <p className="text-[10px] font-bold uppercase tracking-wider text-brand-400">
+                {step.tabHint}
+              </p>
+            )}
             <p className="text-sm text-stone-300 leading-relaxed">{step.description}</p>
           </div>
 
@@ -174,4 +208,5 @@ export function isTourCompleted(): boolean {
 export function resetTour(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem('iris-tour-completed');
 }

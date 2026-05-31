@@ -26,27 +26,36 @@ if _creds_rel:
     if _cp.is_file():
         os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(_cp.resolve())
 
-from api.orchestrator_service import invoke_orchestrator_chat  # noqa: E402
+from api.orchestrator_service import invoke_orchestrator_chat, invoke_triage_backlog  # noqa: E402
 from sub_agents.coach import analyze_photo  # noqa: E402
 from memory.assignments import (  # noqa: E402
     accept_assignment,
     complete_assignment,
     decline_assignment,
     get_active_assignment,
+    get_assignment,
     list_assignments,
     propose_assignment,
 )
 from api.mentor_suggestions import suggest_mentor_questions  # noqa: E402
 from memory.portfolio import (  # noqa: E402
     compute_aesthetic_summary,
+    delete_portfolio_entries,
+    delete_portfolio_entry,
+    get_portfolio_entry,
     get_portfolio_stats,
+    list_portfolio_by_shoot_ids,
     list_portfolio_entries,
 )
 from memory.trends import compute_portfolio_trends  # noqa: E402
-from memory.pending_approvals import apply_decision, list_pending  # noqa: E402
+from memory.pending_approvals import apply_decision, list_decided, list_pending  # noqa: E402
 from memory.users import get_user_profile, set_persona  # noqa: E402
 from api.triage_scan import run_triage_scan  # noqa: E402
 from api.print_sales_scan import run_print_sales_scan  # noqa: E402
+from api.portfolio_insights import (  # noqa: E402
+    get_similar_portfolio_photos,
+    search_portfolio_library,
+)
 from memory.print_sales_list import list_print_sales  # noqa: E402
 from api.field_capture_service import analyze_field_frame  # noqa: E402
 from memory.capture_sessions import create_capture_session, end_capture_session  # noqa: E402
@@ -91,6 +100,13 @@ class ApprovalDecision(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class PortfolioBatchDelete(BaseModel):
+    entry_ids: list[str] = Field(alias="entryIds")
+    user_id: str | None = Field(default=None, alias="userId")
+
+    model_config = {"populate_by_name": True}
+
+
 class CaptureSessionCreate(BaseModel):
     location_description: str = Field(default="", alias="locationDescription")
     assignment_id: str | None = Field(default=None, alias="assignmentId")
@@ -110,6 +126,12 @@ app.add_middleware(
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    mcp_enabled = os.environ.get("ORCHESTRATOR_USE_MCP", "true").lower() not in (
+        "0",
+        "false",
+        "no",
+    )
+    mcp_url = os.environ.get("MONGODB_MCP_HTTP_URL", "")
     return {
         "status": "ok",
         "phase": "4",
@@ -117,6 +139,9 @@ def health() -> dict[str, str]:
         "triageHitl": "enabled",
         "printSalesHitl": "enabled",
         "fieldCapture": "enabled",
+        "mentorMcpReads": "enabled",
+        "mentorMcpToolset": "enabled" if mcp_enabled else "disabled",
+        "mongodbMcpHttp": mcp_url or "stdio",
     }
 
 
@@ -155,6 +180,18 @@ async def agent_chat(body: ChatRequest) -> dict:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/api/v1/pending-approvals/history")
+def pending_approvals_history(
+    user_id: str | None = None,
+    agent_name: str | None = None,
+    limit: int = 50,
+) -> dict:
+    try:
+        return list_decided(user_id=user_id, agent_name=agent_name, limit=limit)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.get("/api/v1/pending-approvals")
 def pending_approvals_list(
     user_id: str | None = None,
@@ -176,6 +213,22 @@ def pending_approvals_decide(approval_id: str, body: ApprovalDecision) -> dict:
             override_payload=body.override_payload,
             user_id=body.user_id,
         )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/triage/backlog")
+async def triage_backlog(
+    user_id: str | None = None,
+    persona: Literal["hobbyist", "working_pro"] = "hobbyist",
+) -> dict:
+    """Invoke Backlog Triage sub-agent via orchestrator (LLM path; HITL for writes)."""
+    try:
+        return await invoke_triage_backlog(user_id=user_id, persona=persona)
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail=str(exc)) from exc
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
@@ -260,10 +313,89 @@ def portfolio_list(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
+@app.get("/api/v1/portfolio/search")
+def portfolio_search(
+    q: str,
+    user_id: str | None = None,
+    limit: int = 8,
+) -> dict:
+    try:
+        return search_portfolio_library(q, user_id=user_id, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/portfolio/by-shoots")
+def portfolio_by_shoots(
+    shoot_ids: str,
+    user_id: str | None = None,
+) -> dict:
+    """Resolve portfolio entries for comma-separated shoot ids (assignment compare)."""
+    try:
+        ids = [s.strip() for s in shoot_ids.split(",") if s.strip()]
+        return list_portfolio_by_shoot_ids(ids, user_id=user_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/api/v1/portfolio/delete-batch")
+def portfolio_delete_batch(body: PortfolioBatchDelete) -> dict:
+    try:
+        return delete_portfolio_entries(body.entry_ids, user_id=body.user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.get("/api/v1/portfolio/stats")
 def portfolio_stats(user_id: str | None = None) -> dict:
     try:
         return get_portfolio_stats(user_id=user_id)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/portfolio/trends")
+def portfolio_trends(user_id: str | None = None, limit: int = 12) -> dict:
+    try:
+        return compute_portfolio_trends(user_id=user_id, limit=limit)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.delete("/api/v1/portfolio/{entry_id}")
+def portfolio_delete(entry_id: str, user_id: str | None = None) -> dict:
+    try:
+        return delete_portfolio_entry(entry_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/portfolio/{entry_id}")
+def portfolio_get(entry_id: str, user_id: str | None = None) -> dict:
+    try:
+        return get_portfolio_entry(entry_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/portfolio/{entry_id}/similar")
+def portfolio_similar(
+    entry_id: str,
+    user_id: str | None = None,
+    limit: int = 4,
+) -> dict:
+    try:
+        return get_similar_portfolio_photos(entry_id, user_id=user_id, limit=limit)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -278,14 +410,6 @@ def aesthetic_profile(user_id: str | None = None) -> dict:
         if effective:
             return upsert_aesthetic_profile(user_id=effective)
         return compute_aesthetic_summary(user_id=user_id)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
-
-
-@app.get("/api/v1/portfolio/trends")
-def portfolio_trends(user_id: str | None = None, limit: int = 12) -> dict:
-    try:
-        return compute_portfolio_trends(user_id=user_id, limit=limit)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
@@ -328,6 +452,16 @@ def assignments_propose(
         return propose_assignment(user_id=user_id, mode=mode, focus_skill=focus_skill)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/assignments/{assignment_id}")
+def assignments_get(assignment_id: str, user_id: str | None = None) -> dict:
+    try:
+        return get_assignment(assignment_id, user_id=user_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 

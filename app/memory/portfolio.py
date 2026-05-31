@@ -288,3 +288,137 @@ def compute_aesthetic_summary(
         "storedProfile": _serialize_mongo_doc(stored),
         "computedAt": datetime.now(timezone.utc).isoformat(),
     }
+
+
+LISTED_FOR_SALE_TAG = "listed_for_sale"
+
+
+def get_portfolio_entry(entry_id: str, *, user_id: str | None = None) -> dict[str, Any]:
+    """Fetch one portfolio entry owned by the user."""
+    uid = _resolve_portfolio_user_id(user_id)
+    try:
+        oid = ObjectId(entry_id)
+    except Exception as exc:
+        raise ValueError("Invalid portfolio entry id") from exc
+
+    query: dict[str, Any] = {"_id": oid}
+    if uid:
+        query["user_id"] = uid
+    doc = get_db().portfolio_entries.find_one(query, {"embedding": 0})
+    if not doc:
+        raise ValueError("Portfolio entry not found")
+    return _serialize_entry(doc)
+
+
+def list_portfolio_by_shoot_ids(
+    shoot_ids: list[str],
+    *,
+    user_id: str | None = None,
+) -> dict[str, Any]:
+    """Resolve portfolio entries for assignment baseline/completion shoot ids."""
+    if not shoot_ids:
+        return {"entries": []}
+    oids: list[ObjectId] = []
+    for sid in shoot_ids:
+        try:
+            oids.append(ObjectId(sid))
+        except Exception:
+            continue
+    if not oids:
+        return {"entries": []}
+
+    query = _portfolio_user_query(user_id)
+    query["shoot_id"] = {"$in": oids}
+    docs = list(
+        get_db()
+        .portfolio_entries.find(query, {"embedding": 0})
+        .sort("created_at", -1)
+    )
+    return {"entries": [_serialize_entry(d) for d in docs]}
+
+
+def _resolve_portfolio_user_id(user_id: str | None) -> ObjectId | None:
+    from memory.assignments import _resolve_user_id
+
+    return _resolve_user_id(user_id)
+
+
+def _reject_pending_for_entry(entry_id: str, uid: ObjectId) -> int:
+    """Auto-reject pending HITL proposals that reference a deleted entry."""
+    now = datetime.now(timezone.utc)
+    coll = get_db().pending_approvals
+    rejected = 0
+    for doc in coll.find({"user_id": uid, "status": "pending"}):
+        pa = doc.get("proposed_action") or {}
+        payload = pa.get("payload") or {}
+        targets_entry = (
+            pa.get("type") == "delete_entry"
+            and (pa.get("target_id") == entry_id or payload.get("entryId") == entry_id)
+        ) or (
+            pa.get("type") == "apply_tags"
+            and entry_id in (payload.get("entryIds") or [])
+        ) or (
+            pa.get("type") == "list_on_marketplace"
+            and (pa.get("target_id") == entry_id or payload.get("portfolio_entry_id") == entry_id)
+        )
+        if not targets_entry:
+            continue
+        coll.update_one(
+            {"_id": doc["_id"], "status": "pending"},
+            {
+                "$set": {
+                    "status": "rejected",
+                    "user_decision": {
+                        "action": "reject",
+                        "override_payload": None,
+                        "decided_at": now,
+                        "reason": "entry_deleted_by_user",
+                    },
+                }
+            },
+        )
+        rejected += 1
+    return rejected
+
+
+def delete_portfolio_entry(entry_id: str, *, user_id: str | None = None) -> dict[str, Any]:
+    """User-initiated delete (distinct from HITL delete_entry approval)."""
+    uid = _resolve_portfolio_user_id(user_id)
+    if not uid:
+        raise ValueError("Set DEMO_USER_ID or sign in to delete photos")
+
+    try:
+        oid = ObjectId(entry_id)
+    except Exception as exc:
+        raise ValueError("Invalid portfolio entry id") from exc
+
+    doc = get_db().portfolio_entries.find_one({"_id": oid, "user_id": uid})
+    if not doc:
+        raise ValueError("Portfolio entry not found")
+
+    user_tags = doc.get("user_tags") or []
+    if LISTED_FOR_SALE_TAG in user_tags:
+        raise ValueError(
+            "This photo is listed for sale — remove the listing before deleting from your library"
+        )
+
+    get_db().portfolio_entries.delete_one({"_id": oid})
+    cancelled = _reject_pending_for_entry(entry_id, uid)
+    return {"deleted": True, "id": entry_id, "cancelledPending": cancelled}
+
+
+def delete_portfolio_entries(
+    entry_ids: list[str],
+    *,
+    user_id: str | None = None,
+) -> dict[str, Any]:
+    """Bulk delete — skips entries that fail validation."""
+    deleted: list[str] = []
+    skipped: list[dict[str, str]] = []
+    for eid in entry_ids:
+        try:
+            delete_portfolio_entry(eid, user_id=user_id)
+            deleted.append(eid)
+        except ValueError as exc:
+            skipped.append({"id": eid, "reason": str(exc)})
+    return {"deleted": deleted, "skipped": skipped, "deletedCount": len(deleted)}

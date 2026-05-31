@@ -13,6 +13,7 @@ import { SettingsTab } from './components/SettingsTab';
 import { FieldTab } from './components/FieldTab';
 import { ScoreExplainer, ScoreExplainerTrigger } from './components/ScoreExplainer';
 import { OnboardingTour, resetTour } from './components/OnboardingTour';
+import { getStoredTheme, type ThemeMode } from './lib/theme';
 import type { AppTab } from './config/navConfig';
 import { isAppTab, setTabHash, tabFromHash } from './config/navConfig';
 import { useAuth } from './auth/useAuth';
@@ -65,6 +66,8 @@ function App() {
   const [showScoreExplainer, setShowScoreExplainer] = useState(false);
   // Onboarding tour
   const [showTour, setShowTour] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => getStoredTheme());
+  const [practiceDetailId, setPracticeDetailId] = useState<string | null>(null);
   const [onboardingBusy, setOnboardingBusy] = useState(false);
   const [sidebarPhotoCount, setSidebarPhotoCount] = useState(0);
   const [sidebarRecentPhotos, setSidebarRecentPhotos] = useState<SidebarPhoto[]>([]);
@@ -124,6 +127,7 @@ function App() {
     // Reset sub-views when leaving tabs
     if (activeTab !== 'practice') {
       setPracticeView('list');
+      setPracticeDetailId(null);
     }
   }, [activeTab, ready, refreshActiveAssignment]);
 
@@ -334,6 +338,9 @@ function App() {
                 onGoToStudio={() => navigate('work')}
                 onGoToField={() => setPracticeView('field')}
                 onAssignmentsChange={refreshActiveAssignment}
+                detailAssignmentId={practiceDetailId}
+                onOpenAssignmentDetail={setPracticeDetailId}
+                onCloseAssignmentDetail={() => setPracticeDetailId(null)}
               />
             )
           )}
@@ -365,6 +372,8 @@ function App() {
                 resetTour();
                 setShowTour(true);
               }}
+              theme={theme}
+              onThemeChange={setTheme}
             />
           )}
         </main>

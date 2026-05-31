@@ -7,8 +7,28 @@
  */
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatDistanceToNow } from 'date-fns';
-import { ArrowUpDown, ChevronDown, ChevronLeft, ImageIcon, Plus, RefreshCw, Sparkles, Tag, TrendingUp, X } from 'lucide-react';
+import {
+  ArrowUpDown,
+  CheckSquare,
+  ChevronDown,
+  ChevronLeft,
+  Database,
+  ImageIcon,
+  Plus,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Square,
+  Tag,
+  Trash2,
+  TrendingUp,
+  X,
+} from 'lucide-react';
+import { SimilarPhotosRow } from './SimilarPhotosRow';
+import { LazyPortfolioImage } from './LazyPortfolioImage';
+import { searchPortfolioLibrary } from '../services/portfolioInsightsClient';
 import { SubViewBack } from './SubViewBack';
 import { FilmGrain } from './FilmGrain';
 import { FocusAreas } from './FocusAreas';
@@ -23,7 +43,7 @@ import { MemoryGridSkeleton } from './SkeletonBlocks';
 import PhotoUploader from './studio/PhotoUploader';
 import StudioAnalysisResults from './studio/StudioAnalysisResults';
 import { ActivePracticeBanner } from './studio/ActivePracticeBanner';
-import { fetchAestheticProfile, fetchPortfolio, fetchPortfolioTrends, type SortField, type SortOrder } from '../services/memoryClient';
+import { fetchAestheticProfile, fetchPortfolio, fetchPortfolioTrends, deletePortfolioEntries, deletePortfolioEntry, type SortField, type SortOrder } from '../services/memoryClient';
 import { analyzePhoto } from '../services/agentClient';
 import { mapAnalysisResult } from '../lib/mapAnalysisResult';
 import type { AnalysisResult } from '../types';
@@ -85,6 +105,17 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
   const [userTagFilter, setUserTagFilter] = useState<string | null>(null);
   const [allUserTags, setAllUserTags] = useState<string[]>([]);
+  const [librarySearch, setLibrarySearch] = useState('');
+  const [searchResults, setSearchResults] = useState<PortfolioListItem[] | null>(null);
+  const [searchMode, setSearchMode] = useState<string | null>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  // Bulk select + delete (A1/A2)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleteConfirm, setDeleteConfirm] = useState<'single' | 'bulk' | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Upload/analysis state
   const [viewMode, setViewMode] = useState<ViewMode>('gallery');
@@ -107,6 +138,48 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
       onClearPendingAnalysis?.();
     }
   }, [pendingAnalysis, onClearPendingAnalysis]);
+
+  const runLibrarySearch = useCallback(async () => {
+    const q = librarySearch.trim();
+    if (!q) {
+      setSearchResults(null);
+      setSearchMode(null);
+      return;
+    }
+    setSearchLoading(true);
+    setError(null);
+    try {
+      const res = await searchPortfolioLibrary(q, 12);
+      setSearchResults(res.matches);
+      setSearchMode(res.mode ?? 'search');
+    } catch (e) {
+      setSearchResults([]);
+      setSearchMode(null);
+      setError(friendlyErrorMessage(e));
+    } finally {
+      setSearchLoading(false);
+    }
+  }, [librarySearch]);
+
+  const clearLibrarySearch = useCallback(() => {
+    setLibrarySearch('');
+    setSearchResults(null);
+    setSearchMode(null);
+  }, []);
+
+  const toggleSelected = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
 
   const loadGallery = useCallback(async () => {
     setLoading(true);
@@ -142,6 +215,44 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
       setLoading(false);
     }
   }, [sortBy, sortOrder, userTagFilter]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    setDeleting(true);
+    setError(null);
+    try {
+      if (deleteConfirm === 'single' && deleteTargetId) {
+        await deletePortfolioEntry(deleteTargetId);
+        if (expandedId === deleteTargetId) setExpandedId(null);
+      } else if (deleteConfirm === 'bulk' && selectedIds.size > 0) {
+        const result = await deletePortfolioEntries([...selectedIds]);
+        if (result.skipped.length > 0) {
+          setError(
+            `Deleted ${result.deletedCount}. Skipped ${result.skipped.length}: ${result.skipped[0]?.reason ?? ''}`,
+          );
+        }
+        exitSelectMode();
+      }
+      await loadGallery();
+    } catch (e) {
+      setError(friendlyErrorMessage(e));
+    } finally {
+      setDeleting(false);
+      setDeleteConfirm(null);
+      setDeleteTargetId(null);
+    }
+  }, [deleteConfirm, deleteTargetId, selectedIds, expandedId, exitSelectMode, loadGallery]);
+
+  useEffect(() => {
+    if (!deleteConfirm) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !deleting) {
+        setDeleteConfirm(null);
+        setDeleteTargetId(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [deleteConfirm, deleting]);
 
   useEffect(() => {
     void loadGallery();
@@ -298,8 +409,62 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
   }
 
   // Gallery view (default)
+  const deleteDialog =
+    deleteConfirm &&
+    createPortal(
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-canvas/90 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-dialog-title"
+        onClick={() => {
+          if (!deleting) {
+            setDeleteConfirm(null);
+            setDeleteTargetId(null);
+          }
+        }}
+      >
+        <div
+          className="max-w-sm w-full rounded-2xl border border-warm bg-surface-1 p-6 space-y-4 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 id="delete-dialog-title" className="font-serif text-lg text-white">
+            Delete from library?
+          </h3>
+          <p className="text-sm text-muted leading-relaxed">
+            {deleteConfirm === 'bulk'
+              ? `Remove ${selectedIds.size} photo${selectedIds.size === 1 ? '' : 's'} permanently. Listed-for-sale items are skipped.`
+              : 'This removes the photo and its critique from your library. Pending organize suggestions for this photo will be cancelled.'}
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => {
+                setDeleteConfirm(null);
+                setDeleteTargetId(null);
+              }}
+              className="px-4 py-2 rounded-lg border border-warm text-sm text-stone-300 hover:bg-surface-2"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={deleting}
+              onClick={() => void handleConfirmDelete()}
+              className="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold hover:bg-rose-500 disabled:opacity-50"
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body,
+    );
+
   return (
     <div className="animate-fadeIn space-y-8">
+      {deleteDialog}
       {analysisError && (
         <InlineAlertBanner
           message={analysisError}
@@ -319,14 +484,59 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
         </button>
       )}
 
+      {/* Library search (Atlas Search on Glass Box text) */}
+      <form
+        className="flex flex-col sm:flex-row gap-2 max-w-2xl"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void runLibrarySearch();
+        }}
+      >
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
+          <input
+            type="search"
+            value={librarySearch}
+            onChange={(e) => setLibrarySearch(e.target.value)}
+            placeholder="Search your library (e.g. backlit portrait)"
+            className="w-full pl-10 pr-3 py-2.5 rounded-lg border border-warm bg-surface-1 text-stone-200 text-sm placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-brand-500"
+            aria-label="Search portfolio by critique text"
+          />
+        </div>
+        <button
+          type="submit"
+          disabled={searchLoading || !librarySearch.trim()}
+          className="px-4 py-2.5 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400 disabled:opacity-50"
+        >
+          {searchLoading ? 'Searching…' : 'Search'}
+        </button>
+        {searchResults !== null && (
+          <button
+            type="button"
+            onClick={clearLibrarySearch}
+            className="px-4 py-2.5 rounded-lg border border-warm text-stone-300 text-sm hover:bg-surface-2"
+          >
+            Clear
+          </button>
+        )}
+      </form>
+      {searchResults !== null && (
+        <p className="text-xs text-muted -mt-4">
+          {searchResults.length} result{searchResults.length === 1 ? '' : 's'}
+          {searchMode ? ` · ${searchMode === 'atlas_search' ? 'MongoDB Atlas Search' : 'text match'}` : ''}
+        </p>
+      )}
+
       {/* Header with upload CTA */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="font-serif text-2xl md:text-3xl text-white mb-1">My Work</h2>
           <p className="text-muted text-sm">
-            {entries.length > 0
-              ? `${entries.length} photo${entries.length === 1 ? '' : 's'} in your library`
-              : 'Your critiqued photos appear here'}
+            {searchResults !== null
+              ? `Showing search results`
+              : entries.length > 0
+                ? `${entries.length} photo${entries.length === 1 ? '' : 's'} in your library`
+                : 'Your critiqued photos appear here'}
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
@@ -392,6 +602,33 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
           >
             <RefreshCw className="w-4 h-4" />
           </button>
+          {(searchResults !== null ? searchResults : entries).length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                if (selectMode) exitSelectMode();
+                else setSelectMode(true);
+              }}
+              className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm ${
+                selectMode
+                  ? 'border-brand-500/50 text-brand-400 bg-brand-500/10'
+                  : 'border-warm text-stone-300 hover:bg-surface-2'
+              }`}
+            >
+              {selectMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+              {selectMode ? 'Cancel' : 'Select'}
+            </button>
+          )}
+          {selectMode && selectedIds.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setDeleteConfirm('bulk')}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-rose-500/50 text-rose-400 text-sm hover:bg-rose-500/10"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete ({selectedIds.size})
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setViewMode('upload')}
@@ -555,7 +792,7 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
       )}
 
       {/* Photo gallery or empty state */}
-      {entries.length === 0 ? (
+      {(searchResults !== null ? searchResults : entries).length === 0 ? (
         <TabEmptyState
           icon={ImageIcon}
           title="Your library is empty"
@@ -575,8 +812,9 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
         />
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {entries.map((entry) => {
+          {(searchResults !== null ? searchResults : entries).map((entry) => {
             const expanded = expandedId === entry.id;
+            const selected = selectedIds.has(entry.id);
             let when = '';
             try {
               when = formatDistanceToNow(new Date(entry.createdAt), { addSuffix: true });
@@ -586,9 +824,22 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
             return (
               <article
                 key={entry.id}
-                className="rounded-2xl bg-surface-1 border border-warm overflow-hidden flex flex-col transition-all duration-[250ms] hover:-translate-y-1 hover:shadow-[0_12px_32px_oklch(0_0_0/0.3)]"
+                className={`rounded-2xl bg-surface-1 border overflow-hidden flex flex-col transition-all duration-[250ms] hover:-translate-y-1 hover:shadow-[0_12px_32px_oklch(0_0_0/0.3)] ${
+                  selected ? 'border-brand-500/60 ring-1 ring-brand-500/40' : 'border-warm'
+                }`}
                 style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
               >
+                <div className="relative flex flex-col flex-1">
+                  {selectMode && (
+                    <button
+                      type="button"
+                      onClick={() => toggleSelected(entry.id)}
+                      className="absolute top-3 left-3 z-10 p-1.5 rounded-md bg-surface-1/90 border border-warm text-brand-400"
+                      aria-label={selected ? 'Deselect photo' : 'Select photo'}
+                    >
+                      {selected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                    </button>
+                  )}
                 <button
                   type="button"
                   className="text-left flex flex-col flex-1"
@@ -598,7 +849,13 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
                       : ''
                   }`}
                   aria-expanded={expanded}
-                  onClick={() => setExpandedId(expanded ? null : entry.id)}
+                  onClick={() => {
+                    if (selectMode) {
+                      toggleSelected(entry.id);
+                      return;
+                    }
+                    setExpandedId(expanded ? null : entry.id);
+                  }}
                 >
                   <div className="p-3 bg-photo-black border-b border-warm/40">
                     <div className="aspect-[4/3] bg-photo-black relative rounded-md overflow-hidden ring-1 ring-warm/60 shadow-inner">
@@ -607,13 +864,16 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
                           Listed
                         </span>
                       )}
+                      {entry.glassBoxSummary.length > 0 && (
+                        <span className="absolute bottom-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-brand-500/20 border border-brand-500/40 text-brand-300 text-[10px] font-semibold">
+                          <Database className="w-3 h-3" aria-hidden />
+                          Grounded
+                        </span>
+                      )}
                       {entry.imageUrl ? (
-                        <img
+                        <LazyPortfolioImage
                           src={entry.imageUrl}
                           alt={entry.sceneDescription?.slice(0, 120) || 'Portfolio photo'}
-                          loading="lazy"
-                          decoding="async"
-                          className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="flex items-center justify-center h-full text-stone-600">
@@ -686,8 +946,52 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
                         ))}
                       </div>
                     )}
+                    {expanded && (
+                      <SimilarPhotosRow
+                        entryId={entry.id}
+                        onSelectEntry={(id) => {
+                          setExpandedId(id);
+                          clearLibrarySearch();
+                        }}
+                      />
+                    )}
+                    {'matchedObservations' in entry &&
+                      Array.isArray(
+                        (entry as PortfolioListItem & { matchedObservations?: string[] })
+                          .matchedObservations,
+                      ) &&
+                      (
+                        entry as PortfolioListItem & { matchedObservations?: string[] }
+                      ).matchedObservations!.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-warm/60">
+                          <p className="text-[10px] font-bold uppercase text-muted tracking-wide mb-1">
+                            Matched critique
+                          </p>
+                          <p className="text-xs text-stone-400 leading-relaxed line-clamp-2">
+                            {(
+                              entry as PortfolioListItem & { matchedObservations?: string[] }
+                            ).matchedObservations![0]}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 </button>
+                {expanded && !selectMode && !isListedForSale(entry.userTags) && (
+                  <div className="px-4 pb-3 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteTargetId(entry.id);
+                        setDeleteConfirm('single');
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete from library
+                    </button>
+                  </div>
+                )}
+                </div>
               </article>
             );
           })}
