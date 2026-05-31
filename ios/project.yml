@@ -31,6 +31,10 @@ targets:
     platform: iOS
     sources:
       - path: Iris
+        excludes:
+          - Resources/Fonts/**
+      - path: Iris/Resources/Fonts
+        buildPhase: resources
       # Drop GoogleService-Info.plist next to this file, then: xcodegen generate
       - path: GoogleService-Info.plist
         optional: true
@@ -48,6 +52,11 @@ targets:
     info:
       path: Iris/Info.plist
       properties:
+        UIAppFonts:
+          - Newsreader-Bold.ttf
+          - DMSans-Regular.ttf
+          - DMSans-Medium.ttf
+          - DMSans-SemiBold.ttf
         UILaunchScreen: {}
         CFBundleURLTypes:
           - CFBundleTypeRole: Editor

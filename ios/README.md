@@ -108,7 +108,31 @@ On launch you should see a brief banner **API OK · phase …** if Cloud Run is 
 
 ## UI (web parity — warm gallery)
 
-Dark **canvas** + **amber** brand, serif titles, bordered cards, score bars, and Glass Box tabs — aligned with `frontend/src/index.css`. Not yet: spatial overlays, radar chart, full “How to Fix” tab (web Studio).
+Dark **canvas** + **amber** brand, serif titles, bordered cards, score bars, and Glass Box tabs — aligned with `frontend/src/index.css`. **C2/C3** add radar chart, spatial overlays, and bundled Newsreader + DM Sans. Not yet: full “How to Fix” tab parity with web Studio.
+
+### Test C2 · C3 · C5 (device recommended)
+
+Regenerate and open after pulling:
+
+```bash
+cd ios && xcodegen generate && open Iris.xcodeproj
+```
+
+| Item | Where | What to verify |
+|------|--------|----------------|
+| **C5 Horizon** | Shoot FAB → viewfinder | Amber dashed line tilts with phone roll; turns **solid green** when level (~±2°). Simulator motion is limited — use a **physical iPhone**. |
+| **C2 Radar** | Shoot → capture → critique sheet → **Overview** | Pentagon **radar chart** above score bars (composition, lighting, technique, creativity, subject impact). |
+| **C2 Spatial** | Same critique sheet, photo preview | Colored boxes on image when API returns `spatial_metadata.annotations` (landscape / architecture shots work best). |
+| **C3 Fonts** | Home title, critique headline, Mentor | Serif headlines = **Newsreader**; body = **DM Sans** (not system Georgia / SF). If fonts fail to load, Iris falls back to system serif/sans — rebuild after `xcodegen generate` so `.ttf` files are in the app bundle. |
+
+Quick font check in Xcode debug console after launch:
+
+```swift
+po UIFont(name: "Newsreader16pt16pt-Bold", size: 17)
+po UIFont(name: "DMSans9pt-Regular", size: 17)
+```
+
+Both should print a font object, not `nil`.
 
 ## Shoot (Phase 1)
 
@@ -132,10 +156,10 @@ Requires network. Starts a `capture_sessions` doc, sends preview frames to `POST
 
 ## Next steps
 
+- [ ] Test **C2 / C3 / C5** on physical iPhone (see table above)
 - [ ] Test Google sign-in on physical iPhone (optional for demo)
 - [ ] Record demo: [`docs/ios-demo-video-script.md`](../docs/ios-demo-video-script.md)
-- [ ] Custom fonts (Newsreader + DM Sans)
-- [ ] Live Field Coach (Phase 3.5+)
+- [ ] Live Field Coach polish (Phase 3.5+)
 
 ---
 

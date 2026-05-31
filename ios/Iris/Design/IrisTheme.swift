@@ -26,15 +26,16 @@ enum IrisFont {
     }
 
     static func serif(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        customOrSystem("Newsreader-Bold", size: size, weight: weight, design: .serif)
+        // PostScript name from bundled Newsreader-Bold.ttf (fontsource / Google Fonts)
+        customOrSystem("Newsreader16pt16pt-Bold", size: size, weight: weight, design: .serif)
     }
 
     static func sans(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         let name: String
         switch weight {
-        case .semibold, .bold: name = "DMSans-SemiBold"
-        case .medium: name = "DMSans-Medium"
-        default: name = "DMSans-Regular"
+        case .semibold, .bold: name = "DMSans9pt-SemiBold"
+        case .medium: name = "DMSans9pt-Medium"
+        default: name = "DMSans9pt-Regular"
         }
         return customOrSystem(name, size: size, weight: weight, design: .default)
     }

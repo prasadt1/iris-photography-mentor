@@ -46,7 +46,7 @@ final class HorizonMotionModel: ObservableObject {
     func start() {
         guard manager.isDeviceMotionAvailable else { return }
         manager.deviceMotionUpdateInterval = 1 / 30
-        manager.startDeviceMotionUpdate(to: .main) { [weak self] motion, _ in
+        manager.startDeviceMotionUpdates(to: .main) { [weak self] motion, _ in
             guard let self, let motion else { return }
             let roll = motion.attitude.roll
             self.rollOffset = roll
