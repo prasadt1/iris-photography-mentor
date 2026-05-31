@@ -40,5 +40,6 @@ class AssignmentRecord(BaseModel):
     baselineShootIds: list[str]
     completionShootIds: list[str]
     skillDelta: SkillDelta | None = None
+    appliedBrief: bool | None = None
     createdAt: str
     completedAt: str | None = None

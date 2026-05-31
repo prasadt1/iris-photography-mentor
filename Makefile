@@ -37,7 +37,12 @@ api-dev:
 		echo "Coach API already running at http://127.0.0.1:$(API_PORT) (use make api-stop to restart)"; \
 		exit 0; \
 	fi; \
-	cd app && uv sync && uv run uvicorn api.server:app --reload --host 127.0.0.1 --port $(API_PORT)
+	if [ -f gcp-service-account.json ]; then \
+	  export GOOGLE_APPLICATION_CREDENTIALS="$(CURDIR)/gcp-service-account.json"; \
+	fi; \
+	cd app && uv sync && \
+	MONGODB_MCP_ALLOW_PYMONGO_FALLBACK=true \
+	uv run uvicorn api.server:app --reload --host 127.0.0.1 --port $(API_PORT)
 
 frontend-dev:
 	@cd frontend && npm run dev

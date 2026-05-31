@@ -5,8 +5,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
+  Award,
+  BarChart3,
   ImageIcon,
-  Target,
   TrendingUp,
   Upload,
 } from 'lucide-react';
@@ -45,7 +46,6 @@ interface Props {
   onAnalysisComplete?: (result: AnalysisResult, imageUrl: string, filename: string) => void;
 }
 
-const PITCH_DISMISS_KEY = 'iris:pitchBandDismissed';
 const PRACTICE_WIN_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 function pickLatestPracticeWin(completed: Assignment[]): Assignment | null {
@@ -112,10 +112,9 @@ export const HomeTab: React.FC<Props> = ({
   const [analyzingImageUrl, setAnalyzingImageUrl] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [analyzeWaitSec, setAnalyzeWaitSec] = useState(0);
-  const [pitchDismissed, setPitchDismissed] = useState(
-    () => localStorage.getItem(PITCH_DISMISS_KEY) === 'true',
-  );
   const [latestPracticeWin, setLatestPracticeWin] = useState<Assignment | null>(null);
+  const [practiceWinPhoto, setPracticeWinPhoto] = useState<PortfolioListItem | null>(null);
+  const [completedAssignmentCount, setCompletedAssignmentCount] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const exampleGlassBoxRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -139,7 +138,24 @@ export const HomeTab: React.FC<Props> = ({
       setContactSheet(recentPhotos.entries);
       setProfile(aesthetic);
       setTrends(trendData);
-      setLatestPracticeWin(pickLatestPracticeWin(assignments.completed));
+      const win = pickLatestPracticeWin(assignments.completed);
+      setLatestPracticeWin(win);
+      setCompletedAssignmentCount(assignments.completed.length);
+
+      if (win?.completionShootIds?.length) {
+        const shootId = win.completionShootIds[0];
+        const match = recentPhotos.entries.find((e) => e.shootId === shootId);
+        if (match) {
+          setPracticeWinPhoto(match);
+        } else {
+          const more = await fetchPortfolio({ limit: 80, sortBy: 'date', sortOrder: 'desc' }).catch(
+            () => ({ entries: [], total: 0 }),
+          );
+          setPracticeWinPhoto(more.entries.find((e) => e.shootId === shootId) ?? null);
+        }
+      } else {
+        setPracticeWinPhoto(null);
+      }
 
       const validOldest = oldestPortfolio.entries.find(
         (e) => e.imageUrl && e.overallAverage > 0,
@@ -229,11 +245,22 @@ export const HomeTab: React.FC<Props> = ({
   const mentorThreshold = useDemoLibrary ? 1 : 3;
   const showMentorCard = Boolean(profile && portfolioTotal >= mentorThreshold);
 
+  const GROWTH_MIN_PHOTOS = 6;
   const showGrowth =
     isReturning &&
+    portfolioTotal >= GROWTH_MIN_PHOTOS &&
     earliestPhoto &&
     bestPhoto &&
     earliestPhoto.id !== bestPhoto.id;
+
+  const avgLibraryScore = (() => {
+    const scores = profile?.averageScores;
+    if (!scores) return null;
+    const keys = ['composition', 'lighting', 'technique', 'creativity', 'subject_impact'] as const;
+    const vals = keys.map((k) => scores[k]).filter((v): v is number => v != null);
+    if (vals.length === 0) return null;
+    return vals.reduce((a, b) => a + b, 0) / vals.length;
+  })();
 
   useEffect(() => {
     setImageLoaded(false);
@@ -245,11 +272,6 @@ export const HomeTab: React.FC<Props> = ({
     const timeout = window.setTimeout(() => setImageError(true), 8000);
     return () => window.clearTimeout(timeout);
   }, [heroPhoto?.imageUrl, imageLoaded, imageError, heroPhoto]);
-
-  const dismissPitchBand = () => {
-    localStorage.setItem(PITCH_DISMISS_KEY, 'true');
-    setPitchDismissed(true);
-  };
 
   return (
     <>
@@ -267,7 +289,9 @@ export const HomeTab: React.FC<Props> = ({
         />
       )}
 
-      <div className="relative z-10 space-y-10 pb-8">
+      <div
+        className={`relative z-10 pb-8 ${isReturning ? 'space-y-5 md:space-y-6' : 'space-y-10'}`}
+      >
         {uploadError && (
           <InlineAlertBanner message={uploadError} onDismiss={() => setUploadError(null)} />
         )}
@@ -310,7 +334,9 @@ export const HomeTab: React.FC<Props> = ({
           <div className="relative overflow-hidden bg-photo-black -mx-3 md:-mx-6 rounded-none md:rounded-2xl md:mx-0">
             <div
               className={`relative ${
-                imageError ? 'h-[min(40vh,480px)] min-h-[280px]' : 'h-[min(70vh,720px)] min-h-[420px]'
+                imageError
+                  ? 'h-[min(36vh,400px)] min-h-[240px]'
+                  : 'h-[min(50vh,520px)] min-h-[280px] md:min-h-[320px]'
               }`}
             >
               {imageError ? (
@@ -343,8 +369,8 @@ export const HomeTab: React.FC<Props> = ({
               )}
               <div className="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-canvas via-canvas/60 to-transparent pointer-events-none" />
 
-              <div className="absolute bottom-6 left-6 right-6 md:left-10 md:right-auto md:max-w-md">
-                <div className="bg-canvas/90 border border-warm/60 p-6 rounded-xl">
+              <div className="absolute bottom-4 left-4 right-4 md:bottom-6 md:left-8 md:right-auto md:max-w-md">
+                <div className="bg-canvas/90 border border-warm/60 p-4 md:p-5 rounded-xl">
                   <p className="text-xs uppercase tracking-widest text-stone-400 mb-2">
                     Best in your library
                   </p>
@@ -400,59 +426,6 @@ export const HomeTab: React.FC<Props> = ({
           </div>
         )}
 
-        {/* Slim pitch band (returning) */}
-        {isReturning && !pitchDismissed && (
-          <div className="flex items-center justify-between bg-surface-1 border border-warm rounded-lg px-4 py-3 max-w-4xl mx-auto">
-            <p className="text-stone-400 text-sm">Remembers every shot you upload.</p>
-            <button
-              type="button"
-              onClick={dismissPitchBand}
-              className="text-stone-500 hover:text-stone-300 p-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Dismiss"
-            >
-              ×
-            </button>
-          </div>
-        )}
-
-        {/* Elevated mentor card */}
-        {isReturning && showMentorCard && profile && (
-          <section className="bg-gradient-to-br from-surface-1 to-surface-2 rounded-xl p-6 border border-warm max-w-4xl mx-auto">
-            <p className="text-xs uppercase tracking-widest text-stone-400 mb-3">From your mentor</p>
-            <p className="text-stone-300 text-base leading-relaxed font-serif mb-4">
-              {mentorInsightText(profile, trendDelta, trendLabel)}
-            </p>
-            <button
-              type="button"
-              onClick={() => onNavigate('mentor')}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-500 text-on-brand font-semibold hover:bg-brand-400 transition-colors"
-            >
-              Ask me anything
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </section>
-        )}
-
-        {/* Practice win (recent completed assignment) */}
-        {isReturning && latestPracticeWin?.skillDelta && (
-          <section className="rounded-xl border border-brand-500/30 bg-brand-500/10 p-6 max-w-4xl mx-auto">
-            <p className="text-xs uppercase tracking-widest text-brand-400 mb-2">Practice win</p>
-            <p className="font-serif text-lg text-white mb-1">
-              {formatSkillLabel(latestPracticeWin.targetSkill)} up +
-              {latestPracticeWin.skillDelta.delta.toFixed(1)} pts
-            </p>
-            <p className="text-sm text-stone-400 mb-4 line-clamp-2">{latestPracticeWin.brief}</p>
-            <button
-              type="button"
-              onClick={() => onNavigate('practice')}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-400 hover:text-brand-300"
-            >
-              Take another assignment
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </section>
-        )}
-
         {/* First visit: example Glass Box */}
         {isFirstVisit && (
           <div
@@ -499,18 +472,43 @@ export const HomeTab: React.FC<Props> = ({
           </section>
         )}
 
-        {/* At a glance (returning) */}
+        {/* At a glance (returning) — above the fold after hero */}
         {isReturning && !loading && (
-          <div className="max-w-4xl mx-auto px-1 space-y-3">
-            <p className="text-xs uppercase tracking-widest text-stone-400 text-center">At a glance</p>
-            <div className="grid sm:grid-cols-2 gap-4">
+          <div className="max-w-4xl mx-auto px-1 space-y-2">
+            <p className="text-xs uppercase tracking-widest text-stone-400">At a glance</p>
+            <div className="grid sm:grid-cols-3 gap-4">
+              <div className="rounded-xl border border-warm bg-surface-1/80 p-4 flex items-start gap-4">
+                <div className="p-2 rounded-lg bg-surface-2 shrink-0 mt-0.5">
+                  <BarChart3 className="w-5 h-5 text-brand-400" aria-hidden />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
+                    Avg score
+                  </p>
+                  {avgLibraryScore != null ? (
+                    <>
+                      <p className="text-sm font-serif text-white tabular-nums">
+                        {avgLibraryScore.toFixed(1)}
+                        <span className="text-stone-400 text-xs font-sans"> / 10</span>
+                      </p>
+                      <p className="text-xs text-stone-400 mt-0.5">Across your recent library</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-serif text-white">—</p>
+                      <p className="text-xs text-stone-400 mt-0.5">Upload more to see averages</p>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div className="rounded-xl border border-warm bg-surface-1/80 p-4 flex items-start gap-4">
                 <div className="p-2 rounded-lg bg-surface-2 shrink-0 mt-0.5">
                   <TrendingUp className="w-5 h-5 text-brand-400" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
-                    Score trend
+                    Recent trend
                   </p>
                   {trendDelta != null && trendLabel ? (
                     <>
@@ -551,58 +549,171 @@ export const HomeTab: React.FC<Props> = ({
                 </div>
               </div>
 
-              <div
-                className={`rounded-xl border p-4 flex items-start gap-4 ${
-                  activeAssignment ? 'border-brand-500/40 bg-brand-500/10' : 'border-warm bg-surface-1/80'
-                }`}
-              >
+              <div className="rounded-xl border border-warm bg-surface-1/80 p-4 flex items-start gap-4">
                 <div className="p-2 rounded-lg bg-surface-2 shrink-0 mt-0.5">
-                  <Target className="w-5 h-5 text-brand-400" aria-hidden />
+                  <Award className="w-5 h-5 text-brand-400" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider mb-1">
-                    Practice challenge
+                    Assignments done
                   </p>
-                  {activeAssignment ? (
-                    <>
-                      <p className="text-sm font-serif text-white">
-                        {formatSkillLabel(activeAssignment.targetSkill || 'General')}
-                      </p>
-                      <p className="text-xs text-stone-400 mt-0.5 line-clamp-2 leading-relaxed">
-                        {activeAssignment.brief}
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-serif text-white">No active challenge</p>
-                      <p className="text-xs text-stone-400 mt-0.5">
-                        Short assignments to practise one skill at a time
-                      </p>
-                    </>
-                  )}
+                  <p className="text-sm font-serif text-white tabular-nums">
+                    {completedAssignmentCount}
+                  </p>
+                  <p className="text-xs text-stone-400 mt-0.5">
+                    {completedAssignmentCount === 0
+                      ? 'Accept a challenge in Practice'
+                      : 'Completed practice briefs'}
+                  </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => onNavigate('practice')}
                   className="text-xs text-brand-400 hover:text-brand-300 font-medium shrink-0 self-center"
                 >
-                  {activeAssignment ? 'Continue →' : 'Browse →'}
+                  Practice →
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Growth comparison */}
-        {showGrowth && (
-          <section className="max-w-5xl mx-auto px-1">
-            <div className="text-center mb-8">
-              <h2 className="font-serif text-2xl md:text-3xl text-white mb-2">Your growth</h2>
-              <p className="text-stone-400 text-sm">
-                From an early frame to your strongest — {portfolioTotal} photos in your library
+        {/* Contact sheet — primary library access, kept high on the page */}
+        {isReturning && (
+          <section className="max-w-6xl mx-auto px-1">
+            <div className="flex items-end justify-between gap-4 mb-3">
+              <div>
+                <h2 className="font-serif text-xl md:text-2xl text-white">Contact sheet</h2>
+                <p className="text-stone-400 text-xs md:text-sm mt-0.5">Recent frames from your library</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400 transition-colors disabled:opacity-50"
+                >
+                  <Upload className="w-4 h-4" />
+                  Upload
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('work')}
+                  className="text-sm text-brand-400 hover:text-brand-300 font-medium"
+                >
+                  Library →
+                </button>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="flex gap-4 overflow-hidden">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="shrink-0 w-48 h-32 rounded-xl bg-surface-2 animate-pulse" />
+                ))}
+              </div>
+            ) : contactSheet.length > 0 ? (
+              <div className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
+                {contactSheet.map((photo) => (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    onClick={() => onNavigate('work')}
+                    className="shrink-0 w-44 sm:w-52 snap-start group text-left"
+                  >
+                    <PhotoMat variant="contact" className="transition-transform duration-300 group-hover:-translate-y-1">
+                      <div className="aspect-[4/5] relative">
+                        <img
+                          src={photo.imageUrl}
+                          alt={photo.sceneDescription || 'Photo'}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-brand-500 text-on-brand text-xs font-bold tabular-nums">
+                          {photo.overallAverage.toFixed(1)}
+                        </span>
+                      </div>
+                    </PhotoMat>
+                    {photo.sceneDescription && (
+                      <p className="mt-1.5 text-xs text-stone-400 line-clamp-1 leading-relaxed">
+                        {photo.sceneDescription}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        {isReturning && showMentorCard && profile && (
+          <section className="rounded-xl border border-warm bg-surface-1 p-4 max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-stone-400 mb-1">From your mentor</p>
+              <p className="text-stone-300 text-sm leading-relaxed font-serif line-clamp-2">
+                {mentorInsightText(profile, trendDelta, trendLabel)}
               </p>
             </div>
-            <div className="flex flex-col md:flex-row items-stretch gap-6 md:gap-10">
+            <button
+              type="button"
+              onClick={() => onNavigate('mentor')}
+              className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400"
+            >
+              Ask mentor
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </section>
+        )}
+
+        {isReturning && latestPracticeWin?.skillDelta && (
+          <section className="rounded-xl border border-warm bg-surface-1 p-4 max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center gap-4">
+            {practiceWinPhoto?.imageUrl ? (
+              <PhotoMat variant="contact" aspect="aspect-square" className="w-20 shrink-0">
+                <img
+                  src={practiceWinPhoto.imageUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </PhotoMat>
+            ) : (
+              <div
+                className="w-20 h-20 shrink-0 rounded-lg bg-surface-2 border border-warm flex items-center justify-center"
+                aria-hidden
+              >
+                <Award className="w-8 h-8 text-stone-500" />
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-brand-400 mb-1">Practice win</p>
+              <p className="text-sm font-serif text-white">
+                {formatSkillLabel(latestPracticeWin.targetSkill)} +{latestPracticeWin.skillDelta.delta.toFixed(1)} pts
+              </p>
+              <p className="text-xs text-stone-400 mt-0.5 line-clamp-2">{latestPracticeWin.brief}</p>
+              {latestPracticeWin.appliedBrief != null && (
+                <p className="text-xs text-stone-400 mt-1">
+                  Brief {latestPracticeWin.appliedBrief ? 'applied' : 'not yet applied'}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigate('practice')}
+              className="text-sm font-semibold text-brand-400 hover:text-brand-300 shrink-0"
+            >
+              Practice →
+            </button>
+          </section>
+        )}
+
+        {/* Growth comparison — below library strip; large comparison last */}
+        {showGrowth && (
+          <section className="max-w-5xl mx-auto px-1">
+            <div className="mb-4">
+              <h2 className="font-serif text-xl md:text-2xl text-white mb-1">Your growth</h2>
+              <p className="text-stone-400 text-xs md:text-sm">
+                Early frame vs strongest · {portfolioTotal} photos
+              </p>
+            </div>
+            <div className="flex flex-col md:flex-row items-stretch gap-4 md:gap-8">
               <div className="flex-1">
                 <p className="text-xs uppercase tracking-widest text-stone-400 mb-3">Then</p>
                 <PhotoMat variant="contact" aspect="aspect-[4/3]">
@@ -641,78 +752,11 @@ export const HomeTab: React.FC<Props> = ({
               </div>
             </div>
             {trendDelta != null && trendDelta > 0 && (
-              <p className="text-center mt-6 text-brand-400 font-medium text-sm">
+              <p className="text-center mt-4 text-brand-400 font-medium text-sm">
                 <TrendingUp className="w-4 h-4 inline mr-1.5" />
                 +{trendDelta.toFixed(1)} in {trendLabel?.toLowerCase()}
               </p>
             )}
-          </section>
-        )}
-
-        {/* Contact sheet */}
-        {isReturning && (
-          <section className="max-w-6xl mx-auto px-1">
-            <div className="flex items-end justify-between gap-4 mb-6">
-              <div>
-                <h2 className="font-serif text-2xl md:text-3xl text-white">Contact sheet</h2>
-                <p className="text-stone-400 text-sm mt-1">Recent frames from your library</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400 transition-colors disabled:opacity-50"
-                >
-                  <Upload className="w-4 h-4" />
-                  Upload
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('work')}
-                  className="text-sm text-brand-400 hover:text-brand-300 font-medium shrink-0"
-                >
-                  Open library →
-                </button>
-              </div>
-            </div>
-
-            {loading ? (
-              <div className="flex gap-4 overflow-hidden">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="shrink-0 w-56 h-40 rounded-xl bg-surface-2 animate-pulse" />
-                ))}
-              </div>
-            ) : contactSheet.length > 0 ? (
-              <div className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
-                {contactSheet.map((photo) => (
-                  <button
-                    key={photo.id}
-                    type="button"
-                    onClick={() => onNavigate('work')}
-                    className="shrink-0 w-52 sm:w-60 snap-start group text-left"
-                  >
-                    <PhotoMat variant="contact" className="transition-transform duration-300 group-hover:-translate-y-1">
-                      <div className="aspect-[3/4] relative">
-                        <img
-                          src={photo.imageUrl}
-                          alt={photo.sceneDescription || 'Photo'}
-                          className="w-full h-full object-cover"
-                        />
-                        <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-brand-500 text-on-brand text-xs font-bold tabular-nums">
-                          {photo.overallAverage.toFixed(1)}
-                        </span>
-                      </div>
-                    </PhotoMat>
-                    {photo.sceneDescription && (
-                      <p className="mt-2 text-xs text-stone-400 line-clamp-2 leading-relaxed">
-                        {photo.sceneDescription}
-                      </p>
-                    )}
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </section>
         )}
       </div>

@@ -148,6 +148,99 @@ function describeProposal(item: PendingApproval): string {
   return item.agentReasoning;
 }
 
+type OrganizeFeedback =
+  | { kind: 'scan'; groups: number; proposals: number; superseded: number }
+  | { kind: 'approved_tags'; photoCount: number; tags: string[] }
+  | { kind: 'approved_delete' }
+  | { kind: 'rejected' };
+
+function OrganizeFeedbackBanner({
+  feedback,
+  onGoToWork,
+  onDismiss,
+}: {
+  feedback: OrganizeFeedback;
+  onGoToWork?: () => void;
+  onDismiss: () => void;
+}) {
+  if (feedback.kind === 'scan') {
+    const { groups, proposals, superseded } = feedback;
+    return (
+      <div className="rounded-xl border border-warm bg-surface-1 px-4 py-3 text-sm text-stone-300">
+        {superseded > 0
+          ? `Replaced ${superseded} old proposal(s). Found ${groups} groups; ${proposals} new card(s) to review below.`
+          : `Found ${groups} groups in your library; ${proposals} proposal(s) waiting below.`}
+      </div>
+    );
+  }
+
+  if (feedback.kind === 'rejected') {
+    return (
+      <div className="rounded-xl border border-warm bg-surface-1 px-4 py-3 flex items-start justify-between gap-3">
+        <p className="text-sm text-stone-300">Suggestion dismissed — nothing changed in your library.</p>
+        <button type="button" onClick={onDismiss} className="text-stone-500 hover:text-white p-1" aria-label="Dismiss">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  const isTags = feedback.kind === 'approved_tags';
+  const tagList = isTags ? feedback.tags.map((t) => t.replace(/_/g, ' ')).join(', ') : '';
+
+  return (
+    <div
+      className="rounded-xl border border-brand-500/40 bg-brand-500/10 px-4 py-4 space-y-3"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-start gap-3">
+        <div className="p-1.5 rounded-full bg-brand-500/20 shrink-0 mt-0.5">
+          <Check className="w-4 h-4 text-brand-400" aria-hidden />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <p className="text-sm font-semibold text-white">
+            {isTags
+              ? `Labels applied to ${feedback.photoCount} photo${feedback.photoCount === 1 ? '' : 's'}`
+              : 'Duplicate removed from your library'}
+          </p>
+          <p className="text-sm text-stone-300 leading-relaxed">
+            {isTags ? (
+              <>
+                Those photos are still in <strong className="text-stone-200 font-medium">My Work</strong> — they
+                now carry labels like <span className="text-brand-300">{tagList}</span>. The card above
+                disappeared because you approved it; your photos did not.
+              </>
+            ) : (
+              <>
+                One near-duplicate was deleted. Your other similar frames are unchanged in{' '}
+                <strong className="text-stone-200 font-medium">My Work</strong>.
+              </>
+            )}
+          </p>
+          {isTags && (
+            <p className="text-xs text-stone-400">
+              Next: open My Work and use the tag filter, or tap Refresh if labels don&apos;t show yet.
+            </p>
+          )}
+        </div>
+        <button type="button" onClick={onDismiss} className="text-stone-500 hover:text-white p-1 shrink-0" aria-label="Dismiss">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      {onGoToWork && (
+        <button
+          type="button"
+          onClick={onGoToWork}
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400"
+        >
+          View in My Work
+        </button>
+      )}
+    </div>
+  );
+}
+
 export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   const [view, setView] = useState<MentorView>('chat');
 
@@ -169,7 +262,7 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   const [scanWaitSec, setScanWaitSec] = useState(0);
   const [acting, setActing] = useState<string | null>(null);
   const [labelError, setLabelError] = useState<string | null>(null);
-  const [scanSummary, setScanSummary] = useState<string | null>(null);
+  const [organizeFeedback, setOrganizeFeedback] = useState<OrganizeFeedback | null>(null);
   const [previews, setPreviews] = useState<Map<string, EntryPreview>>(new Map());
   const [libraryCount, setLibraryCount] = useState(0);
   const [pendingOrganizeCount, setPendingOrganizeCount] = useState(0);
@@ -321,11 +414,12 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
       const n = result.clusters?.length ?? 0;
       const created = result.proposalsCreated?.length ?? 0;
       const cleared = (result as { supersededPending?: number }).supersededPending ?? 0;
-      setScanSummary(
-        cleared > 0
-          ? `Replaced ${cleared} old proposal(s). Found ${n} groups; ${created} new card(s) to review.`
-          : `Found ${n} groups in your library; ${created} proposal(s) to review.`,
-      );
+      setOrganizeFeedback({
+        kind: 'scan',
+        groups: n,
+        proposals: created,
+        superseded: cleared,
+      });
       setLabelItems(result.pending?.items ?? []);
       void loadPreviews();
     } catch (e) {
@@ -336,13 +430,26 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
   };
 
   const handleDecision = async (id: string, action: 'approve' | 'reject') => {
+    const item = labelItems.find((p) => p.id === id);
     setActing(id);
     try {
       await decideApproval(id, action);
       setLabelItems((prev) => prev.filter((p) => p.id !== id));
-      if (action === 'approve') {
-        setScanSummary('Approved — open My Work and hit Refresh to see new labels on your photos.');
+      if (action === 'approve' && item) {
+        if (item.proposedAction.type === 'apply_tags') {
+          const payload = item.proposedAction.payload as { tags?: string[]; entryIds?: string[] };
+          const ids = payload.entryIds ?? entryIdsForProposal(item);
+          setOrganizeFeedback({
+            kind: 'approved_tags',
+            photoCount: ids.length,
+            tags: payload.tags ?? [],
+          });
+        } else if (item.proposedAction.type === 'delete_entry') {
+          setOrganizeFeedback({ kind: 'approved_delete' });
+        }
         void loadPreviews();
+      } else if (action === 'reject') {
+        setOrganizeFeedback({ kind: 'rejected' });
       }
     } catch (e) {
       setLabelError(friendlyErrorMessage(e));
@@ -626,7 +733,17 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
             />
           )}
 
-          {scanSummary && <p className="text-sm text-brand-400/90">{scanSummary}</p>}
+          {organizeFeedback && (
+            <OrganizeFeedbackBanner
+              feedback={organizeFeedback}
+              onGoToWork={
+                organizeFeedback.kind === 'approved_tags' || organizeFeedback.kind === 'approved_delete'
+                  ? onGoToWork
+                  : undefined
+              }
+              onDismiss={() => setOrganizeFeedback(null)}
+            />
+          )}
           {labelError && (
             <p className="text-sm text-red-400" role="alert">
               {labelError}
@@ -639,7 +756,7 @@ export const MentorTab: React.FC<Props> = ({ mode, onGoToWork }) => {
             </p>
           )}
 
-          {!labelLoading && labelItems.length === 0 && !scanSummary && (
+          {!labelLoading && labelItems.length === 0 && !organizeFeedback && (
             <div className="rounded-xl border border-dashed border-warm/60 bg-surface-1/50 p-6 text-center space-y-3">
               <Layers className="w-10 h-10 text-muted mx-auto" />
               <div>

@@ -409,6 +409,19 @@ Backend persists all data; UX must make this visible.
 - Explain what "Draft listing proposals" does:
   "Iris scans your portfolio, picks strong candidates, and generates title, description, and suggested price. You approve each listing individually. Approved listings are saved to your library — not published to Etsy in this preview."
 
+### 3.4 Approved listings discoverability (user feedback, 2026-05-31)
+
+**Problem:** After "Approve listing," the draft card disappears. New users ask where the photo/thumbnail went and what happened to the data.
+
+**Backend truth (already implemented):** Approve writes a document to MongoDB `print_sales` (title, description, price, marketplace, `portfolio_entry_id`, `status: listed`). Nothing is sent to Etsy. The portfolio photo remains in `portfolio_entries`.
+
+**UX requirements (Phase 3 — before deeper listing features):**
+- **Persistent success banner** (same pattern as Organize post-approve): e.g. "Listing saved to your library (not live on Etsy). Photo still in My Work."
+- **"Your approved listings"** section on Print Sales tab — list saved `print_sales` rows (requires `GET /api/v1/print-sales` or equivalent), not only pending HITL cards
+- **Clear separation:** Pending proposals labeled "Proposal — not listed until you approve" vs saved listings with "Saved" / marketplace badge
+- **Next step CTA:** "View in My Work" (and later filter by `listed_for_sale` user tag per §3.2)
+- **Reject flow:** Dismissed state so users know nothing was saved (optional collapsed "Rejected" history)
+
 ---
 
 ## Implementation Notes

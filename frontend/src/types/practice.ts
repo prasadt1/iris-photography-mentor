@@ -19,6 +19,8 @@ export interface Assignment {
   baselineShootIds: string[];
   completionShootIds: string[];
   skillDelta: SkillDelta | null;
+  /** Set when assignment is completed; null for older rows. */
+  appliedBrief: boolean | null;
   createdAt: string;
   completedAt: string | null;
 }

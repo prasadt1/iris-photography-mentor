@@ -70,7 +70,7 @@ def run_triage_scan(user_id: str | None = None) -> dict[str, Any]:
                 triage_tools.propose_photo_deletion(
                     ids[-1],
                     reasoning=(
-                        f"Shoot {dup.get('shootId')} has {len(ids)} similar frames; "
+                        f"This batch has {len(ids)} very similar frames from the same shoot; "
                         "removing the weakest duplicate frees library space."
                     ),
                 )

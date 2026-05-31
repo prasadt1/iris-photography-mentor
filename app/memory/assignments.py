@@ -41,6 +41,7 @@ def _serialize(doc: dict[str, Any]) -> dict[str, Any]:
         "baselineShootIds": [str(x) for x in doc.get("baseline_shoot_ids") or []],
         "completionShootIds": [str(x) for x in doc.get("completion_shoot_ids") or []],
         "skillDelta": skill,
+        "appliedBrief": doc.get("applied_brief"),
         "createdAt": created.isoformat() if isinstance(created, datetime) else str(created or ""),
         "completedAt": (
             completed.isoformat() if isinstance(completed, datetime) else None
@@ -133,6 +134,7 @@ def complete_assignment(assignment_id: str) -> dict[str, Any]:
                 "status": "completed",
                 "completed_at": now,
                 "skill_delta": reflection["skillDelta"],
+                "applied_brief": reflection.get("appliedBrief"),
             }
         },
     )

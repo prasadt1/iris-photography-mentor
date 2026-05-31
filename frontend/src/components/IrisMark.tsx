@@ -1,6 +1,7 @@
 /**
- * Iris mark — uses the approved raster (eye + mechanical aperture + tick arcs).
- * Vector blade attempts read as flower petals at sidebar size; PNG matches the comp.
+ * Iris mark — approved raster (eye + mechanical aperture + tick arcs).
+ * SVG blade attempts read as flower petals at sidebar size; PNG matches the comp.
+ * Use srcSet for crisp rendering on retina displays.
  */
 export function IrisMark({
   size = 48,
@@ -12,6 +13,7 @@ export function IrisMark({
   return (
     <img
       src="/iris-icon.png"
+      srcSet="/iris-icon.png 1x, /iris-icon-512.png 2x"
       alt=""
       width={size}
       height={size}

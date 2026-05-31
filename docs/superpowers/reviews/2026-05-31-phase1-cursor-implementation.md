@@ -2,11 +2,12 @@
 
 **Date:** 2026-05-31  
 **Plan:** `docs/superpowers/plans/2026-05-31-phase1-homepage-polish.md`  
-**Spec:** `docs/superpowers/specs/2026-05-31-iris-full-polish-design.md` (Phase 1)
+**Spec:** `docs/superpowers/specs/2026-05-31-iris-full-polish-design.md` (Phase 1)  
+**Status:** **Closed** — see `docs/superpowers/reviews/2026-05-31-phase1-closed.md`
 
 ## Summary
 
-Phase 1 implemented inline in Cursor across 4 checkpoints. Frontend build (`npm run build`) passes.
+Phase 1 implemented inline in Cursor across 4 checkpoints. Remaining gaps closed 2026-05-31 (3-column glance, SVG logo, growth threshold, palette pass). Frontend build and `pytest app/tests/` pass.
 
 ## Task status
 

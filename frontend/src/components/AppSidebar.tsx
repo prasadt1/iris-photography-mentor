@@ -49,18 +49,23 @@ export const AppSidebar: React.FC<Props> = ({
 }) => {
   const items = sidebarNavItems(mode);
 
+  const showMentorFooter = Boolean(mentorOneLiner && photoCount > 0);
+
   return (
-    <aside className="hidden lg:flex lg:flex-col lg:w-52 shrink-0 border-r border-warm bg-canvas min-h-screen sticky top-0 z-10">
+    <aside className="hidden lg:flex lg:flex-col lg:w-52 shrink-0 border-r border-warm bg-canvas h-screen max-h-screen sticky top-0 z-10">
       <button
         type="button"
         onClick={() => onNavigate('home')}
-        className="sidebar-logo-zone flex items-center p-4 text-left hover:bg-surface-1/50 transition-all duration-200 border-b border-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2"
+        className="sidebar-logo-zone shrink-0 flex items-center p-4 text-left hover:bg-surface-1/50 transition-all duration-200 border-b border-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2"
         style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
       >
         <BrandLogo size="md" />
       </button>
 
-      <nav className="px-2 py-3 space-y-1" aria-label="Main navigation">
+      <nav
+        className="shrink-0 px-2 py-3 space-y-1"
+        aria-label="Main navigation"
+      >
         {items.map((item) => {
           const Icon = item.icon;
           const selected = activeTab === item.id;
@@ -138,14 +143,13 @@ export const AppSidebar: React.FC<Props> = ({
           )}
         </div>
 
-        {/* Contextual block */}
+        {/* Contextual block — tab-specific actions only (not Home mentor copy; that lives in footer) */}
         {(activeTab === 'practice' && activeAssignment) ||
         (activeTab === 'mentor' && pendingOrganize > 0) ||
-        (activeTab === 'print' && pendingPrintDrafts > 0) ||
-        (activeTab === 'home' && mentorOneLiner) ? (
+        (activeTab === 'print' && pendingPrintDrafts > 0) ? (
           <div className="px-3 pb-4">
             {activeTab === 'practice' && activeAssignment && (
-              <div className="bg-surface-2 rounded-lg p-3 border-l-2 border-brand-500">
+              <div className="bg-surface-2 rounded-lg p-3 border border-warm">
                 <p className="text-[10px] uppercase tracking-wider text-stone-500 mb-1">
                   Active assignment
                 </p>
@@ -153,45 +157,41 @@ export const AppSidebar: React.FC<Props> = ({
               </div>
             )}
             {activeTab === 'mentor' && pendingOrganize > 0 && (
-              <div className="bg-surface-2 rounded-lg p-3">
+              <div className="bg-surface-2 rounded-lg p-3 border border-warm">
                 <p className="text-xs text-stone-300">Organize · {pendingOrganize} pending</p>
               </div>
             )}
             {activeTab === 'print' && pendingPrintDrafts > 0 && (
-              <div className="bg-surface-2 rounded-lg p-3">
+              <div className="bg-surface-2 rounded-lg p-3 border border-warm">
                 <p className="text-xs text-stone-300">{pendingPrintDrafts} draft listing(s)</p>
-              </div>
-            )}
-            {activeTab === 'home' && mentorOneLiner && (
-              <div className="bg-surface-2 rounded-lg p-3">
-                <p className="text-xs text-stone-400 line-clamp-3">{mentorOneLiner}</p>
               </div>
             )}
           </div>
         ) : null}
       </div>
 
-      {mentorOneLiner && photoCount >= 3 && (
-        <div className="px-3 py-3 border-t border-warm">
-          <p className="text-xs text-brand-400 line-clamp-3">{mentorOneLiner}</p>
+      <div className="mt-auto shrink-0 border-t border-warm bg-canvas">
+        {showMentorFooter && (
+          <div className="px-3 py-3">
+            <p className="text-xs text-brand-400 leading-relaxed line-clamp-3">{mentorOneLiner}</p>
+          </div>
+        )}
+        <div className={`p-2 ${showMentorFooter ? 'border-t border-warm' : ''}`}>
+          <button
+            type="button"
+            onClick={() => onNavigate('settings')}
+            aria-label="Account settings"
+            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2 ${
+              activeTab === 'settings'
+                ? 'bg-surface-1 text-stone-200 border-l-2 border-brand-400 pl-2.5'
+                : 'text-stone-400 hover:text-stone-300 hover:bg-surface-1/40'
+            }`}
+            style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
+          >
+            <Settings className="w-4 h-4" aria-hidden />
+            Settings
+          </button>
         </div>
-      )}
-
-      <div className="p-2 border-t border-warm">
-        <button
-          type="button"
-          onClick={() => onNavigate('settings')}
-          aria-label="Account settings"
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2 ${
-            activeTab === 'settings'
-              ? 'bg-surface-1 text-stone-200 border-l-2 border-brand-400 pl-2.5'
-              : 'text-stone-400 hover:text-stone-300 hover:bg-surface-1/40'
-          }`}
-          style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
-        >
-          <Settings className="w-4 h-4" aria-hidden />
-          Settings
-        </button>
       </div>
     </aside>
   );

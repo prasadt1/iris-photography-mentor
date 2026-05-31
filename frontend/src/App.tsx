@@ -241,7 +241,7 @@ function App() {
             className="min-w-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2 rounded-md"
             aria-label="Go to Home"
           >
-            <BrandLogo size="sm" showWordmark={false} />
+            <BrandLogo size="sm" />
           </button>
           <div className="flex items-center gap-1 shrink-0">
             {userMode === 'working_pro' && (
