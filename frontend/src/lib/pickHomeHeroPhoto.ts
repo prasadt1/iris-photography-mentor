@@ -1,9 +1,10 @@
 import type { PortfolioListItem } from '../types/memory';
 
+const TIE_EPSILON = 0.4;
+
 /**
- * Pick a home hero frame that reads well full-bleed (Devpost / gallery screenshots).
- * Still drawn from the user's library — prefers golden-hour / sunset landscapes over
- * subjects that crop poorly (e.g. tall glacier faces, vertical compositions).
+ * Pick a home hero frame from the user's library.
+ * Score is primary; composition heuristics break ties only (within TIE_EPSILON).
  */
 export function pickHomeHeroPhoto(
   strongest: PortfolioListItem | null,
@@ -12,22 +13,27 @@ export function pickHomeHeroPhoto(
   const pool = candidates.filter((e) => e.imageUrl && e.overallAverage > 0);
   if (pool.length === 0) return strongest;
 
-  const rank = (p: PortfolioListItem): number => {
-    let s = p.overallAverage * 10;
+  const heuristicBonus = (p: PortfolioListItem): number => {
+    let bonus = 0;
     const tags = p.aestheticTags.map((t) => t.toLowerCase());
     const desc = (p.sceneDescription ?? '').toLowerCase();
 
     if (tags.some((t) => ['golden_hour', 'sunset', 'tropical_sunset', 'backlit'].includes(t))) {
-      s += 8;
+      bonus += 2;
     }
-    if (tags.includes('landscape') && !desc.includes('vertical')) s += 3;
-    if (desc.includes('wide-angle') || desc.includes('wide angle')) s += 2;
-    if (desc.includes('glacier')) s -= 12;
-    if (/\bvertical\b/.test(desc) && /\b(photograph|landscape|portrait)\b/.test(desc)) s -= 6;
+    if (tags.includes('landscape') && !desc.includes('vertical')) bonus += 1;
+    if (desc.includes('wide-angle') || desc.includes('wide angle')) bonus += 1;
+    if (desc.includes('glacier')) bonus -= 4;
+    if (/\bvertical\b/.test(desc) && /\b(photograph|landscape|portrait)\b/.test(desc)) bonus -= 2;
 
-    return s;
+    return bonus;
   };
 
-  const best = [...pool].sort((a, b) => rank(b) - rank(a))[0];
+  const best = [...pool].sort((a, b) => {
+    const scoreDiff = b.overallAverage - a.overallAverage;
+    if (Math.abs(scoreDiff) > TIE_EPSILON) return scoreDiff;
+    return heuristicBonus(b) - heuristicBonus(a);
+  })[0];
+
   return best ?? strongest;
 }
