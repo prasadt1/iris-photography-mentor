@@ -22,6 +22,8 @@ import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { AssignmentDetailView } from './AssignmentDetailView';
 import { PracticeInlineShootBanner } from './PracticeInlineShootBanner';
 import { PracticeCardsSkeleton } from './SkeletonBlocks';
+import { EmptyState } from './EmptyState';
+import { useToast } from './ToastHost';
 import type { Assignment, ReflectionResult, UserMode } from '../types/practice';
 
 interface Props {
@@ -50,6 +52,7 @@ export const PracticeTab: React.FC<Props> = ({
   onOpenAssignmentDetail,
   onCloseAssignmentDetail,
 }) => {
+  const toast = useToast();
   const [proposed, setProposed] = useState<Assignment[]>([]);
   const [active, setActive] = useState<Assignment[]>([]);
   const [completed, setCompleted] = useState<Assignment[]>([]);
@@ -107,6 +110,12 @@ export const PracticeTab: React.FC<Props> = ({
       const accepted = await acceptAssignment(id);
       await load();
       onAssignmentsChange?.();
+      toast({
+        variant: 'success',
+        icon: <Target className="w-[18px] h-[18px]" />,
+        title: 'Assignment added',
+        message: "It's in your practice queue.",
+      });
       setShootBanner(accepted);
     } catch (e) {
       setError(friendlyErrorMessage(e));
@@ -259,13 +268,22 @@ export const PracticeTab: React.FC<Props> = ({
         ))}
 
       {focus === 'idle' && (
-        <div className="text-center py-12 rounded-2xl border border-dashed border-warm">
-          <Target className="w-10 h-10 text-stone-600 mx-auto mb-3" />
-          <p className="text-muted">No active practice yet.</p>
-          <p className="text-sm text-muted mt-1">
-            Upload a few photos in Studio, then tap Suggest practice.
-          </p>
-        </div>
+        <EmptyState
+          icon={<Target className="w-6 h-6" />}
+          title="No active practice yet"
+          description="Upload a few photos in Studio, then tap Suggest practice."
+          action={
+            <button
+              type="button"
+              disabled={acting !== null}
+              onClick={() => void handlePropose()}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-brand-500 text-on-brand text-sm font-semibold hover:bg-brand-400 disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4" />
+              Suggest practice
+            </button>
+          }
+        />
       )}
 
       {completed.length > 0 && focus !== 'proposed' && (
