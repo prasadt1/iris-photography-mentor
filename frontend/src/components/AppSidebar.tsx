@@ -1,6 +1,7 @@
 import React from 'react';
 import { Settings } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+import { useLogoEntrance } from '../hooks/useLogoEntrance';
 import type { AppTab } from '../config/navConfig';
 import { sidebarNavItems } from '../config/navConfig';
 import type { Assignment, UserMode } from '../types/practice';
@@ -48,6 +49,7 @@ export const AppSidebar: React.FC<Props> = ({
   pendingPrintDrafts,
 }) => {
   const items = sidebarNavItems(mode);
+  const logoAnimate = useLogoEntrance();
 
   const showMentorFooter = Boolean(mentorOneLiner && photoCount > 0);
 
@@ -59,7 +61,7 @@ export const AppSidebar: React.FC<Props> = ({
         className="sidebar-logo-zone shrink-0 flex items-center p-4 text-left hover:bg-surface-1/50 transition-all duration-200 border-b border-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2"
         style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
       >
-        <BrandLogo size="md" />
+        <BrandLogo size={26} animate={logoAnimate} />
       </button>
 
       <nav

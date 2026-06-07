@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Camera, CheckCircle2, Settings, Store, Target } from 'lucide-react';
 import { AppSidebar } from './components/AppSidebar';
 import { BottomNav } from './components/BottomNav';
-import { BrandLogo } from './components/BrandLogo';
+import { IrisMark } from './components/IrisMark';
 import { HomeTab } from './components/HomeTab';
 import { MyWorkTab } from './components/MyWorkTab';
 import { MentorTab } from './components/MentorTab';
@@ -14,6 +14,7 @@ import { FieldTab } from './components/FieldTab';
 import { ScoreExplainer, ScoreExplainerTrigger } from './components/ScoreExplainer';
 import { OnboardingTour, resetTour } from './components/OnboardingTour';
 import { getStoredTheme, type ThemeMode } from './lib/theme';
+import { ThemeProvider, useThemeMode } from './lib/ThemeContext';
 import type { AppTab } from './config/navConfig';
 import { isAppTab, setTabHash, tabFromHash } from './config/navConfig';
 import { useAuth } from './auth/useAuth';
@@ -43,6 +44,19 @@ import {
 } from './lib/onboarding';
 import type { AnalysisResult } from './types';
 import type { Assignment, UserMode } from './types/practice';
+
+function MobileHeaderMark() {
+  const theme = useThemeMode();
+  const isLight = theme === 'light';
+  return (
+    <IrisMark
+      size={32}
+      simple
+      color={isLight ? '#b45309' : '#f5a623'}
+      pupilRim={isLight ? '#b45309' : '#fbbf24'}
+    />
+  );
+}
 
 /** Pending analysis result to show in My Work after upload from Home */
 interface PendingAnalysis {
@@ -206,22 +220,27 @@ function App() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center text-muted text-sm">
-        One moment…
-      </div>
+      <ThemeProvider theme={theme}>
+        <div className="min-h-screen bg-canvas flex items-center justify-center text-muted text-sm">
+          One moment…
+        </div>
+      </ThemeProvider>
     );
   }
 
   if (showOnboarding) {
     return (
-      <OnboardingScreen
-        onComplete={handleOnboardingComplete}
-        onPersist={persistPersona}
-      />
+      <ThemeProvider theme={theme}>
+        <OnboardingScreen
+          onComplete={handleOnboardingComplete}
+          onPersist={persistPersona}
+        />
+      </ThemeProvider>
     );
   }
 
   return (
+    <ThemeProvider theme={theme}>
     <div className="min-h-screen bg-canvas text-stone-200 font-sans selection:bg-brand-500/30 flex relative">
       <a href="#main-content" className="sr-only">
         Skip to main content
@@ -248,7 +267,7 @@ function App() {
             className="min-w-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2 rounded-md"
             aria-label="Go to Home"
           >
-            <BrandLogo size="sm" />
+            <MobileHeaderMark />
           </button>
           <div className="flex items-center gap-1 shrink-0">
             {userMode === 'working_pro' && (
@@ -439,6 +458,7 @@ function App() {
         onComplete={() => setShowTour(false)}
       />
     </div>
+    </ThemeProvider>
   );
 }
 

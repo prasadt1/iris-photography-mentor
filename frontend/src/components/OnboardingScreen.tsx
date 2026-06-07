@@ -3,6 +3,7 @@ import { Aperture, Loader2, ScanEye, Store } from 'lucide-react';
 import { BRAND } from '../config/brand';
 import { BrandLogo } from './BrandLogo';
 import { FilmGrain } from './FilmGrain';
+import { useLogoEntrance } from '../hooks/useLogoEntrance';
 import { InlineAlertBanner } from './InlineAlertBanner';
 import { apiUnreachableMessage } from '../lib/apiHelp';
 import { friendlyErrorMessage } from '../lib/friendlyError';
@@ -17,6 +18,7 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete, onPersist }) => 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const logoAnimate = useLogoEntrance();
 
   const choose = async (mode: UserMode) => {
     if (saving) return;
@@ -44,7 +46,7 @@ export const OnboardingScreen: React.FC<Props> = ({ onComplete, onPersist }) => 
       <FilmGrain />
       <div className="max-w-3xl w-full space-y-8 relative z-10">
         <div className="flex flex-col items-center text-center space-y-4">
-          <BrandLogo variant="lockup" size="lg" className="justify-center mx-auto" />
+          <BrandLogo size={36} animate={logoAnimate} className="justify-center mx-auto" />
           <p className="font-serif text-xl md:text-2xl text-stone-100 max-w-lg leading-relaxed">
             {BRAND.tagline} — I remember every frame you upload and coach you like a mentor in the
             darkroom, not a generic chatbot.

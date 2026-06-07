@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { IrisMark } from './IrisMark';
 import { MentorMarkdown } from './MentorMarkdown';
+import { useThemeMode } from '../lib/ThemeContext';
 import { turnPreview, type ChatTurn } from '../lib/mentorChatTurns';
 
 interface Props {
@@ -28,6 +29,10 @@ export const MentorChatTurn: React.FC<Props> = ({
 }) => {
   const hasReply = Boolean(turn.assistant);
   const canToggle = hasReply || loading;
+  const isLight = useThemeMode() === 'light';
+  const markColor = isLight ? '#b45309' : '#f5a623';
+  const markRim = isLight ? '#b45309' : '#fbbf24';
+  const markProps = { size: 22, simple: true, color: markColor, pupilRim: markRim } as const;
 
   return (
     <article
@@ -75,7 +80,7 @@ export const MentorChatTurn: React.FC<Props> = ({
       {expanded && hasReply && turn.assistant && (
         <div className="border-t border-warm/60 px-5 pb-5 pt-4">
           <div className="flex items-center gap-2 mb-3">
-            <IrisMark size={22} />
+            <IrisMark {...markProps} />
             <p className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</p>
           </div>
           <div className="font-serif text-stone-100 text-sm leading-relaxed">
@@ -92,7 +97,7 @@ export const MentorChatTurn: React.FC<Props> = ({
           aria-busy="true"
         >
           <div className="flex items-center gap-2 mb-3">
-            <IrisMark size={22} className="animate-pulse" />
+            <IrisMark {...markProps} className="animate-pulse" />
             <span className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</span>
           </div>
           <div className="flex items-center justify-between gap-2 mb-2">
