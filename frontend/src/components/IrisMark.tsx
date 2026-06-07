@@ -1,23 +1,20 @@
 /**
- * IrisMark — the committed B+ primary mark.
- * Eye + lens aperture (6 blades) + viewfinder reticle tick marks.
- * Use the favicon (public/favicon.svg) at ≤24px / app-icon contexts instead.
+ * IrisMark — UI-weight "Contained Badge" mark.
+ * Dark surface tile + bold amber eye + aperture (4.5px strokes).
+ * Reads cleanly at 32–48px sidebar size. B+ geometry, no ticks needed at this scale.
+ * The favicon (public/favicon.svg) stays as-is for ≤24px / browser tab contexts.
  */
 export function IrisMark({
   size = 48,
-  color = '#f59e0b',
   className = '',
 }: {
   size?: number;
-  color?: string;
   className?: string;
 }) {
   return (
     <svg
-      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 100 100"
       fill="none"
-      stroke={color}
       strokeLinecap="round"
       strokeLinejoin="round"
       width={size}
@@ -25,35 +22,16 @@ export function IrisMark({
       aria-hidden
       className={`shrink-0 ${className}`}
     >
-      <g strokeWidth={0.8} opacity={0.85}>
-        <line x1="34.23" y1="25.66" x2="32.6"  y2="23.15"/>
-        <line x1="37.88" y1="23.66" x2="36.31" y2="20.25"/>
-        <line x1="41.78" y1="22.19" x2="40.5"  y2="17.87"/>
-        <line x1="45.85" y1="21.3"  x2="45.09" y2="16.1"/>
-        <line x1="50"    y1="21"    x2="50"    y2="15"/>
-        <line x1="54.15" y1="21.3"  x2="54.91" y2="16.1"/>
-        <line x1="58.22" y1="22.19" x2="59.5"  y2="17.87"/>
-        <line x1="62.12" y1="23.66" x2="63.69" y2="20.25"/>
-        <line x1="65.77" y1="25.66" x2="67.4"  y2="23.15"/>
-        <line x1="65.77" y1="74.34" x2="67.4"  y2="76.85"/>
-        <line x1="62.12" y1="76.34" x2="63.69" y2="79.75"/>
-        <line x1="58.22" y1="77.81" x2="59.5"  y2="82.13"/>
-        <line x1="54.15" y1="78.7"  x2="54.91" y2="83.9"/>
-        <line x1="50"    y1="79"    x2="50"    y2="85"/>
-        <line x1="45.85" y1="78.7"  x2="45.09" y2="83.9"/>
-        <line x1="41.78" y1="77.81" x2="40.5"  y2="82.13"/>
-        <line x1="37.88" y1="76.34" x2="36.31" y2="79.75"/>
-        <line x1="34.23" y1="74.34" x2="32.6"  y2="76.85"/>
-      </g>
-      <g strokeWidth={2.1}>
-        <path d="M18 50 C31 29, 69 29, 82 50 C69 71, 31 71, 18 50 Z"/>
-        <circle cx="50" cy="50" r="17"/>
-        <line x1="50"    y1="33"    x2="56.38" y2="47.12"/>
-        <line x1="64.72" y1="41.5"  x2="55.69" y2="54.08"/>
-        <line x1="64.72" y1="58.5"  x2="49.31" y2="56.97"/>
-        <line x1="50"    y1="67"    x2="43.62" y2="52.88"/>
-        <line x1="35.28" y1="58.5"  x2="44.31" y2="45.92"/>
-        <line x1="35.28" y1="41.5"  x2="50.69" y2="43.03"/>
+      <rect x="4" y="4" width="92" height="92" rx="22" fill="#2a2724" stroke="#44403c" strokeWidth={1.5} />
+      <g stroke="#fbbf24" strokeWidth={4.5}>
+        <path d="M20 50 C32 31,68 31,80 50 C68 69,32 69,20 50 Z" />
+        <circle cx="50" cy="50" r="16" />
+        <line x1="50"    y1="34"    x2="55.86" y2="47.31" />
+        <line x1="63.86" y1="42"    x2="55.13" y2="53.97" />
+        <line x1="63.86" y1="58"    x2="49.41" y2="57.03" />
+        <line x1="50"    y1="66"    x2="44.14" y2="52.69" />
+        <line x1="36.14" y1="58"    x2="44.87" y2="46.03" />
+        <line x1="36.14" y1="42"    x2="50.59" y2="42.97" />
       </g>
     </svg>
   );
