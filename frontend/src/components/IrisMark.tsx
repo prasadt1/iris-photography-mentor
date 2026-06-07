@@ -1,37 +1,117 @@
-/**
- * IrisMark — UI-weight "Contained Badge" mark.
- * Dark surface tile + bold amber eye + aperture (4.5px strokes).
- * Reads cleanly at 32–48px sidebar size. B+ geometry, no ticks needed at this scale.
- * The favicon (public/favicon.svg) stays as-is for ≤24px / browser tab contexts.
- */
+import { useEffect, useRef, useState } from 'react';
+
 export function IrisMark({
   size = 48,
+  color = '#f5a623',
+  pupilRim = '#fbbf24',
+  simple = false,
+  animate = false,
   className = '',
 }: {
   size?: number;
+  color?: string;
+  pupilRim?: string;
+  simple?: boolean;
+  animate?: boolean;
   className?: string;
 }) {
+  const C = 50;
+  const R1 = 47;
+  const R2 = 43;
+  const Rc = 27;
+  const pR = 11;
+  const lines = simple ? 22 : 48;
+  const fiberW = simple ? 1.1 : 0.55;
+  const bladeW = simple ? 2.2 : 1.4;
+  const ringW = simple ? 2.0 : 1.5;
+
+  const t = Math.sqrt(R2 * R2 - Rc * Rc);
+  const blades = Array.from({ length: 6 }, (_, i) => {
+    const phi = ((60 * i) * Math.PI) / 180;
+    const px = C + Rc * Math.cos(phi);
+    const py = C + Rc * Math.sin(phi);
+    const dx = -Math.sin(phi);
+    const dy = Math.cos(phi);
+    return { x1: px, y1: py, x2: px + t * dx, y2: py + t * dy };
+  });
+
+  const fibers = Array.from({ length: lines }, (_, i) => {
+    const a = (i / lines) * Math.PI * 2;
+    return {
+      x1: C + (pR + 2) * Math.cos(a),
+      y1: C + (pR + 2) * Math.sin(a),
+      x2: C + (Rc - 2.5) * Math.cos(a),
+      y2: C + (Rc - 2.5) * Math.sin(a),
+    };
+  });
+
+  const groupRef = useRef<SVGGElement>(null);
+  const [settled, setSettled] = useState(!animate);
+
+  useEffect(() => {
+    if (!animate) return;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      setSettled(true);
+      return;
+    }
+    const id = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setSettled(true)),
+    );
+    return () => cancelAnimationFrame(id);
+  }, [animate]);
+
+  const transform = settled ? 'rotate(0deg) scale(1)' : 'rotate(-35deg) scale(0.92)';
+
   return (
     <svg
-      viewBox="0 0 100 100"
-      fill="none"
-      strokeLinecap="round"
-      strokeLinejoin="round"
       width={size}
       height={size}
-      aria-hidden
+      viewBox="0 0 100 100"
+      fill="none"
       className={`shrink-0 ${className}`}
+      role="img"
+      aria-label="Iris"
     >
-      <rect x="4" y="4" width="92" height="92" rx="22" className="iris-mark-tile" strokeWidth={1.5} />
-      <g stroke="#fbbf24" strokeWidth={4.5}>
-        <path d="M20 50 C32 31,68 31,80 50 C68 69,32 69,20 50 Z" />
-        <circle cx="50" cy="50" r="16" />
-        <line x1="50"    y1="34"    x2="55.86" y2="47.31" />
-        <line x1="63.86" y1="42"    x2="55.13" y2="53.97" />
-        <line x1="63.86" y1="58"    x2="49.41" y2="57.03" />
-        <line x1="50"    y1="66"    x2="44.14" y2="52.69" />
-        <line x1="36.14" y1="58"    x2="44.87" y2="46.03" />
-        <line x1="36.14" y1="42"    x2="50.59" y2="42.97" />
+      <g
+        ref={groupRef}
+        style={{
+          transformOrigin: '50% 50%',
+          transform,
+          transition: 'transform 620ms cubic-bezier(0.22, 1, 0.36, 1)',
+        }}
+      >
+        <circle cx={C} cy={C} r={R1} stroke={color} strokeWidth={ringW} />
+        <circle cx={C} cy={C} r={R2} stroke={color} strokeWidth={ringW * 0.7} opacity={0.75} />
+        {blades.map((b, i) => (
+          <line
+            key={`b${i}`}
+            x1={b.x1}
+            y1={b.y1}
+            x2={b.x2}
+            y2={b.y2}
+            stroke={color}
+            strokeWidth={bladeW}
+            strokeLinecap="round"
+          />
+        ))}
+        <circle cx={C} cy={C} r={Rc} stroke={color} strokeWidth={bladeW} />
+        {fibers.map((f, i) => (
+          <line
+            key={`f${i}`}
+            x1={f.x1}
+            y1={f.y1}
+            x2={f.x2}
+            y2={f.y2}
+            stroke={color}
+            strokeWidth={fiberW}
+            strokeLinecap="round"
+            opacity={0.8}
+          />
+        ))}
+        <circle cx={C} cy={C} r={pR} fill="#0d0d0d" stroke={pupilRim} strokeWidth={bladeW} />
+        <circle cx={46.7} cy={46.7} r={3.5} fill={pupilRim} />
+        <circle cx={53.1} cy={49.5} r={1.5} fill={pupilRim} />
       </g>
     </svg>
   );
