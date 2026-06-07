@@ -1,5 +1,5 @@
 /* Minimal PWA shell — offline navigation fallback + runtime font cache. */
-const CACHE = 'practice-companion-shell-v2';
+const CACHE = 'iris-shell-v3';
 
 function isSameOriginFont(url) {
   return (

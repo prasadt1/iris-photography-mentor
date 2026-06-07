@@ -1,7 +1,7 @@
 {
   "eval_set_id": "iris_photography_eval",
   "name": "Iris Photography Mentor Evaluation",
-  "description": "ADK eval cases for Practice Companion — mentor memory, triage HITL, and coach critique paths.",
+  "description": "ADK eval cases for Iris — mentor memory, triage HITL, and coach critique paths.",
   "eval_cases": [
     {
       "eval_id": "mentor_library_memory",

@@ -1,13 +1,15 @@
 import React, { useMemo } from 'react';
 import { Smartphone } from 'lucide-react';
 
+import { IRIS_WEB_URL } from '../config/urls';
+
 /** QR deep-link to Practice on the same host (web); native Iris uses the same API account. */
 export const ContinueOnPhoneQr: React.FC = () => {
   const { continueUrl, qrSrc } = useMemo(() => {
     const origin =
       typeof window !== 'undefined'
         ? window.location.origin
-        : 'https://practice-companion-hackathon.web.app';
+        : IRIS_WEB_URL;
     const url = `${origin}/#practice`;
     const qr = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=8&data=${encodeURIComponent(url)}`;
     return { continueUrl: url, qrSrc: qr };

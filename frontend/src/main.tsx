@@ -6,7 +6,9 @@ import App from './App.tsx'
 import { FirebaseAuthProvider } from './auth/FirebaseAuthProvider.tsx'
 import { ToastHost } from './components/ToastHost'
 import { initTheme } from './lib/theme'
+import { migrateLegacyStorageKeys } from './lib/storageMigration'
 
+migrateLegacyStorageKeys()
 initTheme()
 
 createRoot(document.getElementById('root')!).render(

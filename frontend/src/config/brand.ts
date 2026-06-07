@@ -1,4 +1,4 @@
-/** Display brand — repo/code identifiers stay practice-companion / practice_companion. */
+/** Display brand — product name Iris; legacy GCP/Atlas IDs unchanged in infra. */
 export const BRAND = {
   name: 'Iris',
   tagline: 'AI photography mentor with persistent portfolio memory',

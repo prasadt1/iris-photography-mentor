@@ -71,7 +71,7 @@ class UserScopeMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app = FastAPI(title="Practice Companion API", version="0.5.0")
+app = FastAPI(title="Iris API", version="0.5.0")
 app.add_middleware(UserScopeMiddleware)
 
 

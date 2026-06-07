@@ -31,7 +31,7 @@ from memory.users import get_persona, resolve_user_id
 
 logger = logging.getLogger(__name__)
 
-APP_NAME = "practice_companion_orchestrator"
+APP_NAME = "iris_orchestrator"
 _session_service = InMemorySessionService()
 CHAT_TIMEOUT_SEC = 180
 

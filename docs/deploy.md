@@ -89,7 +89,8 @@ firebase deploy --only hosting
 
 ## 3. Open the app
 
-- `https://practice-companion-hackathon.web.app`  
+- **Primary (Iris):** `https://iris-photo-mentor.web.app`  
+- **Legacy alias:** `https://practice-companion-hackathon.web.app` (same build)
 - or Firebase console → Hosting URL
 
 Ensure `CORS_ORIGINS` on Cloud Run includes your Firebase domain (deploy script adds `*.web.app` and `*.firebaseapp.com`).
@@ -98,7 +99,7 @@ Ensure `CORS_ORIGINS` on Cloud Run includes your Firebase domain (deploy script 
 
 1. **Web app** (once per project): Firebase console → Project settings → Your apps → Web, or CLI:
    ```bash
-   firebase apps:create WEB "Iris Practice Companion" --project practice-companion-hackathon
+   firebase apps:create WEB "Iris" --project practice-companion-hackathon
    ```
 2. **Sync Vite env into `.env`** (does not commit secrets):
    ```bash
@@ -106,7 +107,7 @@ Ensure `CORS_ORIGINS` on Cloud Run includes your Firebase domain (deploy script 
    ```
    Writes `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`.
 3. **Enable Google provider**: [Firebase Console → Authentication](https://console.firebase.google.com/project/practice-companion-hackathon/authentication/providers) → Sign-in method → **Google** → Enable → Save. Add a support email if prompted.
-4. **Authorized domains** (usually auto): Authentication → Settings → Authorized domains should include `practice-companion-hackathon.web.app` and `localhost`.
+4. **Authorized domains** (usually auto): Authentication → Settings → Authorized domains should include `iris-photo-mentor.web.app`, `practice-companion-hackathon.web.app`, and `localhost`.
 5. **Redeploy hosting** so the build embeds the keys: `API_URL=https://YOUR-RUN-URL make deploy-hosting`.
 6. **Verify**: open Settings on the hosted app → **Sign in with Google** (not “Firebase web keys are not configured”).
 

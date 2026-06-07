@@ -31,7 +31,7 @@ def ensure_cloud_trace_export() -> None:
 
 
 ensure_cloud_trace_export()
-TRACER = trace.get_tracer("practice_companion.mcp_reads")
+TRACER = trace.get_tracer("iris.mcp_reads")
 
 
 @contextmanager

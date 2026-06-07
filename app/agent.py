@@ -1,5 +1,5 @@
 """
-v5 Practice Companion orchestrator (app/agent.py).
+v5 Iris orchestrator (app/agent.py).
 
 Persona-filtered AgentTool delegation per §4.3. Playground / Agent Engine entry via
 orchestrator/agent.py importing build_orchestrator_agent().

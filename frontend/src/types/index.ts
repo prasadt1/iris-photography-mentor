@@ -1,5 +1,5 @@
 /**
- * Practice Companion Types
+ * Iris Types
  * Based on spec.md §7.2 MongoDB schema
  */
 

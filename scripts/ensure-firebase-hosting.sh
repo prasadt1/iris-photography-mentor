@@ -42,8 +42,11 @@ except json.JSONDecodeError:
     sys.exit(0)
 
 sites = (sites_data.get("result") or {}).get("sites") or []
-if sites:
+preferred = "iris-photo-mentor"
+site = next((s for s in sites if s.get("name", "").endswith("/" + preferred)), None)
+if not site and sites:
     site = sites[0]
+if site:
     site_id = site.get("name", "").split("/")[-1] or project
     url = site.get("defaultUrl", "")
     print(f"ok|{site_id}|{url}|")

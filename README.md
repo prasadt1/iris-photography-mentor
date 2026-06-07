@@ -43,7 +43,7 @@ Iris and Aftershoot coexist: Aftershoot for the cull-and-deliver pipeline, Iris 
 
 | Surface | URL |
 |---------|-----|
-| **Web App** | [practice-companion-hackathon.web.app](https://practice-companion-hackathon.web.app) |
+| **Web App** | [iris-photo-mentor.web.app](https://iris-photo-mentor.web.app) |
 | **API (health check)** | […/health](https://practice-companion-api-l6kusl5xcq-uc.a.run.app/health) — JSON with `status`, `phase`, feature flags. REST base: `https://practice-companion-api-l6kusl5xcq-uc.a.run.app/api/v1/` (no HTML at `/`). |
 
 **Test flow:** Home or **My Work (Studio)** → upload a photo → Glass Box critique → **Practice** → accept an assignment → shoot via **Field** (browser camera) or Studio → complete assignment → **My Work** trends / focus areas. **Mentor** chat uses the ADK orchestrator; critique upload uses the Coach pipeline over REST.
@@ -263,8 +263,8 @@ sequenceDiagram
 
 ```bash
 # Clone
-git clone https://github.com/prasadt1/photography-practice-companion.git
-cd photography-practice-companion
+git clone https://github.com/prasadt1/iris-photography-mentor.git
+cd iris-photography-mentor
 
 # Environment
 cp .env.example .env
@@ -372,7 +372,7 @@ Public docs: [`docs/README.md`](docs/README.md) · canonical spec: [`docs/spec.m
 ## Repository Structure
 
 ```
-photography-practice-companion/
+iris-photography-mentor/
 ├── app/                    # Python backend
 │   ├── api/               # FastAPI routes
 │   ├── memory/            # MongoDB operations

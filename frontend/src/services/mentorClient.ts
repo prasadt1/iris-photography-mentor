@@ -3,8 +3,8 @@
  */
 
 import { apiFetch } from '../lib/apiFetch';
-const SESSION_KEY = 'practice_companion_mentor_session';
-const PERSONA_KEY = 'practice_companion_mentor_persona';
+const SESSION_KEY = 'iris_mentor_session';
+const PERSONA_KEY = 'iris_mentor_persona';
 
 export interface ChatMessage {
   id: string;

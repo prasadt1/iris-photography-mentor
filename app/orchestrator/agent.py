@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Practice Companion — ADK playground entry (v5 multi-agent orchestrator).
+Iris — ADK playground entry (v5 multi-agent orchestrator).
 
 Delegates to sub-agents via AgentTool (app/agent.py). Legacy FunctionTool-only
 orchestrator removed in Phase 1 per docs/spec.md §2.1.
