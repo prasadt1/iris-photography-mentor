@@ -23,7 +23,9 @@ import { AssignmentDetailView } from './AssignmentDetailView';
 import { PracticeInlineShootBanner } from './PracticeInlineShootBanner';
 import { PracticeCardsSkeleton } from './SkeletonBlocks';
 import { EmptyState } from './EmptyState';
+import { VoiceoverButton } from './VoiceoverButton';
 import { useToast } from './ToastHost';
+import { practiceSpeechText } from '../lib/plainTextForSpeech';
 import { Button, Card, Eyebrow } from './primitives';
 import type { Assignment, ReflectionResult, UserMode } from '../types/practice';
 
@@ -243,7 +245,15 @@ export const PracticeTab: React.FC<Props> = ({
 
       {focus !== 'proposed' && lastReflection && (
         <Card variant="active" className="bg-brand-500/10 text-sm text-stone-200">
-          <Eyebrow tone="brand" className="mb-2">Reflection complete</Eyebrow>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <Eyebrow tone="brand">Reflection complete</Eyebrow>
+            <VoiceoverButton
+              speechId="practice-reflection-latest"
+              text={lastReflection.summary}
+              label="reflection summary"
+              size="sm"
+            />
+          </div>
           <p className="leading-relaxed mb-2">{lastReflection.summary}</p>
           <p className="text-brand-400 text-xs">
             {formatSkillApplicationDelta(lastReflection.skillDelta.delta)} · applied brief:{' '}
@@ -336,9 +346,17 @@ function CompletedCard({
         onClick={long ? onToggle : undefined}
         className={`w-full text-left px-4 py-3 ${long ? 'hover:bg-surface-1 cursor-pointer' : 'cursor-default'}`}
       >
-        <p className="text-[10px] font-bold text-muted uppercase tracking-wide mb-2 flex items-center gap-1">
-          <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" aria-hidden />
-          Completed
+        <p className="text-[10px] font-bold text-muted uppercase tracking-wide mb-2 flex items-center justify-between gap-2">
+          <span className="inline-flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-brand-400" aria-hidden />
+            Completed
+          </span>
+          <VoiceoverButton
+            speechId={`practice-completed-${assignment.id}`}
+            text={practiceSpeechText(assignment)}
+            label="completed assignment"
+            size="sm"
+          />
         </p>
         <p
           className={`font-medium text-stone-200 leading-relaxed ${
@@ -392,13 +410,21 @@ function ProposedCard({
   return (
     <Card variant="proposed" padding="lg">
       <Eyebrow tone="brand" className="mb-2 text-amber-400">Proposed — your approval required</Eyebrow>
-      <p className="text-xs text-brand-400 mb-3 capitalize">
-        Focus: {assignment.targetSkill.replace(/_/g, ' ')}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+        <p className="text-xs text-brand-400 capitalize">
+          Focus: {assignment.targetSkill.replace(/_/g, ' ')}
+        </p>
+        <VoiceoverButton
+          speechId={`practice-proposed-${assignment.id}`}
+          text={practiceSpeechText(assignment)}
+          label="proposed assignment"
+          size="sm"
+        />
+      </div>
       <p className="text-stone-100 leading-relaxed mb-4">{assignment.brief}</p>
       {assignment.rationale ? (
         <div className="mb-6">
-          <HitlReasoningCallout reasoning={assignment.rationale} />
+          <HitlReasoningCallout reasoning={assignment.rationale} speechId={`proposed-${assignment.id}`} />
         </div>
       ) : null}
       <div className="flex flex-wrap gap-3">
@@ -453,12 +479,20 @@ function ActiveCard({
         </Eyebrow>
         <span className="text-[10px] text-muted">{when}</span>
       </div>
-      <p className="text-xs text-muted mb-3 capitalize">
-        Focus: {assignment.targetSkill.replace(/_/g, ' ')}
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+        <p className="text-xs text-muted capitalize">
+          Focus: {assignment.targetSkill.replace(/_/g, ' ')}
+        </p>
+        <VoiceoverButton
+          speechId={`practice-active-${assignment.id}`}
+          text={practiceSpeechText(assignment)}
+          label="active assignment"
+          size="sm"
+        />
+      </div>
       <p className="text-stone-100 leading-relaxed mb-3">{assignment.brief}</p>
       {assignment.rationale ? (
-        <HitlReasoningCallout reasoning={assignment.rationale} />
+        <HitlReasoningCallout reasoning={assignment.rationale} speechId={`active-${assignment.id}`} />
       ) : null}
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <Button

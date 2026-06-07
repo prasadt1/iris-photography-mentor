@@ -11,6 +11,8 @@ import { SubViewBack } from './SubViewBack';
 import { friendlyErrorMessage } from '../lib/friendlyError';
 import { formatSkillApplicationDelta } from '../lib/formatSkillDelta';
 import { fetchAssignment } from '../services/practiceClient';
+import { practiceSpeechText } from '../lib/plainTextForSpeech';
+import { VoiceoverButton } from './VoiceoverButton';
 import type { Assignment } from '../types/practice';
 
 interface Props {
@@ -87,13 +89,25 @@ export const AssignmentDetailView: React.FC<Props> = ({ assignmentId, onBack }) 
           </span>
           {when && <span className="text-[10px] text-muted">{when}</span>}
         </div>
-        <h1 className="font-serif text-2xl md:text-3xl text-white leading-snug">{assignment.brief}</h1>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h1 className="font-serif text-2xl md:text-3xl text-white leading-snug flex-1 min-w-0">
+            {assignment.brief}
+          </h1>
+          <VoiceoverButton
+            speechId={`practice-detail-${assignment.id}`}
+            text={practiceSpeechText(assignment)}
+            label="assignment brief"
+            size="sm"
+          />
+        </div>
         <p className="text-sm text-muted capitalize">
           Focus: {assignment.targetSkill.replace(/_/g, ' ')}
         </p>
       </header>
 
-      {assignment.rationale && <HitlReasoningCallout reasoning={assignment.rationale} />}
+      {assignment.rationale && (
+        <HitlReasoningCallout reasoning={assignment.rationale} speechId={`detail-${assignment.id}`} />
+      )}
 
       {assignment.skillDelta && (
         <div className="rounded-xl border border-brand-500/30 bg-brand-500/10 p-4">

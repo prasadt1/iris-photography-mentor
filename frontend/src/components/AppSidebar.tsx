@@ -61,7 +61,7 @@ export const AppSidebar: React.FC<Props> = ({
         className="sidebar-logo-zone shrink-0 flex items-center p-4 text-left hover:bg-surface-1/50 transition-all duration-200 border-b border-warm focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-400 focus-visible:outline-offset-2"
         style={{ transitionTimingFunction: 'var(--ease-out-expo)' }}
       >
-        <BrandLogo size={26} animate={logoAnimate} />
+        <BrandLogo variant="horizontal" animate={logoAnimate} />
       </button>
 
       <nav

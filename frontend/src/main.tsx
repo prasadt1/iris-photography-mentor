@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { FirebaseAuthProvider } from './auth/FirebaseAuthProvider.tsx'
 import { ToastHost } from './components/ToastHost'
+import { SpeechProvider } from './lib/SpeechContext'
 import { initTheme } from './lib/theme'
 import { migrateLegacyStorageKeys } from './lib/storageMigration'
 
@@ -14,9 +15,11 @@ initTheme()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <FirebaseAuthProvider>
-      <ToastHost>
-        <App />
-      </ToastHost>
+      <SpeechProvider>
+        <ToastHost>
+          <App />
+        </ToastHost>
+      </SpeechProvider>
     </FirebaseAuthProvider>
   </StrictMode>,
 )

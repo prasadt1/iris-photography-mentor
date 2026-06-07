@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Camera, CheckCircle2, Settings, Store, Target } from 'lucide-react';
 import { AppSidebar } from './components/AppSidebar';
 import { BottomNav } from './components/BottomNav';
-import { IrisMark } from './components/IrisMark';
+import { BrandLogo } from './components/BrandLogo';
+import { LogoComparison } from './components/LogoComparison';
 import { HomeTab } from './components/HomeTab';
 import { MyWorkTab } from './components/MyWorkTab';
 import { MentorTab } from './components/MentorTab';
@@ -14,7 +15,7 @@ import { FieldTab } from './components/FieldTab';
 import { ScoreExplainer, ScoreExplainerTrigger } from './components/ScoreExplainer';
 import { OnboardingTour, resetTour } from './components/OnboardingTour';
 import { getStoredTheme, type ThemeMode } from './lib/theme';
-import { ThemeProvider, useThemeMode } from './lib/ThemeContext';
+import { ThemeProvider } from './lib/ThemeContext';
 import type { AppTab } from './config/navConfig';
 import { isAppTab, setTabHash, tabFromHash } from './config/navConfig';
 import { useAuth } from './auth/useAuth';
@@ -46,16 +47,7 @@ import type { AnalysisResult } from './types';
 import type { Assignment, UserMode } from './types/practice';
 
 function MobileHeaderMark() {
-  const theme = useThemeMode();
-  const isLight = theme === 'light';
-  return (
-    <IrisMark
-      size={32}
-      simple
-      color={isLight ? '#b45309' : '#f5a623'}
-      pupilRim={isLight ? '#b45309' : '#fbbf24'}
-    />
-  );
+  return <BrandLogo variant="mark" markSize={30} />;
 }
 
 /** Pending analysis result to show in My Work after upload from Home */
@@ -83,6 +75,9 @@ function App() {
   // Onboarding tour
   const [showTour, setShowTour] = useState(false);
   const [theme, setTheme] = useState<ThemeMode>(() => getStoredTheme());
+  const [showLogoCompare, setShowLogoCompare] = useState(
+    () => typeof window !== 'undefined' && window.location.hash === '#logo-compare',
+  );
   const [practiceDetailId, setPracticeDetailId] = useState<string | null>(null);
   const [onboardingBusy, setOnboardingBusy] = useState(false);
   const [sidebarPhotoCount, setSidebarPhotoCount] = useState(0);
@@ -107,6 +102,12 @@ function App() {
     } catch {
       setActiveAssignment(null);
     }
+  }, []);
+
+  useEffect(() => {
+    const onHash = () => setShowLogoCompare(window.location.hash === '#logo-compare');
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
   }, []);
 
   useEffect(() => {
@@ -217,6 +218,14 @@ function App() {
       setOnboardingBusy(false);
     }
   }, [auth.userId]);
+
+  if (showLogoCompare) {
+    return (
+      <ThemeProvider theme={theme}>
+        <LogoComparison />
+      </ThemeProvider>
+    );
+  }
 
   if (!ready) {
     return (

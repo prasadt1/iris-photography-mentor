@@ -6,12 +6,21 @@ struct ReflectionSheet: View {
     var onDismiss: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var speechReader: SpeechReader
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    IrisSectionLabel(text: "Reflection complete")
+                    HStack {
+                        IrisSectionLabel(text: "Reflection complete")
+                        Spacer()
+                        VoiceoverButton(
+                            speechId: "practice-reflection",
+                            text: reflection.summary,
+                            label: "reflection summary"
+                        )
+                    }
                     Text(reflection.summary)
                         .font(IrisFont.sans(15))
                         .foregroundStyle(Color.irisTextPrimary.opacity(0.92))
@@ -83,6 +92,9 @@ struct ReflectionSheet: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onDisappear {
+            speechReader.stop()
+        }
     }
 
     private func statBlock(title: String, value: Double) -> some View {

@@ -3,6 +3,7 @@ import SwiftUI
 struct PracticeView: View {
     @EnvironmentObject private var appState: AppState
     @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var speechReader: SpeechReader
 
     @State private var assignments: AssignmentsResponse?
     @State private var loading = true
@@ -48,6 +49,9 @@ struct PracticeView: View {
             }
             .onAppear {
                 if appState.selectedTab == .practice { Task { await loadIfNeeded() } }
+            }
+            .onDisappear {
+                speechReader.stop()
             }
             .refreshable { await load(force: true) }
             .sheet(item: $reflectionPresentation) { item in
@@ -177,13 +181,22 @@ struct PracticeView: View {
         @ViewBuilder actions: () -> Actions
     ) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            HStack(alignment: .top) {
                 if style == .active {
                     IrisSectionLabel(text: "Active")
                 } else if style == .proposed {
                     IrisSectionLabel(text: "New")
                 }
                 Spacer()
+                VoiceoverButton(
+                    speechId: "practice-\(style)-\(a.id)",
+                    text: SpeechPlainText.practiceSpeech(
+                        focus: a.targetSkill,
+                        brief: a.brief,
+                        rationale: a.rationale
+                    ),
+                    label: "assignment brief"
+                )
                 Text(a.targetSkill.replacingOccurrences(of: "_", with: " "))
                     .font(IrisFont.sans(10, weight: .semibold))
                     .foregroundStyle(Color.irisTextMuted)

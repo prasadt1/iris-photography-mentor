@@ -6,6 +6,7 @@ struct IrisApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @StateObject private var auth = AuthViewModel()
     @StateObject private var appState = AppState()
+    @StateObject private var speechReader = SpeechReader()
 
     init() {
         _ = FirebaseBootstrap.configureIfPossible()
@@ -17,6 +18,7 @@ struct IrisApp: App {
             RootView()
                 .environmentObject(auth)
                 .environmentObject(appState)
+                .environmentObject(speechReader)
                 .preferredColorScheme(.dark)
                 .onOpenURL { url in
                     _ = auth.handleOpenURL(url)

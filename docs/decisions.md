@@ -133,3 +133,24 @@ MVP includes HITL via assignment status flow:
 
 **Judge narrative:** “Gemini 3.1 Pro on Vertex” — not the invalid shorthand `gemini-3-pro` in `us-central1`.  
 **Consequences:** ADK agents set `GOOGLE_CLOUD_LOCATION=global`. Embedding/upload code must call `vertexai.init(..., location=us-central1)` explicitly when generating vectors.
+
+---
+
+## ADR-011: Bold aperture-eye mark and horizontal lockup
+
+**Status:** Accepted (Jun 2026)  
+**Context:** The detailed fiber-heavy mark read busy at sidebar/PWA sizes. Luxury positioning favors restraint: confident geometry and typography-led horizontal lockups (Leica/Aperture pattern).  
+**Decision:**
+
+| Surface | Lockup |
+|---------|--------|
+| **Sidebar / nav** | Horizontal — `[mark] Iris` (capital I), mark ≈ **1.4×** wordmark cap height |
+| **Onboarding / marketing hero** | Tittle — mark over dotless **ı** + `ris` at large size |
+| **Favicon / PWA / mark-only** | Mark alone; **`extraBold`** stroke weights on dark `#1a1816` tile |
+
+**Mark geometry:** 6 windmill aperture blades + outer ring + iris ring + dark pupil (`#1a1816`) + single amber catchlight. **No** radial fiber fuzz.  
+**Colors:** dark theme `#f5a623` / `#fbbf24`; light theme `#b45309` for mark and rim.  
+**Wordmark:** Newsreader, warm paper text `#e8e0d6` on dark canvas.  
+**Naming:** “Iris” is the product name — **not** a backronym in UI copy.
+
+**Consequences:** `IrisMark.tsx` is the single parametric source; `favicon.svg` and PNG icons (32/192/512) derive from `extraBold` geometry. `LogoComparison` (`#logo-compare`) remains for A/B typography presets only — mark is shared.

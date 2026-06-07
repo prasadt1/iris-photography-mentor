@@ -2,6 +2,7 @@ import React from 'react';
 import { ChevronDown, Loader2 } from 'lucide-react';
 import { IrisMark } from './IrisMark';
 import { MentorMarkdown } from './MentorMarkdown';
+import { VoiceoverButton } from './VoiceoverButton';
 import { useThemeMode } from '../lib/ThemeContext';
 import { turnPreview, type ChatTurn } from '../lib/mentorChatTurns';
 
@@ -32,7 +33,7 @@ export const MentorChatTurn: React.FC<Props> = ({
   const isLight = useThemeMode() === 'light';
   const markColor = isLight ? '#b45309' : '#f5a623';
   const markRim = isLight ? '#b45309' : '#fbbf24';
-  const markProps = { size: 22, simple: true, color: markColor, pupilRim: markRim } as const;
+  const markProps = { size: 22, color: markColor, pupilRim: markRim } as const;
 
   return (
     <article
@@ -79,11 +80,22 @@ export const MentorChatTurn: React.FC<Props> = ({
 
       {expanded && hasReply && turn.assistant && (
         <div className="border-t border-warm/60 px-5 pb-5 pt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <IrisMark {...markProps} />
-            <p className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</p>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <IrisMark {...markProps} />
+              <p className="text-[10px] uppercase tracking-widest text-brand-400">From Iris</p>
+            </div>
+            <VoiceoverButton
+              speechId={`mentor-${turn.id}`}
+              text={turn.assistant.content}
+              label="Iris reply"
+              size="sm"
+            />
           </div>
-          <div className="font-serif text-stone-100 text-sm leading-relaxed">
+          <div
+            className="font-serif text-stone-100 text-sm leading-relaxed"
+            aria-label="Iris mentor reply"
+          >
             <MentorMarkdown content={turn.assistant.content} />
           </div>
         </div>

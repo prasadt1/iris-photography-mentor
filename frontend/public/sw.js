@@ -11,7 +11,7 @@ function isSameOriginFont(url) {
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) =>
-      cache.addAll(['/', '/index.html', '/manifest.json', '/favicon.svg']),
+      cache.addAll(['/', '/index.html', '/manifest.json', '/favicon.svg', '/favicon.png']),
     ),
   );
   self.skipWaiting();

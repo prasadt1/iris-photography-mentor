@@ -3,6 +3,7 @@ import SwiftUI
 struct MentorView: View {
     @EnvironmentObject private var auth: AuthViewModel
     @EnvironmentObject private var appState: AppState
+    @EnvironmentObject private var speechReader: SpeechReader
     @StateObject private var chatStore = MentorChatStore()
 
     @State private var input = ""
@@ -57,6 +58,9 @@ struct MentorView: View {
             }
             .onAppear {
                 if appState.selectedTab == .mentor { prepareIfNeeded() }
+            }
+            .onDisappear {
+                speechReader.stop()
             }
         }
     }
@@ -146,22 +150,32 @@ struct MentorView: View {
     private func messageBubble(_ msg: MentorChatMessage) -> some View {
         HStack(alignment: .top) {
             if msg.isUser { Spacer(minLength: 40) }
-            Group {
-                if msg.isUser {
-                    Text(msg.content)
-                } else {
-                    IrisMarkdownText(
-                        markdown: msg.content,
-                        font: IrisFont.sans(14),
-                        foreground: Color.irisTextPrimary
+            VStack(alignment: msg.isUser ? .trailing : .leading, spacing: 8) {
+                Group {
+                    if msg.isUser {
+                        Text(msg.content)
+                    } else {
+                        IrisMarkdownText(
+                            markdown: msg.content,
+                            font: IrisFont.sans(14),
+                            foreground: Color.irisTextPrimary
+                        )
+                    }
+                }
+                .font(IrisFont.sans(14))
+                .foregroundStyle(msg.isUser ? Color.irisOnBrand : Color.irisTextPrimary)
+                .padding(12)
+                .background(msg.isUser ? Color.irisBrand : Color.irisSurface2)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+
+                if !msg.isUser {
+                    VoiceoverButton(
+                        speechId: "mentor-\(msg.id)",
+                        text: msg.content,
+                        label: "Iris reply"
                     )
                 }
             }
-            .font(IrisFont.sans(14))
-            .foregroundStyle(msg.isUser ? Color.irisOnBrand : Color.irisTextPrimary)
-            .padding(12)
-            .background(msg.isUser ? Color.irisBrand : Color.irisSurface2)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             if !msg.isUser { Spacer(minLength: 40) }
         }
     }

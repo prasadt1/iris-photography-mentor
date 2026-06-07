@@ -21,6 +21,8 @@
 		43A5EC2F4B6D76569C082D3A /* CameraSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 502F7A261E8175ED43CEF5F6 /* CameraSessionModel.swift */; };
 		558AC6E84C2EF5C8B2F13F77 /* MentorService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79CF9E83DCDE9BEBF595B5F7 /* MentorService.swift */; };
 		57AEA81DFC7690F909ADB52C /* AnalyzeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00A196100C05A4E989FB05DC /* AnalyzeService.swift */; };
+		A7F3E2D1C4B5A69788796A5C /* SpeechReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F3E2D1C4B5A69788796A5B /* SpeechReader.swift */; };
+		C9D5E4F3B2A69788796A5B4E /* VoiceoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9D5E4F3B2A69788796A5B4D /* VoiceoverButton.swift */; };
 		5E38C05F56495BC17DA4EBD1 /* IrisTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E94AD0804D6FB31BD9295C8 /* IrisTheme.swift */; };
 		632E7671FC2B8A6A475EB443 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = E7C7B677466ADD901B91BC90 /* FirebaseCore */; };
 		639015AD5AB82E4A715E62CA /* PortfolioMerge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56DA34B6677D1DC14F7C345 /* PortfolioMerge.swift */; };
@@ -135,6 +137,8 @@
 		FA4B1FE916581CEAA29457C4 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		FA980BFD6FAA3EEC3EC158AC /* HorizonLevelOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HorizonLevelOverlay.swift; sourceTree = "<group>"; };
 		FC2F1571111A4E0ABC1493CB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A7F3E2D1C4B5A69788796A5B /* SpeechReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechReader.swift; sourceTree = "<group>"; };
+		C9D5E4F3B2A69788796A5B4D /* VoiceoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceoverButton.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -231,6 +235,7 @@
 			children = (
 				CC570417F3DAFFFC35C547A4 /* CameraFrameEncoder.swift */,
 				900CCCDF3A3C2CCEFA41F9C5 /* CueSpeaker.swift */,
+				A7F3E2D1C4B5A69788796A5B /* SpeechReader.swift */,
 				5D0477A665FCC232BBF5BFB5 /* ImageUploadPrep.swift */,
 				F129DA1C94A4DEE0F9B75853 /* IrisPlatform.swift */,
 				ED96A7F428A0944200C0855E /* NetworkMonitor.swift */,
@@ -321,6 +326,7 @@
 				BB29DFA434834756CB5154A8 /* IrisFAB.swift */,
 				ED87613FE529D61C0200AE35 /* IrisMarkdownText.swift */,
 				1E94AD0804D6FB31BD9295C8 /* IrisTheme.swift */,
+				C9D5E4F3B2A69788796A5B4D /* VoiceoverButton.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -539,6 +545,8 @@
 				88E7ACC79B0B7C7452D0BDAF /* SignInView.swift in Sources */,
 				C61D25F048F0B40F42D3FCC3 /* SpatialAnnotationOverlay.swift in Sources */,
 				9E1A7325811F44260DDD6A4F /* StudioView.swift in Sources */,
+				A7F3E2D1C4B5A69788796A5C /* SpeechReader.swift in Sources */,
+				C9D5E4F3B2A69788796A5B4E /* VoiceoverButton.swift in Sources */,
 				7C7FC6FF48AD1F20F6357AB3 /* UserService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
