@@ -1,6 +1,9 @@
 export interface SavedPrintListing {
   id: string;
   portfolioEntryId: string;
+  shootId?: string | null;
+  imageUrl?: string | null;
+  orphaned?: boolean;
   marketplace: string;
   title: string;
   description: string;

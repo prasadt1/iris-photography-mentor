@@ -58,6 +58,9 @@ frontend-dev:
 seed-demo:
 	@python3 scripts/seed-demo-data.py
 
+repair-print-sales-demo:
+	@python3 scripts/repair-print-sales-demo.py
+
 # Production deploy — see docs/deploy.md
 API_URL ?=
 

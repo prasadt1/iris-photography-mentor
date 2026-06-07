@@ -46,6 +46,7 @@ def main() -> None:
         "GOOGLE_CLOUD_PROJECT": project,
         "VERTEX_AI_GEMINI_LOCATION": os.getenv("VERTEX_AI_GEMINI_LOCATION", "global"),
         "GEMINI_MODEL": os.getenv("GEMINI_MODEL", "gemini-3.1-pro-preview"),
+        "FIELD_CAPTURE_MODEL": os.getenv("FIELD_CAPTURE_MODEL", "gemini-2.5-flash"),
         "VERTEX_AI_REGION": os.getenv("VERTEX_AI_REGION", "us-central1"),
         "EMBEDDING_MODEL": os.getenv("EMBEDDING_MODEL", "multimodalembedding@001"),
         "MONGODB_DB_NAME": os.getenv("MONGODB_DB_NAME", "practice_companion"),

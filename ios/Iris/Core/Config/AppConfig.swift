@@ -36,6 +36,7 @@ enum AppConfig {
 
     private static let liveCoachEnabledKey = "iris.liveCoachEnabled"
     private static let liveCoachVoiceKey = "iris.liveCoachVoice"
+    private static let horizonLevelKey = "iris.horizonLevelEnabled"
 
     static var liveCoachEnabled: Bool {
         get {
@@ -47,10 +48,21 @@ enum AppConfig {
 
     static var liveCoachVoiceEnabled: Bool {
         get {
-            if UserDefaults.standard.object(forKey: liveCoachVoiceKey) == nil { return true }
+            // Off by default — voice + screen recording + live camera fight over the audio
+            // server on device. On-screen hints are reliable; enable voice in Settings.
+            if UserDefaults.standard.object(forKey: liveCoachVoiceKey) == nil { return false }
             return UserDefaults.standard.bool(forKey: liveCoachVoiceKey)
         }
         set { UserDefaults.standard.set(newValue, forKey: liveCoachVoiceKey) }
+    }
+
+    /// Viewfinder horizon-level guide. Off by default keeps demo recordings clean.
+    static var horizonLevelEnabled: Bool {
+        get {
+            if UserDefaults.standard.object(forKey: horizonLevelKey) == nil { return false }
+            return UserDefaults.standard.bool(forKey: horizonLevelKey)
+        }
+        set { UserDefaults.standard.set(newValue, forKey: horizonLevelKey) }
     }
 
     /// AVSpeechUtterance rate (0.0–1.0). Slightly faster for field coaching.

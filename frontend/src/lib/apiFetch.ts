@@ -19,18 +19,24 @@ export function apiUrl(path: string): string {
   return `${API_BASE}${normalized}`;
 }
 
-const API_TIMEOUT_MS = 45_000;
+const DEFAULT_API_TIMEOUT_MS = 45_000;
 
-export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  const headers = new Headers(init?.headers);
+export type ApiFetchOptions = RequestInit & {
+  /** Override default 45s timeout (e.g. photo analysis on Cloud Run). */
+  timeoutMs?: number;
+};
+
+export async function apiFetch(path: string, init?: ApiFetchOptions): Promise<Response> {
+  const { timeoutMs = DEFAULT_API_TIMEOUT_MS, ...requestInit } = init ?? {};
+  const headers = new Headers(requestInit.headers);
   if (scopeUserId) {
     headers.set('X-User-Id', scopeUserId);
   }
 
   const timeoutController = new AbortController();
-  const timeoutId = window.setTimeout(() => timeoutController.abort(), API_TIMEOUT_MS);
+  const timeoutId = window.setTimeout(() => timeoutController.abort(), timeoutMs);
 
-  const callerSignal = init?.signal;
+  const callerSignal = requestInit.signal;
   if (callerSignal) {
     if (callerSignal.aborted) {
       timeoutController.abort();
@@ -41,7 +47,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
 
   try {
     return await fetch(apiUrl(path), {
-      ...init,
+      ...requestInit,
       headers,
       signal: timeoutController.signal,
     });

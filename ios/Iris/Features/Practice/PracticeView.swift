@@ -192,8 +192,7 @@ struct PracticeView: View {
                     speechId: "practice-\(style)-\(a.id)",
                     text: SpeechPlainText.practiceSpeech(
                         focus: a.targetSkill,
-                        brief: a.brief,
-                        rationale: a.rationale
+                        brief: a.brief
                     ),
                     label: "assignment brief"
                 )
@@ -205,10 +204,11 @@ struct PracticeView: View {
                     .background(Color.irisSurface3)
                     .clipShape(Capsule())
             }
-            Text(a.brief)
-                .font(IrisFont.sans(14))
-                .foregroundStyle(Color.irisTextPrimary.opacity(0.92))
-                .lineSpacing(3)
+            IrisMarkdownText(
+                markdown: a.brief,
+                font: IrisFont.sans(14),
+                foreground: Color.irisTextPrimary.opacity(0.92)
+            )
             actions()
         }
         .irisCard(borderBrand: style == .active)

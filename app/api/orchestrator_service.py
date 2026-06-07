@@ -70,7 +70,7 @@ def _resolve_chat_persona(
 
 
 def _format_agent_result_payload(raw: str) -> str:
-    """Turn JSON planner payloads into readable chat text."""
+    """Turn JSON planner/reflection payloads into readable chat text."""
     text = raw.strip()
     if not text:
         return ""
@@ -81,13 +81,20 @@ def _format_agent_result_payload(raw: str) -> str:
     if not isinstance(data, dict):
         return text
     sections: list[str] = []
-    for key in ("brief", "reply", "message", "summary"):
+    brief = data.get("brief")
+    if brief:
+        sections.append(str(brief).strip())
+    for key in ("reply", "message", "summary"):
         val = data.get(key)
-        if val:
+        if val and key != "brief":
             sections.append(str(val).strip())
     rationale = data.get("rationale")
     if rationale:
-        sections.append(f"Why this fits you: {rationale}".strip())
+        body = str(rationale).strip()
+        if body.startswith("-") or body.startswith("*"):
+            sections.append(f"**Why this fits you**\n{body}")
+        else:
+            sections.append(f"**Why this fits you**\n- {body}")
     return "\n\n".join(sections) if sections else text
 
 

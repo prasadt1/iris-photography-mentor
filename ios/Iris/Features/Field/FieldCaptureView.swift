@@ -65,6 +65,9 @@ struct FieldCaptureView: View {
             guard let item else { return }
             Task { await importPhoto(item) }
         }
+        .onChange(of: camera.recoveryGeneration) { _, _ in
+            liveCoach.onCameraRecovered(camera: camera)
+        }
         .sheet(isPresented: $showResult) {
             if let lastResult {
                 CritiqueResultsView(result: lastResult, previewImage: lastCaptureImage) {
@@ -111,7 +114,7 @@ struct FieldCaptureView: View {
                 thirdsGrid(in: geo.size)
                     .allowsHitTesting(false)
 
-                if camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
+                if AppConfig.horizonLevelEnabled, camera.isConfigured, !CameraSessionModel.isSimulator, !camera.permissionDenied, !analyzing {
                     HorizonLevelOverlay()
                 }
 
@@ -286,9 +289,13 @@ struct FieldCaptureView: View {
                             .font(IrisFont.sans(13, weight: .semibold))
                             .foregroundStyle(Color.irisTextPrimary)
                     }
+                    Text("Coach is quiet — tap the green Shutter when you’re happy.")
+                        .font(IrisFont.sans(12))
+                        .foregroundStyle(Color.irisTextMuted)
+                        .multilineTextAlignment(.center)
                     if let hint = liveCoach.hint {
                         Text(hint)
-                            .font(IrisFont.sans(13))
+                            .font(IrisFont.sans(13, weight: .medium))
                             .foregroundStyle(Color.irisTextPrimary.opacity(0.92))
                             .multilineTextAlignment(.center)
                     }
@@ -314,22 +321,35 @@ struct FieldCaptureView: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .strokeBorder(Color.irisOnBrand.opacity(0.35), lineWidth: 2)
+                            .strokeBorder(
+                                liveCoach.isCompositionLocked && liveCoach.isEnabled
+                                    ? Color.green.opacity(0.85)
+                                    : Color.irisOnBrand.opacity(0.35),
+                                lineWidth: liveCoach.isCompositionLocked && liveCoach.isEnabled ? 3 : 2
+                            )
                             .frame(width: 40, height: 40)
                         Image(systemName: "camera.fill")
                             .font(.body.weight(.semibold))
                             .foregroundStyle(Color.irisOnBrand)
                     }
-                    Text("Shutter · Capture")
+                    Text(liveCoach.isCompositionLocked && liveCoach.isEnabled ? "Shutter · Shoot now" : "Shutter · Capture")
                         .font(IrisFont.sans(14, weight: .bold))
                         .tracking(0.4)
                 }
                 .foregroundStyle(Color.irisOnBrand)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 14)
-                .background(analyzing ? Color.irisBrand.opacity(0.45) : Color.irisBrand)
+                .background(
+                    liveCoach.isCompositionLocked && liveCoach.isEnabled
+                        ? Color.green.opacity(0.92)
+                        : (analyzing ? Color.irisBrand.opacity(0.45) : Color.irisBrand)
+                )
                 .clipShape(Capsule())
-                .shadow(color: Color.irisBrand.opacity(0.28), radius: 14, y: 4)
+                .shadow(
+                    color: (liveCoach.isCompositionLocked && liveCoach.isEnabled ? Color.green : Color.irisBrand).opacity(0.35),
+                    radius: liveCoach.isCompositionLocked && liveCoach.isEnabled ? 18 : 14,
+                    y: 4
+                )
             }
             .disabled(analyzing || (!CameraSessionModel.isSimulator && !camera.isConfigured))
             .accessibilityLabel("Capture and analyze")
@@ -385,6 +405,7 @@ struct FieldCaptureView: View {
         guard !CameraSessionModel.isSimulator else { return }
 
         auth.ensureDemoUserId()
+        FieldAudioSession.prepareForFieldCapture()
         await camera.prepare()
         guard camera.isConfigured else {
             if let msg = camera.errorMessage {

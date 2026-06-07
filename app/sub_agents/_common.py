@@ -28,9 +28,24 @@ _gemini_location = os.getenv("VERTEX_AI_GEMINI_LOCATION", "global")
 os.environ.setdefault("GOOGLE_CLOUD_LOCATION", _gemini_location)
 os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "True")
 
+_CONCISE_FORMAT_STEMS = frozenset({"mentor", "orchestrator", "reflection"})
+
+
+def _append_concise_format(prompt: str) -> str:
+    format_path = PROMPTS_DIR / "concise_response_format.txt"
+    if not format_path.is_file():
+        return prompt
+    appendix = format_path.read_text(encoding="utf-8").strip()
+    if not appendix:
+        return prompt
+    return f"{prompt.rstrip()}\n\n---\n\n{appendix}"
+
 
 def load_prompt(stem: str) -> str:
-    return (PROMPTS_DIR / f"{stem}.txt").read_text(encoding="utf-8")
+    text = (PROMPTS_DIR / f"{stem}.txt").read_text(encoding="utf-8")
+    if stem in _CONCISE_FORMAT_STEMS:
+        text = _append_concise_format(text)
+    return text
 
 
 def load_sub_agent_prompt(stem: str, user_id: str | None = None) -> str:

@@ -129,9 +129,28 @@ struct SettingsView: View {
                 get: { AppConfig.liveCoachVoiceEnabled },
                 set: { AppConfig.liveCoachVoiceEnabled = $0 }
             )) {
-                Text("Speak cues aloud")
-                    .font(IrisFont.sans(14, weight: .medium))
-                    .foregroundStyle(Color.irisTextPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Speak cues aloud")
+                        .font(IrisFont.sans(14, weight: .medium))
+                        .foregroundStyle(Color.irisTextPrimary)
+                    Text("Off by default — safer with screen recording. Hints still show on screen.")
+                        .font(IrisFont.sans(11))
+                        .foregroundStyle(Color.irisTextMuted)
+                }
+            }
+            .tint(Color.irisBrand)
+            Toggle(isOn: Binding(
+                get: { AppConfig.horizonLevelEnabled },
+                set: { AppConfig.horizonLevelEnabled = $0 }
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Horizon level guide")
+                        .font(IrisFont.sans(14, weight: .medium))
+                        .foregroundStyle(Color.irisTextPrimary)
+                    Text("Subtle tilt line in the viewfinder. Off for the cleanest recordings.")
+                        .font(IrisFont.sans(11))
+                        .foregroundStyle(Color.irisTextMuted)
+                }
             }
             .tint(Color.irisBrand)
         }

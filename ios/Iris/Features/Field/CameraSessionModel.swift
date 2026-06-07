@@ -17,25 +17,22 @@ enum CameraSessionError: LocalizedError {
     }
 }
 
-private final class FrameGate: @unchecked Sendable {
-    var handler: (@Sendable (Data) -> Void)?
-    var interval: TimeInterval = 5
-    var lastSampleTime: TimeInterval = 0
-    var pendingOneShot: ((Data?) -> Void)?
-
-    func completePendingOneShot(with data: Data?) {
-        if let oneShot = pendingOneShot {
-            pendingOneShot = nil
-            oneShot(data)
-        }
-    }
+private final class PhotoCaptureGate: @unchecked Sendable {
+    var continuation: CheckedContinuation<Data, Error>?
 }
 
-/// AVFoundation session for rear-camera preview + still capture + live-coach frame sampling.
+/// AVFoundation session for rear-camera preview + still capture.
+///
+/// Live coach samples frames via fast still captures (photo output only). A separate
+/// `AVCaptureVideoDataOutput` was removed — running photo + video outputs together
+/// triggers FigCaptureSourceRemote -17281 on device, especially during screen recording,
+/// and frame delivery silently stops.
 @MainActor
 final class CameraSessionModel: NSObject, ObservableObject {
     @Published private(set) var isConfigured = false
     @Published private(set) var isRunning = false
+    @Published private(set) var wasInterrupted = false
+    @Published private(set) var recoveryGeneration = 0
     @Published private(set) var permissionDenied = false
     @Published private(set) var zoomFactor: CGFloat = 1
     @Published private(set) var minZoomFactor: CGFloat = 1
@@ -44,11 +41,15 @@ final class CameraSessionModel: NSObject, ObservableObject {
 
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
-    private let videoOutput = AVCaptureVideoDataOutput()
     private let sessionQueue = DispatchQueue(label: "iris.camera.session")
-    private let frameGate = FrameGate()
+    private let photoGate = PhotoCaptureGate()
     private var captureDevice: AVCaptureDevice?
-    private var captureContinuation: CheckedContinuation<Data, Error>?
+    private var observersRegistered = false
+    private var isRecovering = false
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
 
     static var isSimulator: Bool {
         #if targetEnvironment(simulator)
@@ -85,15 +86,15 @@ final class CameraSessionModel: NSObject, ObservableObject {
     func start() {
         guard isConfigured, !isRunning else { return }
         sessionQueue.async { [weak self] in
+            FieldAudioSession.prepareForFieldCapture()
             self?.session.startRunning()
             Task { @MainActor in
-                self?.isRunning = true
+                self?.isRunning = self?.session.isRunning ?? false
             }
         }
     }
 
     func stop() {
-        disableFrameSampling()
         guard isRunning else { return }
         sessionQueue.async { [weak self] in
             self?.session.stopRunning()
@@ -103,54 +104,30 @@ final class CameraSessionModel: NSObject, ObservableObject {
         }
     }
 
-    /// Periodic coach frames from the video pipeline (does not compete with shutter stills).
-    func enableFrameSampling(interval: TimeInterval = 5, handler: @escaping @Sendable (Data) -> Void) {
-        sessionQueue.async { [frameGate] in
-            frameGate.handler = handler
-            frameGate.interval = interval
-            frameGate.lastSampleTime = 0
-        }
+    /// Fast still for live coach (photo output only — reliable on device + screen recording).
+    func captureCoachFrame() async throws -> Data {
+        try await capturePhoto(fast: true)
     }
 
-    func disableFrameSampling() {
-        sessionQueue.async { [frameGate] in
-            frameGate.completePendingOneShot(with: nil)
-            frameGate.handler = nil
-        }
-    }
-
-    func captureSampleFrameNow(timeout: TimeInterval = 2.5) async -> Data? {
-        await withCheckedContinuation { continuation in
-            final class ResumeBox: @unchecked Sendable {
-                private let lock = NSLock()
-                private var done = false
-                private let continuation: CheckedContinuation<Data?, Never>
-
-                init(_ continuation: CheckedContinuation<Data?, Never>) {
-                    self.continuation = continuation
+    /// Best-effort restart when coach ticks fail to get a frame.
+    func ensureRunning() async {
+        await withCheckedContinuation { (done: CheckedContinuation<Void, Never>) in
+            sessionQueue.async { [weak self] in
+                guard let self else {
+                    done.resume()
+                    return
                 }
-
-                func resume(with data: Data?) {
-                    lock.lock()
-                    defer { lock.unlock() }
-                    guard !done else { return }
-                    done = true
-                    continuation.resume(returning: data)
+                if !self.session.isRunning {
+                    FieldAudioSession.prepareForFieldCapture()
+                    self.session.startRunning()
                 }
-            }
-
-            let box = ResumeBox(continuation)
-
-            sessionQueue.async { [frameGate] in
-                frameGate.completePendingOneShot(with: nil)
-                frameGate.pendingOneShot = { data in
-                    box.resume(with: data)
-                }
-            }
-
-            sessionQueue.asyncAfter(deadline: .now() + timeout) { [frameGate] in
-                if frameGate.pendingOneShot != nil {
-                    frameGate.completePendingOneShot(with: nil)
+                let running = self.session.isRunning
+                Task { @MainActor in
+                    self.isRunning = running
+                    if running {
+                        self.recoveryGeneration += 1
+                    }
+                    done.resume()
                 }
             }
         }
@@ -230,19 +207,100 @@ final class CameraSessionModel: NSObject, ObservableObject {
                     continuation.resume(throwing: CameraSessionError.captureFailed)
                     return
                 }
-                Task { @MainActor in
-                    if self.captureContinuation != nil {
-                        continuation.resume(throwing: CameraSessionError.captureInProgress)
-                        return
-                    }
-                    self.captureContinuation = continuation
+                if self.photoGate.continuation != nil {
+                    continuation.resume(throwing: CameraSessionError.captureInProgress)
+                    return
                 }
+                self.photoGate.continuation = continuation
                 let settings = AVCapturePhotoSettings(format: [AVVideoCodecKey: AVVideoCodecType.jpeg])
                 if fast {
                     settings.photoQualityPrioritization = .speed
                 }
+                if !self.photoOutput.supportedFlashModes.isEmpty {
+                    settings.flashMode = .off
+                }
                 self.photoOutput.capturePhoto(with: settings, delegate: self)
             }
+        }
+    }
+
+    private func registerSessionObservers() {
+        guard !observersRegistered else { return }
+        observersRegistered = true
+        let nc = NotificationCenter.default
+        nc.addObserver(
+            self,
+            selector: #selector(sessionRuntimeError(_:)),
+            name: .AVCaptureSessionRuntimeError,
+            object: session
+        )
+        nc.addObserver(
+            self,
+            selector: #selector(sessionWasInterrupted(_:)),
+            name: .AVCaptureSessionWasInterrupted,
+            object: session
+        )
+        nc.addObserver(
+            self,
+            selector: #selector(sessionInterruptionEnded(_:)),
+            name: .AVCaptureSessionInterruptionEnded,
+            object: session
+        )
+        nc.addObserver(
+            self,
+            selector: #selector(mediaServicesWereReset(_:)),
+            name: AVAudioSession.mediaServicesWereResetNotification,
+            object: nil
+        )
+    }
+
+    @objc nonisolated private func mediaServicesWereReset(_ note: Notification) {
+        restartAfterGlitch(forceStop: true)
+    }
+
+    @objc nonisolated private func sessionRuntimeError(_ note: Notification) {
+        restartAfterGlitch(forceStop: true)
+    }
+
+    @objc nonisolated private func sessionWasInterrupted(_ note: Notification) {
+        Task { @MainActor in
+            self.wasInterrupted = true
+            self.isRunning = false
+        }
+    }
+
+    @objc nonisolated private func sessionInterruptionEnded(_ note: Notification) {
+        restartAfterGlitch(forceStop: true)
+    }
+
+    nonisolated private func restartAfterGlitch(forceStop: Bool) {
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            if self.isRecovering { return }
+            self.isRecovering = true
+            defer { self.isRecovering = false }
+
+            if forceStop, self.session.isRunning {
+                self.session.stopRunning()
+            }
+
+            DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.5) {
+                self.sessionQueue.async {
+                    FieldAudioSession.prepareForFieldCapture()
+                    if !self.session.isRunning {
+                        self.session.startRunning()
+                    }
+                    self.publishRecovery(running: self.session.isRunning)
+                }
+            }
+        }
+    }
+
+    nonisolated private func publishRecovery(running: Bool) {
+        Task { @MainActor in
+            self.wasInterrupted = false
+            self.isRunning = running
+            self.recoveryGeneration += 1
         }
     }
 
@@ -253,13 +311,21 @@ final class CameraSessionModel: NSObject, ObservableObject {
                     done.resume()
                     return
                 }
+                FieldAudioSession.prepareForFieldCapture()
                 self.session.beginConfiguration()
-                self.session.sessionPreset = .photo
+                // Lighter than .photo — preview + periodic coach stills, less pipeline stress.
+                if self.session.canSetSessionPreset(.high) {
+                    self.session.sessionPreset = .high
+                } else {
+                    self.session.sessionPreset = .photo
+                }
+                self.session.automaticallyConfiguresApplicationAudioSession = false
 
                 defer {
                     self.session.commitConfiguration()
                     Task { @MainActor in
                         self.isConfigured = self.session.inputs.isEmpty == false
+                        self.registerSessionObservers()
                         if let device = self.captureDevice {
                             let minZ = device.minAvailableVideoZoomFactor
                             let maxZ = device.maxAvailableVideoZoomFactor
@@ -269,6 +335,13 @@ final class CameraSessionModel: NSObject, ObservableObject {
                         }
                         done.resume()
                     }
+                }
+
+                for input in self.session.inputs {
+                    self.session.removeInput(input)
+                }
+                for output in self.session.outputs {
+                    self.session.removeOutput(output)
                 }
 
                 guard
@@ -300,20 +373,7 @@ final class CameraSessionModel: NSObject, ObservableObject {
                 guard self.session.canAddOutput(self.photoOutput) else { return }
                 self.session.addOutput(self.photoOutput)
                 self.photoOutput.isHighResolutionCaptureEnabled = false
-
-                self.videoOutput.alwaysDiscardsLateVideoFrames = true
-                self.videoOutput.videoSettings = [
-                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
-                ]
-                self.videoOutput.setSampleBufferDelegate(self, queue: self.sessionQueue)
-                if self.session.canAddOutput(self.videoOutput) {
-                    self.session.addOutput(self.videoOutput)
-                    if let connection = self.videoOutput.connection(with: .video) {
-                        if connection.isVideoRotationAngleSupported(90) {
-                            connection.videoRotationAngle = 90
-                        }
-                    }
-                }
+                self.photoOutput.maxPhotoQualityPrioritization = .speed
             }
         }
     }
@@ -325,9 +385,10 @@ extension CameraSessionModel: AVCapturePhotoCaptureDelegate {
         didFinishProcessingPhoto photo: AVCapturePhoto,
         error: Error?
     ) {
-        Task { @MainActor in
-            defer { captureContinuation = nil }
-            guard let continuation = captureContinuation else { return }
+        sessionQueue.async { [weak self] in
+            guard let self else { return }
+            guard let continuation = self.photoGate.continuation else { return }
+            self.photoGate.continuation = nil
             if let error {
                 continuation.resume(throwing: error)
                 return
@@ -337,31 +398,6 @@ extension CameraSessionModel: AVCapturePhotoCaptureDelegate {
                 return
             }
             continuation.resume(returning: data)
-        }
-    }
-}
-
-extension CameraSessionModel: AVCaptureVideoDataOutputSampleBufferDelegate {
-    nonisolated func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        guard let jpeg = CameraFrameEncoder.jpeg(from: sampleBuffer) else { return }
-        sessionQueue.async { [weak self] in
-            guard let self else { return }
-            let gate = self.frameGate
-
-            if gate.pendingOneShot != nil {
-                gate.completePendingOneShot(with: jpeg)
-                return
-            }
-
-            guard let handler = gate.handler else { return }
-            let now = CACurrentMediaTime()
-            if now - gate.lastSampleTime < gate.interval { return }
-            gate.lastSampleTime = now
-            handler(jpeg)
         }
     }
 }

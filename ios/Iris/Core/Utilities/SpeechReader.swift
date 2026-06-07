@@ -41,7 +41,7 @@ enum SpeechPlainText {
             options: .regularExpression
         )
         text = text.replacingOccurrences(
-            of: #"\n{2,}"#,
+            of: #"\n+"#,
             with: ". ",
             options: .regularExpression
         )
@@ -53,16 +53,12 @@ enum SpeechPlainText {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    static func practiceSpeech(focus: String, brief: String, rationale: String?) -> String {
-        var parts = [
+    /// Spoken practice assignment: skill focus + brief only (rationale stays on-screen).
+    static func practiceSpeech(focus: String, brief: String) -> String {
+        [
             "Focus on \(focus.replacingOccurrences(of: "_", with: " ")).",
             plain(from: brief),
-        ]
-        if let rationale,
-           !rationale.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            parts.append(plain(from: rationale))
-        }
-        return parts.joined(separator: " ")
+        ].joined(separator: " ")
     }
 }
 

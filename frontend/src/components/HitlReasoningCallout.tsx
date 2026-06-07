@@ -1,5 +1,6 @@
 import React from 'react';
 import { humanizeOrganizeReasoning } from '../lib/humanizeOrganizeReasoning';
+import { MentorMarkdown } from './MentorMarkdown';
 import { VoiceoverButton } from './VoiceoverButton';
 
 interface Props {
@@ -25,7 +26,9 @@ export const HitlReasoningCallout: React.FC<Props> = ({ reasoning, speechId }) =
           />
         ) : null}
       </div>
-      <p className="text-sm text-stone-200 leading-relaxed">{text}</p>
+      <div className="text-sm text-stone-200 leading-relaxed">
+        <MentorMarkdown content={text} />
+      </div>
     </div>
   );
 };

@@ -53,10 +53,10 @@ def _gemini_client() -> genai.Client:
 
 
 def _field_capture_model() -> str:
-    return os.environ.get(
-        "FIELD_CAPTURE_MODEL",
-        os.environ.get("GEMINI_MODEL", "gemini-2.0-flash"),
-    )
+    # Live coaching needs sub-2s cues, so it must NOT inherit the heavy reasoning model
+    # (GEMINI_MODEL, e.g. gemini-3.1-pro-preview) used by Coach/Mentor — that adds many
+    # seconds per frame. Default to a fast Flash model; override via FIELD_CAPTURE_MODEL.
+    return os.environ.get("FIELD_CAPTURE_MODEL", "gemini-2.5-flash")
 
 
 def _parse_cue_payload(raw: str) -> dict[str, Any]:
@@ -65,8 +65,16 @@ def _parse_cue_payload(raw: str) -> dict[str, Any]:
         logger.warning("field_capture: empty model text — using default cue")
         return dict(_DEFAULT_CUE)
 
-    if text.startswith("```"):
-        text = text.strip("`").removeprefix("json").strip()
+    # Flash models sometimes wrap JSON in prose/markdown ("Here is the JSON:\n```json …```").
+    # Extract the first balanced object so a cue still renders instead of the default.
+    if "```" in text:
+        fence = text.split("```")
+        if len(fence) >= 2:
+            text = fence[1].removeprefix("json").strip()
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        text = text[start : end + 1]
 
     try:
         data = json.loads(text)
@@ -92,20 +100,25 @@ def _parse_cue_payload(raw: str) -> dict[str, Any]:
 
 def _cue_from_structured(response: Any) -> dict[str, Any]:
     """Prefer validated schema output; fall back to text JSON parse."""
-    if getattr(response, "parsed", None) is not None:
+    parsed = getattr(response, "parsed", None)
+    model: FieldCaptureCueOutput | None = None
+    if isinstance(parsed, FieldCaptureCueOutput):
+        model = parsed
+    elif parsed is not None:
         try:
-            model = FieldCaptureCueOutput.model_validate(response.parsed)
-            spoken = (model.spoken_cue or model.on_screen_hint).strip()
-            hint = (model.on_screen_hint or model.spoken_cue).strip()
-            if spoken or hint:
-                return {
-                    "spokenCue": spoken or hint,
-                    "onScreenHint": hint or spoken,
-                    "confidence": model.confidence,
-                    "readyToCapture": model.ready_to_capture,
-                }
+            model = FieldCaptureCueOutput.model_validate(parsed)
         except Exception as exc:
             logger.warning("field_capture: structured parse failed: %s", exc)
+    if model is not None:
+        spoken = (model.spoken_cue or model.on_screen_hint).strip()
+        hint = (model.on_screen_hint or model.spoken_cue).strip()
+        if spoken or hint:
+            return {
+                "spokenCue": spoken or hint,
+                "onScreenHint": hint or spoken,
+                "confidence": model.confidence,
+                "readyToCapture": model.ready_to_capture,
+            }
     raw = (getattr(response, "text", None) or "").strip()
     return _parse_cue_payload(raw)
 
@@ -150,10 +163,17 @@ def analyze_field_frame(
             )
         ],
         config=types.GenerateContentConfig(
-            temperature=0.35,
+            temperature=0.2,
             response_mime_type="application/json",
-            response_schema=FieldCaptureCueOutput.model_json_schema(),
-            max_output_tokens=256,
+            # Pass the Pydantic class (not its json_schema dict) so the SDK enforces
+            # structured output and populates response.parsed — otherwise Flash returns
+            # prose ("Here is the JSON…") and every cue falls back to the default.
+            response_schema=FieldCaptureCueOutput,
+            # gemini-2.5-flash is a thinking model: with thinking on, reasoning tokens
+            # consume the whole output budget and the JSON comes back empty ('' / '{').
+            # Disable thinking for these tiny composition cues — faster AND reliable.
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+            max_output_tokens=512,
         ),
     )
 

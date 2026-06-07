@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+from sub_agents._common import _append_concise_format
 from memory.assignment_schema import PlannerAssignmentOutput
 from memory.db import get_db
 
@@ -123,7 +124,7 @@ def generate_assignment(
     averages, llm_snapshots, internal_snapshots = _portfolio_context(uid)
 
     prompt_path = Path(__file__).parent.parent / "prompts" / "planner.txt"
-    system = prompt_path.read_text(encoding="utf-8")
+    system = _append_concise_format(prompt_path.read_text(encoding="utf-8"))
 
     if averages:
         # Use provided focus_skill or fall back to weakest dimension

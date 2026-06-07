@@ -19,6 +19,7 @@ import { PhotoMat } from './PhotoMat';
 import { Button, Card, Tag, Eyebrow, StatCard } from './primitives';
 import { useCountUp } from '../hooks/useCountUp';
 import { formatSkillLabel } from '../lib/formatSkillLabel';
+import { friendlyErrorMessage } from '../lib/friendlyError';
 import { pickHomeHeroPhoto } from '../lib/pickHomeHeroPhoto';
 import {
   fetchAestheticProfile,
@@ -241,7 +242,7 @@ export const HomeTab: React.FC<Props> = ({
       if (err instanceof Error && err.name === 'AbortError') {
         setUploadError('Analysis cancelled.');
       } else {
-        setUploadError('Upload failed. Please try again.');
+        setUploadError(friendlyErrorMessage(err));
       }
     } finally {
       abortRef.current = null;

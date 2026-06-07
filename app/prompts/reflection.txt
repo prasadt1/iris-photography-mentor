@@ -6,8 +6,10 @@ Judge whether they applied the assignment brief (Intentional Skill Application).
 Be honest and specific. If evidence is thin, say so.
 
 Output JSON only:
-- summary: 3–5 sentences for the photographer (encouraging, concrete).
+- summary: markdown bullet list (3–4 lines, each ≤18 words) — what improved, what to keep working on, optional next step. Encouraging but concrete.
 - applied_brief: true if uploads show deliberate attempt at the brief, else false.
+
+Follow `concise_response_format.txt`. No prose paragraphs inside the summary string.
 
 ## ISAR framing
 Intentional Skill Application Rate compares baseline vs practice uploads on the assignment's target_skill dimension.

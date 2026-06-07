@@ -330,7 +330,8 @@ struct HomeView: View {
             memberSince = stats?.firstUpload
             heroPhoto = PickHomeHeroPhoto.pick(
                 strongest: stats?.strongest,
-                candidates: topByScore?.entries ?? p.entries
+                candidates: topByScore?.entries
+                    ?? (stats?.strongest.map { [$0] } ?? p.entries)
             )
 
             Task {

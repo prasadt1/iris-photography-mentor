@@ -9,6 +9,7 @@ from memory.assignments import _resolve_user_id
 from memory.db import get_db
 from memory.pending_approvals import list_pending
 from memory.portfolio import _avg_score
+from memory.print_sales_helpers import listing_exists_for_portfolio_entry
 from sub_agents.tools import print_sales_tools
 
 
@@ -44,16 +45,9 @@ def _entry_already_pending(uid: str, entry_id: str) -> bool:
 
 
 def _entry_already_listed(uid: str, entry_id: str) -> bool:
-    return (
-        get_db().print_sales.find_one(
-            {
-                "user_id": uid,
-                "portfolio_entry_id": entry_id,
-                "status": "listed",
-            }
-        )
-        is not None
-    )
+    from bson import ObjectId
+
+    return listing_exists_for_portfolio_entry(ObjectId(uid), entry_id)
 
 
 def _dedupe_key(doc: dict[str, Any]) -> str:

@@ -21,10 +21,11 @@ struct ReflectionSheet: View {
                             label: "reflection summary"
                         )
                     }
-                    Text(reflection.summary)
-                        .font(IrisFont.sans(15))
-                        .foregroundStyle(Color.irisTextPrimary.opacity(0.92))
-                        .lineSpacing(4)
+                    IrisMarkdownText(
+                        markdown: reflection.summary,
+                        font: IrisFont.sans(15),
+                        foreground: Color.irisTextPrimary.opacity(0.92)
+                    )
 
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {

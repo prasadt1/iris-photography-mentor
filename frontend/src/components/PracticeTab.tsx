@@ -23,6 +23,7 @@ import { AssignmentDetailView } from './AssignmentDetailView';
 import { PracticeInlineShootBanner } from './PracticeInlineShootBanner';
 import { PracticeCardsSkeleton } from './SkeletonBlocks';
 import { EmptyState } from './EmptyState';
+import { MentorMarkdown } from './MentorMarkdown';
 import { VoiceoverButton } from './VoiceoverButton';
 import { useToast } from './ToastHost';
 import { practiceSpeechText } from '../lib/plainTextForSpeech';
@@ -254,7 +255,9 @@ export const PracticeTab: React.FC<Props> = ({
               size="sm"
             />
           </div>
-          <p className="leading-relaxed mb-2">{lastReflection.summary}</p>
+          <div className="leading-relaxed mb-2">
+            <MentorMarkdown content={lastReflection.summary} />
+          </div>
           <p className="text-brand-400 text-xs">
             {formatSkillApplicationDelta(lastReflection.skillDelta.delta)} · applied brief:{' '}
             {lastReflection.appliedBrief ? 'yes' : 'not yet'}
@@ -358,13 +361,13 @@ function CompletedCard({
             size="sm"
           />
         </p>
-        <p
+        <div
           className={`font-medium text-stone-200 leading-relaxed ${
             expanded || !long ? '' : 'line-clamp-2'
           }`}
         >
-          {assignment.brief}
-        </p>
+          <MentorMarkdown content={assignment.brief} />
+        </div>
         {long && !expanded && (
           <span className="text-[10px] text-brand-400 mt-1 inline-block">Show full brief</span>
         )}
@@ -388,9 +391,9 @@ function CompletedCard({
         )}
       </button>
       {expanded && assignment.rationale && (
-        <p className="text-xs text-muted border-t border-warm px-4 py-3 leading-relaxed">
-          {assignment.rationale}
-        </p>
+        <div className="text-xs text-muted border-t border-warm px-4 py-3 leading-relaxed">
+          <MentorMarkdown content={assignment.rationale} />
+        </div>
       )}
     </li>
   );
@@ -421,7 +424,9 @@ function ProposedCard({
           size="sm"
         />
       </div>
-      <p className="text-stone-100 leading-relaxed mb-4">{assignment.brief}</p>
+      <div className="text-stone-100 leading-relaxed mb-4">
+        <MentorMarkdown content={assignment.brief} />
+      </div>
       {assignment.rationale ? (
         <div className="mb-6">
           <HitlReasoningCallout reasoning={assignment.rationale} speechId={`proposed-${assignment.id}`} />
@@ -490,7 +495,9 @@ function ActiveCard({
           size="sm"
         />
       </div>
-      <p className="text-stone-100 leading-relaxed mb-3">{assignment.brief}</p>
+      <div className="text-stone-100 leading-relaxed mb-3">
+        <MentorMarkdown content={assignment.brief} />
+      </div>
       {assignment.rationale ? (
         <HitlReasoningCallout reasoning={assignment.rationale} speechId={`active-${assignment.id}`} />
       ) : null}

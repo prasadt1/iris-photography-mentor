@@ -12,6 +12,7 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
+from sub_agents._common import _append_concise_format
 from memory.assignment_schema import SkillDelta
 from memory.db import get_db
 
@@ -126,7 +127,7 @@ def reflect_assignment(assignment_id: str) -> dict[str, Any]:
     if completion_entries and os.environ.get("GEMINI_MODEL"):
         try:
             prompt_path = Path(__file__).parent.parent / "prompts" / "reflection.txt"
-            system = prompt_path.read_text(encoding="utf-8")
+            system = _append_concise_format(prompt_path.read_text(encoding="utf-8"))
             context = {
                 "brief": assignment.get("brief"),
                 "target_skill": assignment.get("target_skill"),

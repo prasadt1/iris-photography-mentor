@@ -1,5 +1,4 @@
 /** Strip markdown-ish formatting for Web Speech API utterances. */
-import { humanizeOrganizeReasoning } from './humanizeOrganizeReasoning';
 
 export function plainTextForSpeech(input: string): string {
   return input
@@ -13,23 +12,20 @@ export function plainTextForSpeech(input: string): string {
     .replace(/^>\s+/gm, '')
     .replace(/^[-*+]\s+/gm, '')
     .replace(/^\d+\.\s+/gm, '')
-    .replace(/\n{2,}/g, '. ')
+    .replace(/\n+/g, '. ')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
+/** Spoken practice assignment: skill focus + brief only (rationale stays on-screen). */
 export function practiceSpeechText(parts: {
   targetSkill?: string;
   brief: string;
-  rationale?: string | null;
 }): string {
   const segments: string[] = [];
   if (parts.targetSkill) {
     segments.push(`Focus on ${parts.targetSkill.replace(/_/g, ' ')}.`);
   }
   segments.push(plainTextForSpeech(parts.brief));
-  if (parts.rationale?.trim()) {
-    segments.push(plainTextForSpeech(humanizeOrganizeReasoning(parts.rationale)));
-  }
   return segments.filter(Boolean).join(' ');
 }

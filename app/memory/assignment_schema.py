@@ -16,9 +16,13 @@ class SkillDelta(BaseModel):
 
 
 class PlannerAssignmentOutput(BaseModel):
-    brief: str
+    brief: str = Field(
+        description="Markdown bullets (2–3 lines, ≤18 words each) — assignment steps + Success: criterion."
+    )
     target_skill: str
-    rationale: str
+    rationale: str = Field(
+        description="Markdown bullets (2 lines max) — Pattern: from scores; Why now: tie to brief."
+    )
 
 
 class AssignmentCreate(BaseModel):

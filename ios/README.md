@@ -34,6 +34,16 @@ sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 
 ## Open the project
 
+If Xcode shows **Unknown error**, run the repair script first (cleans stale user data and regenerates the project):
+
+```bash
+cd ios
+chmod +x scripts/repair-xcode-project.sh
+./scripts/repair-xcode-project.sh
+```
+
+Normal workflow:
+
 ```bash
 cd ios
 brew install xcodegen   # once

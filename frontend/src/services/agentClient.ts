@@ -134,6 +134,8 @@ export async function analyzePhoto(request: AnalyzePhotoRequest): Promise<Analyz
     method: 'POST',
     body: form,
     signal: request.signal,
+    // Cloud Run Coach pipeline (Gemini + GCS + embeddings) often exceeds 45s.
+    timeoutMs: 120_000,
   });
 
   if (!response.ok) {

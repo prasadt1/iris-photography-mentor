@@ -8,7 +8,7 @@ export function friendlyErrorMessage(err: unknown): string {
     const msg = err.message;
     const lower = msg.toLowerCase();
     if (lower.includes('504') || lower.includes('timeout') || lower.includes('timed out')) {
-      return 'That took too long. Try a shorter question or ask again in a moment.';
+      return 'That took too long — the server may still be processing. Wait a moment and check My Work, or try again.';
     }
     if (
       lower.includes('failed to fetch') ||

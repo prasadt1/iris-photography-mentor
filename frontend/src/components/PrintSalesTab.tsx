@@ -6,7 +6,7 @@ import { TabEmptyState } from './TabEmptyState';
 import { printScanStage } from '../lib/scanLoadingStages';
 import { HitlReasoningCallout } from './HitlReasoningCallout';
 import { friendlyErrorMessage } from '../lib/friendlyError';
-import { dedupePrintProposals } from '../lib/dedupePrintProposals';
+import { dedupePrintProposals, filterAlreadyListedProposals } from '../lib/dedupePrintProposals';
 import { listingFromApproval } from '../lib/printListingPayload';
 import { fetchPortfolio } from '../services/memoryClient';
 import {
@@ -140,7 +140,11 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
         fetchPrintRejected(),
         loadPreviews(),
       ]);
-      const deduped = dedupePrintProposals(pending.items, previewMap);
+      const deduped = filterAlreadyListedProposals(
+        dedupePrintProposals(pending.items, previewMap),
+        saved.items,
+        previewMap,
+      );
       setItems(deduped);
       setSavedListings(saved.items);
       setRejected(rejectedItems.items);
@@ -177,8 +181,13 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
       const created = result.proposalsCreated?.length ?? 0;
       const cleared = result.supersededPending ?? 0;
       setFeedback({ kind: 'scan', created, superseded: cleared });
-      const previewMap = await loadPreviews();
-      const deduped = dedupePrintProposals(result.pending?.items ?? [], previewMap);
+      const [saved, previewMap] = await Promise.all([fetchSavedPrintListings(), loadPreviews()]);
+      setSavedListings(saved.items);
+      const deduped = filterAlreadyListedProposals(
+        dedupePrintProposals(result.pending?.items ?? [], previewMap),
+        saved.items,
+        previewMap,
+      );
       setItems(deduped);
       const nextPrices: Record<string, number> = {};
       for (const item of deduped) {
@@ -336,23 +345,30 @@ export const PrintSalesTab: React.FC<Props> = ({ mode, onGoToMentor, onGoToWork,
           <ul className="space-y-3">
             {savedListings.map((listing) => {
               const entry = previews.get(listing.portfolioEntryId);
+              const imageUrl = listing.imageUrl ?? entry?.imageUrl;
+              const orphaned = listing.orphaned ?? !imageUrl;
               return (
                 <li
                   key={listing.id}
                   className="rounded-xl border border-warm bg-surface-1 overflow-hidden flex flex-col sm:flex-row gap-4 p-4"
                 >
                   <div className="shrink-0 w-full sm:w-24 aspect-square rounded-lg overflow-hidden bg-black border border-warm">
-                    {entry?.imageUrl ? (
+                    {imageUrl ? (
                       <img
-                        src={entry.imageUrl}
+                        src={imageUrl}
                         alt=""
                         loading="lazy"
                         decoding="async"
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="flex items-center justify-center h-full min-h-[80px] text-stone-600">
+                      <div className="flex flex-col items-center justify-center h-full min-h-[80px] text-stone-600 px-2 text-center gap-1">
                         <ImageIcon className="w-8 h-8" />
+                        {orphaned && (
+                          <span className="text-[10px] text-stone-500 leading-tight">
+                            Photo removed from library
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>

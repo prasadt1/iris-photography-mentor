@@ -12,7 +12,7 @@ enum PickHomeHeroPhoto {
         guard !pool.isEmpty else { return strongest }
 
         let best = pool.max { a, b in
-            let scoreDiff = b.overallAverage - a.overallAverage
+            let scoreDiff = a.overallAverage - b.overallAverage
             if abs(scoreDiff) > tieEpsilon { return scoreDiff < 0 }
             return heuristicBonus(a) < heuristicBonus(b)
         }

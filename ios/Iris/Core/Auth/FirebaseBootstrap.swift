@@ -5,8 +5,19 @@ import FirebaseCore
 #endif
 
 enum FirebaseBootstrap {
-    /// Eager configure at module load (before Auth / Google Sign-In).
-    private static let bootstrapped: Bool = {
+    /// Configure as early as possible when the app module loads (before Auth / swizzlers).
+    private static let moduleLoadConfigure: Void = {
+        _ = configureNow()
+    }()
+
+    @discardableResult
+    static func configureIfPossible() -> Bool {
+        _ = moduleLoadConfigure
+        return isConfigured
+    }
+
+    @discardableResult
+    private static func configureNow() -> Bool {
         guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
             return false
         }
@@ -18,12 +29,6 @@ enum FirebaseBootstrap {
         #else
         return false
         #endif
-    }()
-
-    @discardableResult
-    static func configureIfPossible() -> Bool {
-        _ = bootstrapped
-        return isConfigured
     }
 
     static var isConfigured: Bool {

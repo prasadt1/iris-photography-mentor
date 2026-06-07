@@ -114,6 +114,11 @@ def _execute_approved(doc: dict[str, Any], override_payload: dict[str, Any] | No
         eid = pa.get("target_id") or payload.get("portfolio_entry_id")
         if not eid:
             return
+        from memory.print_sales_helpers import listing_exists_for_portfolio_entry
+
+        uid = doc.get("user_id")
+        if uid and listing_exists_for_portfolio_entry(uid, str(eid)):
+            return
         marketplace = payload.get("marketplace") or "etsy"
         price = payload.get("suggestedListPrice") or payload.get("list_price") or 45.0
         now = datetime.now(timezone.utc)
