@@ -390,7 +390,7 @@ function ProposedCard({
   onDecline: () => void;
 }) {
   return (
-    <Card padding="lg" className="border-2 border-amber-500/40">
+    <Card variant="proposed" padding="lg">
       <Eyebrow tone="brand" className="mb-2 text-amber-400">Proposed — your approval required</Eyebrow>
       <p className="text-xs text-brand-400 mb-3 capitalize">
         Focus: {assignment.targetSkill.replace(/_/g, ' ')}
