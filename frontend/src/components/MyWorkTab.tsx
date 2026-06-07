@@ -814,13 +814,33 @@ export const MyWorkTab: React.FC<MyWorkTabProps> = ({
       {/* Photo gallery or empty state */}
       {(searchResults !== null ? searchResults : entries).length === 0 ? (
         <EmptyState
-          icon={<Images className="w-6 h-6" />}
-          title="No frames in your Library yet"
-          description="Upload your first photo and I'll critique it on five dimensions — then remember it."
+          icon={
+            searchResults !== null ? (
+              <Search className="w-6 h-6" />
+            ) : (
+              <Images className="w-6 h-6" />
+            )
+          }
+          title={
+            searchResults !== null
+              ? 'No photos matched that search'
+              : 'No frames in your Library yet'
+          }
+          description={
+            searchResults !== null
+              ? 'Try a different word or phrase — I search by meaning, not just keywords.'
+              : "Upload your first photo and I'll critique it on five dimensions — then remember it."
+          }
           action={
-            <Button icon={<Upload className="w-4 h-4" />} onClick={() => setViewMode('upload')}>
-              Upload photo
-            </Button>
+            searchResults !== null ? (
+              <Button variant="secondary" onClick={clearLibrarySearch}>
+                Clear search
+              </Button>
+            ) : (
+              <Button icon={<Upload className="w-4 h-4" />} onClick={() => setViewMode('upload')}>
+                Upload photo
+              </Button>
+            )
           }
         />
       ) : (
