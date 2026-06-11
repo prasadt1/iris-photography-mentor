@@ -43,6 +43,9 @@
 | 16 | `proof-04-stack-health.png` | Live stack flags | `/health` — Gemini models, MCP URL, Data Store configured. |
 | 17 | `proof-05-agent-graph.png` | Nine ADK agents (live import) | Orchestrator + 8 sub-agents enumerated from the constructed ADK graph; persona-filtered delegation. |
 | 18 | `../runtime-proof/playground-03-triage-events.png` | ADK playground — multi-agent delegation | Same orchestrator (dev UI): Mentor turn 1, Triage turn 2; HITL duplicate scan. |
+| 19 | `../compliance-proof/cloud-console/cloud-trace-detail-mongodb-mcp-find-attributes.png` | Cloud Trace — MCP span detail | OpenTelemetry: `mcp.tool_name=find`, `mongodb.collection=portfolio_entries`. |
+
+Optional extras (if slots remain): `cloud-logging-mcp-read-ok-search.png`, `cloud-trace-explorer-mongodb-mcp-find-heatmap.png` — see [PROOF-PACKAGE.md](compliance-proof/PROOF-PACKAGE.md).
 
 ### Tier 4 — Annotated UI + tech splits (optional if slots remain)
 
@@ -50,10 +53,10 @@ One frame = screenshot + verified stack. Prefer **gallery only** (article stays 
 
 | Order | File | Gallery title | Caption |
 |-------|------|---------------|---------|
-| 19 | `annotated-05-organize.png` | Organize — UI + HITL stack | Triage agent → `pending_approvals` — no autonomous writes. |
-| 20 | `annotated-06-my-work.png` | My Work — UI + Atlas stack | NL search + vector similar photos on one MongoDB corpus. |
-| 21 | `annotated-04-mentor.png` | Mentor — UI + orchestration stack | Orchestrator → Mentor; MCP read path to Atlas. |
-| 22 | `annotated-02-glass-box.png` | Glass Box — UI + Coach stack | Gemini 3.1 Pro + Agent Builder + PyMongo write. |
+| 20 | `annotated-05-organize.png` | Organize — UI + HITL stack | Triage agent → `pending_approvals` — no autonomous writes. |
+| 21 | `annotated-06-my-work.png` | My Work — UI + Atlas stack | NL search + vector similar photos on one MongoDB corpus. |
+| 22 | `annotated-04-mentor.png` | Mentor — UI + orchestration stack | Orchestrator → Mentor; MCP read path to Atlas. |
+| 23 | `annotated-02-glass-box.png` | Glass Box — UI + Coach stack | Gemini 3.1 Pro + Agent Builder + PyMongo write. |
 
 ### Tier 5 — Optional extras
 

@@ -14,6 +14,9 @@ Iris is a **live production stack**, not a mockup. This folder holds **committed
 | **Nine-agent graph (live ADK import)** | [evidence/agent-graph.txt](evidence/agent-graph.txt) · [evidence/agent-graph.json](evidence/agent-graph.json) · `proof-05-agent-graph.png` |
 | **ADK playground capture (Tier 2)** | [playground-03-triage-events.png](../runtime-proof/playground-03-triage-events.png) (gallery) · [README](../runtime-proof/README.md) · [02a mentor](../runtime-proof/playground-02a-mentor-events.png) · [02b traces](../runtime-proof/playground-02b-mentor-traces.png) |
 | **Architecture compliance map** | [../hackathon-compliance.md](../hackathon-compliance.md) |
+| **Full proof package index** | [PROOF-PACKAGE.md](PROOF-PACKAGE.md) — all layers (panels, Cloud Console, playground, JSON) |
+| **Claude analysis prompt** | [CLAUDE-PROOF-ANALYSIS-PROMPT.md](CLAUDE-PROOF-ANALYSIS-PROMPT.md) — paste into Claude to audit proofs |
+| **Cloud Console screenshots** | [cloud-console/](cloud-console/) — Trace + Logging captures (MongoDB MCP) |
 
 ## What gets proven (backend-only — no browser)
 
