@@ -105,13 +105,16 @@ Skip if time is short — `proof-05` documents gating in code.
 
 ---
 
-## After capture
+## Committed captures
 
-```bash
-git add docs/runtime-proof/playground-*.png
-git commit -m "Add ADK playground runtime proof (mentor + triage delegation)."
-git push origin main
-```
+| File | Content |
+|------|---------|
+| [playground-02a-mentor-events.png](playground-02a-mentor-events.png) | Mentor delegation — Events + function response |
+| [playground-02b-mentor-traces.png](playground-02b-mentor-traces.png) | Mentor — Traces waterfall (~41s, MongoDB tools) |
+| [playground-03-triage-events.png](playground-03-triage-events.png) | **Gallery pick** — mentor + triage in one session |
+| [playground-03b-triage-response.png](playground-03b-triage-response.png) | Triage function response + persona HITL question |
+
+Public URL base: `https://raw.githubusercontent.com/prasadt1/iris-photography-mentor/main/docs/runtime-proof/`
 
 ---
 

@@ -42,6 +42,7 @@
 | 15 | `proof-03-agent-builder.png` | Agent Builder grounding | Discovery Engine Data Store + Coach Glass Box principle citations. |
 | 16 | `proof-04-stack-health.png` | Live stack flags | `/health` — Gemini models, MCP URL, Data Store configured. |
 | 17 | `proof-05-agent-graph.png` | Nine ADK agents (live import) | Orchestrator + 8 sub-agents enumerated from the constructed ADK graph; persona-filtered delegation. |
+| 18 | `../runtime-proof/playground-03-triage-events.png` | ADK playground — multi-agent delegation | Same orchestrator (dev UI): Mentor turn 1, Triage turn 2; HITL duplicate scan. |
 
 ### Tier 4 — Annotated UI + tech splits (optional if slots remain)
 
@@ -49,10 +50,10 @@ One frame = screenshot + verified stack. Prefer **gallery only** (article stays 
 
 | Order | File | Gallery title | Caption |
 |-------|------|---------------|---------|
-| 18 | `annotated-05-organize.png` | Organize — UI + HITL stack | Triage agent → `pending_approvals` — no autonomous writes. |
-| 19 | `annotated-06-my-work.png` | My Work — UI + Atlas stack | NL search + vector similar photos on one MongoDB corpus. |
-| 20 | `annotated-04-mentor.png` | Mentor — UI + orchestration stack | Orchestrator → Mentor; MCP read path to Atlas. |
-| 21 | `annotated-02-glass-box.png` | Glass Box — UI + Coach stack | Gemini 3.1 Pro + Agent Builder + PyMongo write. |
+| 19 | `annotated-05-organize.png` | Organize — UI + HITL stack | Triage agent → `pending_approvals` — no autonomous writes. |
+| 20 | `annotated-06-my-work.png` | My Work — UI + Atlas stack | NL search + vector similar photos on one MongoDB corpus. |
+| 21 | `annotated-04-mentor.png` | Mentor — UI + orchestration stack | Orchestrator → Mentor; MCP read path to Atlas. |
+| 22 | `annotated-02-glass-box.png` | Glass Box — UI + Coach stack | Gemini 3.1 Pro + Agent Builder + PyMongo write. |
 
 ### Tier 5 — Optional extras
 
