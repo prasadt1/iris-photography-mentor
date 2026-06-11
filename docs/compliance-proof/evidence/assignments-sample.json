@@ -1,0 +1,46 @@
+{
+    "proposed": [],
+    "active": [
+        {
+            "id": "6577a1f2b3c4d5e6f7a8b9d0",
+            "userId": "6577a1f2b3c4d5e6f7a8b9c0",
+            "status": "active",
+            "brief": "Golden-hour composition \u2014 fill the frame with one strong subject:\n\u2022 Pick a single clear subject (a tree, an animal, a fence line)\n\u2022 Place it on a vertical third \u2014 don't show the whole scene\n\u2022 Use the low warm light: side or backlight, watch your shadows\nSuccess: one intentional frame where the subject dominates, not the scenery.",
+            "targetSkill": "composition",
+            "rationale": "Pattern: recent frames still cluster near center (composition ~5.4).\nWhy now: evening light rewards deliberate framing \u2014 build on your completed thirds drill.",
+            "baselineShootIds": [
+                "6577a1f2b3c4d5e6f7a8b9c2"
+            ],
+            "completionShootIds": [],
+            "skillDelta": null,
+            "appliedBrief": null,
+            "createdAt": "2026-06-09T12:39:11.414000",
+            "completedAt": null
+        }
+    ],
+    "completed": [
+        {
+            "id": "6a285dcf1bdf62325e90b3c8",
+            "userId": "6577a1f2b3c4d5e6f7a8b9c0",
+            "status": "completed",
+            "brief": "Use rule of thirds on your next outdoor frame \u2014 place the main subject on a vertical third, not dead center.\nSuccess: one clear subject with intentional negative space.",
+            "targetSkill": "composition",
+            "rationale": "Pattern: early library frames cluster near center (composition ~4.5).\nWhy now: baseline before the current composition drill.",
+            "baselineShootIds": [
+                "6577a1f2b3c4d5e6f7a8b9c1"
+            ],
+            "completionShootIds": [
+                "6577a1f2b3c4d5e6f7a8b9c2"
+            ],
+            "skillDelta": {
+                "metric": "composition",
+                "baseline_value": 4.5,
+                "current_value": 5.4,
+                "delta": 0.9
+            },
+            "appliedBrief": true,
+            "createdAt": "2026-05-16T18:39:11.309000",
+            "completedAt": "2026-05-30T18:39:11.309000"
+        }
+    ]
+}

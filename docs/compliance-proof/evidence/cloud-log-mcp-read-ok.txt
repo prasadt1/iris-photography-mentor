@@ -1,0 +1,5 @@
+INFO:memory.mcp_http_client:mcp_read_ok tool=find collection=portfolio_entries count=16 transport=http
+INFO:memory.mcp_http_client:mcp_read_ok tool=find collection=portfolio_entries count=0 transport=http
+INFO:memory.mcp_http_client:mcp_read_ok tool=find collection=portfolio_entries count=8 transport=http
+INFO:memory.mcp_http_client:mcp_read_ok tool=find collection=portfolio_entries count=3 transport=http
+INFO:memory.mcp_http_client:mcp_read_ok tool=find collection=portfolio_entries count=10 transport=http

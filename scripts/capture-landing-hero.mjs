@@ -8,7 +8,7 @@
  * Requires: npm install in docs/devpost-assets (playwright).
  */
 
-import { chromium } from 'playwright';
+import { chromium } from '../docs/devpost-assets/node_modules/playwright/index.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 

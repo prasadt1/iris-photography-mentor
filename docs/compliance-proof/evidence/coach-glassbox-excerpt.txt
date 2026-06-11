@@ -1,0 +1,2 @@
+principles: ['composition.md', 'lighting.md', 'technique.md']
+observations: The image is a single, uniform color.

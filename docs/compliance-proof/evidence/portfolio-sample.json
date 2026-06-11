@@ -1,0 +1,83 @@
+{
+    "entries": [
+        {
+            "id": "6a285dcf1bdf62325e90b3c7",
+            "userId": "6577a1f2b3c4d5e6f7a8b9c0",
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c4",
+            "imageUrl": "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900&q=80",
+            "createdAt": "2026-05-27T12:39:11.259000",
+            "scores": {
+                "composition": 7.4,
+                "lighting": 7,
+                "technique": 7,
+                "creativity": 5.5,
+                "subject_impact": 6.8
+            },
+            "overallAverage": 6.7,
+            "aestheticTags": [
+                "still_life",
+                "minimalist"
+            ],
+            "userTags": [],
+            "sceneDescription": "A single still-life object on wood with shallow depth of field.",
+            "colourNotes": "Warm and natural palette with balanced contrast.",
+            "glassBoxSummary": [
+                "Subject sits near center; limited negative space on the sides.",
+                "Items cluster in the middle; edges feel crowded."
+            ]
+        },
+        {
+            "id": "6a285dcf1bdf62325e90b3c6",
+            "userId": "6577a1f2b3c4d5e6f7a8b9c0",
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c4",
+            "imageUrl": "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=900&q=80",
+            "createdAt": "2026-05-26T12:39:11.259000",
+            "scores": {
+                "composition": 7.2,
+                "lighting": 7,
+                "technique": 7,
+                "creativity": 5.5,
+                "subject_impact": 6.8
+            },
+            "overallAverage": 6.7,
+            "aestheticTags": [
+                "still_life",
+                "minimalist"
+            ],
+            "userTags": [],
+            "sceneDescription": "A single still-life object on wood with shallow depth of field.",
+            "colourNotes": "Warm and natural palette with balanced contrast.",
+            "glassBoxSummary": [
+                "Subject sits near center; limited negative space on the sides.",
+                "Items cluster in the middle; edges feel crowded."
+            ]
+        },
+        {
+            "id": "6a285dcf1bdf62325e90b3c5",
+            "userId": "6577a1f2b3c4d5e6f7a8b9c0",
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c4",
+            "imageUrl": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=900&q=80",
+            "createdAt": "2026-05-25T12:39:11.259000",
+            "scores": {
+                "composition": 7.1,
+                "lighting": 7,
+                "technique": 7,
+                "creativity": 5.5,
+                "subject_impact": 6.8
+            },
+            "overallAverage": 6.7,
+            "aestheticTags": [
+                "still_life",
+                "minimalist"
+            ],
+            "userTags": [],
+            "sceneDescription": "A single still-life object on wood with shallow depth of field.",
+            "colourNotes": "Warm and natural palette with balanced contrast.",
+            "glassBoxSummary": [
+                "Subject sits near center; limited negative space on the sides.",
+                "Items cluster in the middle; edges feel crowded."
+            ]
+        }
+    ],
+    "total": 16
+}

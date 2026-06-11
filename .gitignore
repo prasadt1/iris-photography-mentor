@@ -98,3 +98,6 @@ docs/demo-video-frames/
 # Oversized Devpost gallery exports (uploaded to Devpost; too large for git)
 docs/devpost-public/hero-*.png
 docs/devpost-public/collage-*.png
+
+# Throwaway verification fixture downloaded by verify-hackathon-stack.sh
+docs/compliance-proof/evidence/.verify-test.jpg

@@ -1,0 +1,15 @@
+{
+    "status": "ok",
+    "phase": "4",
+    "orchestratorChat": "enabled",
+    "triageHitl": "enabled",
+    "printSalesHitl": "enabled",
+    "fieldCapture": "enabled",
+    "mentorMcpReads": "enabled",
+    "mentorMcpToolset": "enabled",
+    "mongodbMcpHttp": "https://mongodb-mcp-l6kusl5xcq-uc.a.run.app/mcp",
+    "geminiModel": "gemini-3.1-pro-preview",
+    "fieldCaptureModel": "gemini-2.5-flash",
+    "dataStoreConfigured": true,
+    "dataStoreId": "photography-principles_1779626390010"
+}

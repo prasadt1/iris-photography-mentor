@@ -1,0 +1,161 @@
+{
+    "clusters": [
+        {
+            "label": "still_life",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c7",
+                "6a285dcf1bdf62325e90b3c6",
+                "6a285dcf1bdf62325e90b3c5",
+                "6a285dcf1bdf62325e90b3c4"
+            ],
+            "count": 4
+        },
+        {
+            "label": "minimalist",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c7",
+                "6a285dcf1bdf62325e90b3c6",
+                "6a285dcf1bdf62325e90b3c5",
+                "6a285dcf1bdf62325e90b3c4"
+            ],
+            "count": 4
+        },
+        {
+            "label": "landscape",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c3",
+                "6a285dcf1bdf62325e90b3c2",
+                "6a285dcf1bdf62325e90b3c1",
+                "6a285dcf1bdf62325e90b3c0"
+            ],
+            "count": 4
+        },
+        {
+            "label": "golden_hour",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c3",
+                "6a285dcf1bdf62325e90b3c2",
+                "6a285dcf1bdf62325e90b3c1",
+                "6a285dcf1bdf62325e90b3c0"
+            ],
+            "count": 4
+        },
+        {
+            "label": "flat_lay",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3bf",
+                "6a285dcf1bdf62325e90b3be",
+                "6a285dcf1bdf62325e90b3bd",
+                "6a285dcf1bdf62325e90b3bc"
+            ],
+            "count": 4
+        }
+    ],
+    "duplicateCandidates": [
+        {
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c4",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c7",
+                "6a285dcf1bdf62325e90b3c6",
+                "6a285dcf1bdf62325e90b3c5",
+                "6a285dcf1bdf62325e90b3c4"
+            ]
+        },
+        {
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c3",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3c3",
+                "6a285dcf1bdf62325e90b3c2",
+                "6a285dcf1bdf62325e90b3c1",
+                "6a285dcf1bdf62325e90b3c0"
+            ]
+        },
+        {
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c2",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3bf",
+                "6a285dcf1bdf62325e90b3be",
+                "6a285dcf1bdf62325e90b3bd",
+                "6a285dcf1bdf62325e90b3bc"
+            ]
+        },
+        {
+            "shootId": "6577a1f2b3c4d5e6f7a8b9c1",
+            "entryIds": [
+                "6a285dcf1bdf62325e90b3bb",
+                "6a285dcf1bdf62325e90b3ba",
+                "6a285dcf1bdf62325e90b3b9",
+                "6a285dcf1bdf62325e90b3b8"
+            ]
+        }
+    ],
+    "untaggedGems": [],
+    "proposalsCreated": [
+        {
+            "pendingApprovalId": "6a2a589d0385a99857b9b2ae",
+            "status": "pending"
+        },
+        {
+            "pendingApprovalId": "6a2a589e0385a99857b9b2af",
+            "status": "pending"
+        },
+        {
+            "pendingApprovalId": "6a2a589e0385a99857b9b2b0",
+            "status": "pending"
+        }
+    ],
+    "pending": {
+        "items": [
+            {
+                "id": "6a2a589e0385a99857b9b2b0",
+                "agentName": "triage",
+                "proposedAction": {
+                    "type": "delete_entry",
+                    "targetId": "6a285dcf1bdf62325e90b3bc",
+                    "payload": {
+                        "entryId": "6a285dcf1bdf62325e90b3bc"
+                    }
+                },
+                "agentReasoning": "This shoot has 4 portfolio copies of the same session; removing the weakest duplicate keeps one frame for memory and search.",
+                "status": "pending",
+                "userDecision": null,
+                "createdAt": "2026-06-11T06:41:34.183000",
+                "decidedAt": null
+            },
+            {
+                "id": "6a2a589e0385a99857b9b2af",
+                "agentName": "triage",
+                "proposedAction": {
+                    "type": "delete_entry",
+                    "targetId": "6a285dcf1bdf62325e90b3c0",
+                    "payload": {
+                        "entryId": "6a285dcf1bdf62325e90b3c0"
+                    }
+                },
+                "agentReasoning": "This shoot has 4 portfolio copies of the same session; removing the weakest duplicate keeps one frame for memory and search.",
+                "status": "pending",
+                "userDecision": null,
+                "createdAt": "2026-06-11T06:41:34.076000",
+                "decidedAt": null
+            },
+            {
+                "id": "6a2a589d0385a99857b9b2ae",
+                "agentName": "triage",
+                "proposedAction": {
+                    "type": "delete_entry",
+                    "targetId": "6a285dcf1bdf62325e90b3c4",
+                    "payload": {
+                        "entryId": "6a285dcf1bdf62325e90b3c4"
+                    }
+                },
+                "agentReasoning": "This shoot has 4 portfolio copies of the same session; removing the weakest duplicate keeps one frame for memory and search.",
+                "status": "pending",
+                "userDecision": null,
+                "createdAt": "2026-06-11T06:41:33.967000",
+                "decidedAt": null
+            }
+        ],
+        "total": 3
+    },
+    "supersededPending": 4
+}
