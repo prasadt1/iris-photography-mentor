@@ -44,10 +44,13 @@ Committed from Desktop captures. Project: **practice-companion-hackathon**.
 |------|--------|
 | [playground-02a-mentor-events.png](../runtime-proof/playground-02a-mentor-events.png) | Orchestrator → **mentor** delegation |
 | [playground-02b-mentor-traces.png](../runtime-proof/playground-02b-mentor-traces.png) | Mentor tool waterfall (~41s) |
-| [playground-03-triage-events.png](../runtime-proof/playground-03-triage-events.png) | **Gallery pick** — mentor + **triage** in one session |
+| [playground-03-triage-events.png](../runtime-proof/playground-03-triage-events.png) | Mentor + **triage** in one session |
 | [playground-03b-triage-response.png](../runtime-proof/playground-03b-triage-response.png) | Triage HITL + persona question |
+| [playground-04a-coach-delegation-image.png](../runtime-proof/playground-04a-coach-delegation-image.png) | **Coach** — image upload + orchestrator → coach |
+| [playground-04b-coach-glassbox-response.png](../runtime-proof/playground-04b-coach-glassbox-response.png) | Coach Glass Box JSON in Events |
+| [playground-04c-coach-function-response-detail.png](../runtime-proof/playground-04c-coach-function-response-detail.png) | **Gallery pick** — multimodal critique scores / bounding boxes |
 
-Label: *ADK dev playground (localhost)* — same `app/agent.py` graph as Cloud Run.
+Label: *ADK dev playground (localhost)* — same `app/agent.py` graph as Cloud Run. **One session:** mentor → triage → coach (three sub-agents).
 
 ---
 
@@ -102,8 +105,9 @@ Refresh: `./scripts/verify-hackathon-stack.sh` (optionally `RUN_COACH=1`).
 4. `proof-01-mcp-read.png`
 5. `proof-03-agent-builder.png`
 6. `proof-02-orchestrator.png`
-7. `playground-03-triage-events.png` (runtime delegation)
-8. `cloud-trace-detail-mongodb-mcp-find-attributes.png` (OpenTelemetry span attrs)
+7. `playground-03-triage-events.png` (mentor + triage delegation)
+8. `playground-04c-coach-function-response-detail.png` (Coach multimodal Glass Box)
+9. `cloud-trace-detail-mongodb-mcp-find-attributes.png` (OpenTelemetry — if slot remains)
 
 Full upload order: [devpost-gallery-upload.md](../devpost-gallery-upload.md).
 

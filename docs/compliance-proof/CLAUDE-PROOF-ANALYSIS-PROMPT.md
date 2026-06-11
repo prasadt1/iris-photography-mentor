@@ -50,8 +50,11 @@ Base: `https://raw.githubusercontent.com/prasadt1/iris-photography-mentor/main/d
 - `playground-02b-mentor-traces.png` — mentor trace waterfall
 - `playground-03-triage-events.png` — mentor + triage in one session
 - `playground-03b-triage-response.png` — triage HITL response
+- `playground-04a-coach-delegation-image.png` — orchestrator → **coach** with image upload
+- `playground-04b-coach-glassbox-response.png` — coach Glass Box JSON
+- `playground-04c-coach-function-response-detail.png` — full FUNCTION RESPONSE (scores, bounding_boxes)
 
-Label playground honestly: **localhost ADK dev UI**, not the public judge URL. Same entrypoint as Cloud Run (`app/agent.py`).
+Label playground honestly: **localhost ADK dev UI**, not the public judge URL. Same entrypoint as Cloud Run (`app/agent.py`). **One session proves three sub-agents:** mentor → triage → coach.
 
 #### E. Machine-readable evidence (JSON / text)
 Base: `https://raw.githubusercontent.com/prasadt1/iris-photography-mentor/blob/main/docs/compliance-proof/evidence/`

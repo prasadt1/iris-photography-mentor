@@ -44,8 +44,9 @@
 | 17 | `proof-05-agent-graph.png` | Nine ADK agents (live import) | Orchestrator + 8 sub-agents enumerated from the constructed ADK graph; persona-filtered delegation. |
 | 18 | `../runtime-proof/playground-03-triage-events.png` | ADK playground — multi-agent delegation | Same orchestrator (dev UI): Mentor turn 1, Triage turn 2; HITL duplicate scan. |
 | 19 | `../compliance-proof/cloud-console/cloud-trace-detail-mongodb-mcp-find-attributes.png` | Cloud Trace — MCP span detail | OpenTelemetry: `mcp.tool_name=find`, `mongodb.collection=portfolio_entries`. |
+| 20 | `../runtime-proof/playground-04c-coach-function-response-detail.png` | ADK playground — Coach Glass Box | Orchestrator → Coach; multimodal critique JSON (scores, glass_box). |
 
-Optional extras (if slots remain): `cloud-logging-mcp-read-ok-search.png`, `cloud-trace-explorer-mongodb-mcp-find-heatmap.png` — see [PROOF-PACKAGE.md](compliance-proof/PROOF-PACKAGE.md).
+Optional extras: `playground-03-triage-events.png` (3 agents in one timeline), `cloud-logging-mcp-read-ok-search.png` — [PROOF-PACKAGE.md](compliance-proof/PROOF-PACKAGE.md).
 
 ### Tier 4 — Annotated UI + tech splits (optional if slots remain)
 

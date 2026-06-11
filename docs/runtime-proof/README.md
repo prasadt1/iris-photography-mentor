@@ -82,14 +82,34 @@ Optional playground frame: header showing **`orchestrator`** selected (entrypoin
 
 ---
 
-## Shot 4 — Persona gating (optional)
+## Shot 4 — Coach multimodal critique (third turn, same session)
+
+**Prompt (turn 3):** attach a landscape photo +
+
+> Critique this photo
+
+**Capture:**
+
+| File | What to frame |
+|------|----------------|
+| `playground-04a-coach-delegation-image.png` | Events: image upload + orchestrator **Function call → coach** (`Critique the uploaded landscape…`) |
+| `playground-04b-coach-glassbox-response.png` | Coach ✓ — Events + `glass_box` JSON (scene_description, scores, observations) |
+| `playground-04c-coach-function-response-detail.png` | **FUNCTION RESPONSE** modal — full Glass Box (scores, bounding_boxes, priority_fixes) |
+
+**Caption:** *Turn 3: orchestrator → **Coach** — multimodal Gemini critique with structured Glass Box JSON (same Coach agent as `POST /api/v1/analyze-photo` on Cloud Run).*
+
+Proves a **third sub-agent** in one playground session: mentor → triage → coach.
+
+---
+
+## Shot 5 — Persona gating (optional)
 
 Skip if time is short — `proof-05` documents gating in code.
 
-1. Switch persona to **working_pro** (Settings in product, or env `DEFAULT_PERSONA`) and confirm `print_sales` appears in orchestrator tools.
-2. Or capture Triage’s in-response persona question (hobbyist vs working pro) from Shot 3b.
+1. Switch persona to **working_pro** and confirm `print_sales` in orchestrator tools.
+2. Or use Triage’s persona question from Shot 3b.
 
-**Save as:** `playground-04-persona-gating.png`
+**Save as:** `playground-05-persona-gating.png`
 
 ---
 
@@ -111,8 +131,11 @@ Skip if time is short — `proof-05` documents gating in code.
 |------|---------|
 | [playground-02a-mentor-events.png](playground-02a-mentor-events.png) | Mentor delegation — Events + function response |
 | [playground-02b-mentor-traces.png](playground-02b-mentor-traces.png) | Mentor — Traces waterfall (~41s, MongoDB tools) |
-| [playground-03-triage-events.png](playground-03-triage-events.png) | **Gallery pick** — mentor + triage in one session |
+| [playground-03-triage-events.png](playground-03-triage-events.png) | Mentor + triage in one session |
 | [playground-03b-triage-response.png](playground-03b-triage-response.png) | Triage function response + persona HITL question |
+| [playground-04a-coach-delegation-image.png](playground-04a-coach-delegation-image.png) | Coach — image upload + orchestrator → coach call |
+| [playground-04b-coach-glassbox-response.png](playground-04b-coach-glassbox-response.png) | Coach — Glass Box JSON in Events |
+| [playground-04c-coach-function-response-detail.png](playground-04c-coach-function-response-detail.png) | **Gallery pick (coach)** — full FUNCTION RESPONSE / scores |
 
 Public URL base: `https://raw.githubusercontent.com/prasadt1/iris-photography-mentor/main/docs/runtime-proof/`
 
@@ -124,6 +147,6 @@ Public URL base: `https://raw.githubusercontent.com/prasadt1/iris-photography-me
 |-------|----------|
 | Code (9 agents) | `agent-graph.json`, `proof-05-agent-graph.png` |
 | Runtime API | Cloud Trace + `mcp_read_ok` / `grounding_ok`, `verify-hackathon-stack.sh` |
-| Orchestration UI | `playground-02a/b` (mentor) + `playground-03` (triage) |
+| Orchestration UI | `playground-02`–`04` — **mentor + triage + coach** in one session |
 
-**Devpost gallery:** one slot for proof-05 (roster) + at most **one** playground image (recommend `playground-03-triage-events.png` — shows two agents in one session). Put the rest in this folder or article appendix.
+**Devpost gallery:** proof-05 (roster) + up to **two** playground images — recommend `playground-03-triage-events.png` (multi-agent timeline) and `playground-04c-coach-function-response-detail.png` (multimodal Coach / Glass Box).
