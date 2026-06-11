@@ -2,78 +2,94 @@
 
 Optional evidence that the **same orchestrator** wired in production (`app/agent.py`) is visible in the **ADK dev playground** (localhost). This is not the live product URL — label it honestly as dev UI.
 
-**Code-level proof (already committed):** `scripts/dump-agent-graph.py` → `docs/compliance-proof/evidence/agent-graph.json` → `proof-05-agent-graph.png`
+## Two-layer proof (use both)
 
-**Runtime proof (this folder):** screen captures from `make playground` showing the roster and delegation in action.
+| Layer | What it shows | Artifact |
+|-------|----------------|----------|
+| **Roster** | All 9 LlmAgents exist in code | `proof-05-agent-graph.png` + `agent-graph.json` (from `scripts/dump-agent-graph.py`) |
+| **Runtime** | Orchestrator **delegates** to different sub-agents and tools fire | PNGs in this folder (mentor + triage captures) |
+
+**Do not expect one chat turn to invoke every sub-agent.** One message → one specialist. Use **multiple turns in the same session** (mentor, then triage) plus proof-05 for the full nine-agent story.
+
+The left sidebar in the playground lists **Python packages** (`sub_agents`, `memory`, …), not the agent roster. Select **`orchestrator`** in the app dropdown — not `sub_agents`.
 
 ## Prereqs
 
 - `gcp-service-account.json` at repo root
 - `.env` with `MONGODB_URI`, `DEMO_USER_ID`, Gemini / Vertex vars
-- Clean desktop, **1920×1080** recording window, no stray tabs
+- Clean desktop, **1920×1080** window, no stray tabs
+- Responses can take **30–90 seconds** — wait for Events / Traces to populate
 
 ## Start
 
 ```bash
 cd /path/to/iris-photography-mentor
+export GOOGLE_APPLICATION_CREDENTIALS="$(pwd)/gcp-service-account.json"
 make playground
 ```
 
 Browser: **http://127.0.0.1:8080** (ADK playground — not Coach API on 8081).
 
----
-
-## Shot 1 — The roster (required)
-
-**Goal:** Visual proof of **nine agents** — Orchestrator + 8 sub-agents.
-
-1. Open the agent tree / selector in the playground UI.
-2. Frame so every name is legible:
-   - `orchestrator`
-   - `coach`, `mentor`, `planner`, `reflection`, `field_coach`, `triage`, `print_sales`, `visual_describer`
-3. Capture full window (PNG).
-
-**Save as:** `docs/runtime-proof/playground-01-agent-roster.png`
-
-**Caption (gallery / README):** *Same ADK orchestrator that runs on Cloud Run — agent roster in the ADK dev UI (localhost:8080). Nine LlmAgents: one orchestrator + eight sub-agents.*
-
-**Where it goes:** **One** gallery slot + link from `docs/compliance-proof/README.md`. Do not add multiple playground images to the Devpost gallery.
+1. App dropdown → **`orchestrator`**
+2. **NEW SESSION**
 
 ---
 
-## Shot 2 — Delegation in action (required)
+## Shot 1 — Roster (use proof-05, not the sidebar)
 
-**Goal:** Prove agents **run**, not just exist — orchestrator hands off to a sub-agent and tools fire.
+The playground UI does **not** show a tree of all nine agent names. For the roster, judges use:
 
-1. Select the **orchestrator** (root agent).
-2. Send a pre-typed prompt that routes clearly, e.g.:
-   - *"What should I practice next based on my portfolio?"* → Planner / Mentor path
-   - or *"Name my two strongest portfolio photos by score only — one sentence."* → Mentor + MCP reads
-3. Expand the **events / function-call / tool panel** in the playground.
-4. Capture the frame showing:
-   - User message
-   - Orchestrator delegation (AgentTool → sub-agent name)
-   - At least one tool call (e.g. portfolio read, assignment, grounding)
+- `docs/devpost-public/proof-05-agent-graph.png`
+- `docs/compliance-proof/evidence/agent-graph.txt`
 
-**Save as:** `docs/runtime-proof/playground-02-delegation-events.png`
+Optional playground frame: header showing **`orchestrator`** selected (entrypoint only).
 
-**Caption:** *Orchestrator delegates via AgentTool; sub-agent tool calls visible in the ADK event stream (dev UI).*
-
-**Where it goes:** This folder (`docs/runtime-proof/`). Optionally a **2–3s cut** in the demo video architecture beat.
+**Save as (optional):** `playground-01-orchestrator-entry.png`
 
 ---
 
-## Shot 3 — Persona gating (optional)
+## Shot 2 — Mentor delegation (required)
 
-**Goal:** Echo the persona matrix from `proof-05-agent-graph.png`.
+**Prompt (turn 1):**
 
-1. If the playground exposes persona / tool-list switching, set **hobbyist**.
-2. Show that `print_sales` and `visual_describer` are **not** in the orchestrator tool list.
-3. Switch to **working_pro** and show `print_sales` appears; **vision_impairment** and show `visual_describer` appears.
+> Name my two strongest portfolio photos by score only — one sentence.
 
-**Save as:** `docs/runtime-proof/playground-03-persona-gating.png`
+**Capture:**
 
-Skip if the UI makes this fiddly — `proof-05` already documents gating in code.
+| File | What to frame |
+|------|----------------|
+| `playground-02a-mentor-events.png` | Events timeline: user message → `mentor` (⚡ then ✓); expand Event showing `skipSummarization: true` and function response |
+| `playground-02b-mentor-traces.png` | **Traces** tab: `call_llm` → `mentor` → nested `get_recent…` / `atlas_search…` / MongoDB spans |
+
+**Caption:** *ADK dev playground — orchestrator delegates to Mentor; portfolio tools fire (~41s trace). Same graph as Cloud Run `POST /api/v1/agent/chat`.*
+
+---
+
+## Shot 3 — Triage delegation (required — second turn, same session)
+
+**Prompt (turn 2, do not start a new session):**
+
+> Scan my library for duplicate photos
+
+**Capture:**
+
+| File | What to frame |
+|------|----------------|
+| `playground-03-triage-events.png` | Events timeline showing **both** turns: mentor (earlier) + triage (`#5` / `#6`); proves multiple sub-agents in one orchestrator session |
+| `playground-03b-triage-response.png` | (Optional) Function response close-up: duplicate sequences, HITL / persona clarifying question |
+
+**Caption:** *Turn 2: orchestrator routes to Triage — library scan, duplicate detection, human-in-the-loop deletion proposals (persona-aware).*
+
+---
+
+## Shot 4 — Persona gating (optional)
+
+Skip if time is short — `proof-05` documents gating in code.
+
+1. Switch persona to **working_pro** (Settings in product, or env `DEFAULT_PERSONA`) and confirm `print_sales` appears in orchestrator tools.
+2. Or capture Triage’s in-response persona question (hobbyist vs working pro) from Shot 3b.
+
+**Save as:** `playground-04-persona-gating.png`
 
 ---
 
@@ -82,34 +98,29 @@ Skip if the UI makes this fiddly — `proof-05` already documents gating in code
 | Say | Do not say |
 |-----|------------|
 | ADK dev playground (localhost) | Production judge URL |
-| Same orchestrator entrypoint as Cloud Run / Agent Engine | Agent Engine is what judges hit today |
-| MongoDB MCP on **read** paths in production | MCP on every write |
+| Same orchestrator entrypoint as Cloud Run | Agent Engine is what judges hit today |
+| One turn → one sub-agent; proof-05 lists all nine | “All nine agents ran in this screenshot” |
 
-**Voiceover one-liner:** *"Production runs on Cloud Run; this is the same ADK orchestrator and tool graph in the dev playground."*
+**Voiceover one-liner:** *"Production runs on Cloud Run; this is the same ADK orchestrator — Mentor for portfolio chat, Triage for library cleanup."*
 
 ---
 
 ## After capture
 
 ```bash
-# Commit captures (when ready)
 git add docs/runtime-proof/playground-*.png
-git commit -m "Add ADK playground runtime proof captures."
+git commit -m "Add ADK playground runtime proof (mentor + triage delegation)."
 git push origin main
 ```
 
-Regenerate compliance panels if you refreshed other evidence:
+---
 
-```bash
-./scripts/verify-hackathon-stack.sh
-cd app && uv run python ../scripts/dump-agent-graph.py
-python3 scripts/build-compliance-proof-images.py
-```
-
-## Proof stack (complete when Shots 1–2 are in)
+## Proof stack (complete)
 
 | Layer | Artifact |
 |-------|----------|
-| Code | `agent-graph.json`, `proof-05-agent-graph.png` |
-| Runtime API | Cloud Trace + `mcp_read_ok` / `grounding_ok` logs, `verify-hackathon-stack.sh` |
-| Orchestration UI | `playground-01-agent-roster.png`, `playground-02-delegation-events.png` |
+| Code (9 agents) | `agent-graph.json`, `proof-05-agent-graph.png` |
+| Runtime API | Cloud Trace + `mcp_read_ok` / `grounding_ok`, `verify-hackathon-stack.sh` |
+| Orchestration UI | `playground-02a/b` (mentor) + `playground-03` (triage) |
+
+**Devpost gallery:** one slot for proof-05 (roster) + at most **one** playground image (recommend `playground-03-triage-events.png` — shows two agents in one session). Put the rest in this folder or article appendix.
