@@ -89,3 +89,12 @@ docs/playground-demo-recording.md
 docs/ios-product-spec.md
 docs/ui-ux-design.md
 docs/diagrams/user-journey-*.mmd
+
+# Heavy demo-video work artifacts and renders (kept local; too large for git)
+docs/demo-video-output/
+docs/demo-video-clips/
+docs/demo-video-frames/
+
+# Oversized Devpost gallery exports (uploaded to Devpost; too large for git)
+docs/devpost-public/hero-*.png
+docs/devpost-public/collage-*.png
