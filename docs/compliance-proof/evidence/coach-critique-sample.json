@@ -1,0 +1,110 @@
+{
+    "portfolioEntryId": "6a2a5c680385a99857b9b2b4",
+    "sceneDescription": "The image consists entirely of a solid, uniform field of medium-dark brown. There are no subjects, textures, lighting gradients, or compositional elements visible within the frame.",
+    "colourNotes": "The entire frame is a single, flat shade of warm, earthy brown, reminiscent of dry clay or milk chocolate.",
+    "scores": {
+        "composition": 0.0,
+        "lighting": 0.0,
+        "technique": 0.0,
+        "creativity": 0.0,
+        "subject_impact": 0.0
+    },
+    "critique": {
+        "composition": "There are no compositional elements, subjects, or framing choices present to evaluate.",
+        "lighting": "The image lacks any lighting information, shadows, highlights, or gradients.",
+        "technique": "As a solid color block, there is no photographic technique, focus, or exposure data to assess.",
+        "overall": "This appears to be a solid color placeholder or an image that failed to render properly, rather than a photograph. Please ensure the correct file was uploaded."
+    },
+    "strengths": [
+        "Provides a perfectly uniform color field, which could be useful as a digital asset or background."
+    ],
+    "improvements": [
+        "Upload a photograph containing a subject, lighting, and composition for a full critique."
+    ],
+    "learningPath": [
+        "Verify the image file is correct and not corrupted.",
+        "Upload a new photograph to receive actionable feedback."
+    ],
+    "settingsEstimate": {
+        "focalLength": "unknown",
+        "aperture": "unknown",
+        "shutterSpeed": "unknown",
+        "iso": "unknown"
+    },
+    "glassBox": {
+        "observations": [
+            "Image is a 100% uniform color field.",
+            "No pixel variation or texture detected.",
+            "Lack of any photographic subject or lens characteristics."
+        ],
+        "reasoning_steps": [
+            "Analyzed image for subjects and found none.",
+            "Checked for lighting gradients and found uniform pixel values.",
+            "Concluded the image is a digital artifact or placeholder rather than a photograph."
+        ],
+        "priority_fixes": [
+            {
+                "severity": "critical",
+                "issue": "No photographic content detected. Upload a valid photograph."
+            }
+        ],
+        "grounding_principles": [
+            "lighting.md",
+            "composition.md",
+            "technique.md",
+            "subject_impact.md",
+            "creativity.md"
+        ],
+        "grounding_citations": [
+            {
+                "id": "lighting.md",
+                "title": "Lighting",
+                "excerpt": "Golden hour (the hour after sunrise and before sunset) provides warm, soft, directional light ideal for portraits and landscapes. Blue hour (twilight) offers cool, diffused light. Both reduce harsh shadows and add atmosp"
+            },
+            {
+                "id": "composition.md",
+                "title": "Composition",
+                "excerpt": "The rule of thirds divides the frame into a 3x3 grid. Place key subjects or points of interest along these lines or at their intersections to create balanced, engaging compositions. This technique prevents overly centere"
+            },
+            {
+                "id": "technique.md",
+                "title": "Technique",
+                "excerpt": "**Critical focus** should land on the subject's most important feature (usually the eyes in portraits, the main subject in landscapes or still life). Use single-point autofocus for precision. Verify focus at 100% magnifi"
+            },
+            {
+                "id": "subject_impact.md",
+                "title": "Subject impact",
+                "excerpt": "In portrait photography, genuine emotion outweighs technical perfection. Capture authentic expressions\u2014joy, contemplation, vulnerability\u2014not forced smiles."
+            },
+            {
+                "id": "creativity.md",
+                "title": "Creativity",
+                "excerpt": "**Perspective** is where you position the camera relative to the subject:"
+            }
+        ]
+    },
+    "spatialMetadata": {
+        "annotations": [],
+        "subject_relationships": {
+            "primary_subject_position": "none",
+            "secondary_subjects": [],
+            "depth_axis": "flat",
+            "leading_lines_present": false
+        },
+        "lighting_map": {
+            "key_light_direction": "none",
+            "fill_light_strength": "absent",
+            "rim_light_present": false,
+            "color_temperature": "warm",
+            "shadow_character": "mixed"
+        }
+    },
+    "aestheticTags": [
+        "solid_color",
+        "brown",
+        "minimalist",
+        "placeholder",
+        "abstract"
+    ],
+    "imageUrl": "https://storage.googleapis.com/practice-companion-portfolio/originals/6577a1f2b3c4d5e6f7a8b9c0/6a2a5c440385a99857b9b2b3/3678ff464b8a411b9a824c8cf486c348.jpg?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=975418990849-compute%40developer.gserviceaccount.com%2F20260611%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260611T065744Z&X-Goog-Expires=21600&X-Goog-SignedHeaders=host&X-Goog-Signature=bba2732613a52cf574989da007468b1e031f8f56f5504764548a20628c9948027274e38d94b127635a4294669c3b51f0b4f1768faefa502e30b0f009c5ffdef29e1f097a13a86f6f8dfee34171027d52ef7bb0b9456de20d57167873f75bd7248185ff6c9faf7aff1381dddb4c62f8b8dacb9d2e1188a69b090589484d765aaa615c3c123f33e783b8c014f1d98788c1774e966f913aa17e7253b44ce3a0e01c39673959fecdc6f506fb4cf10fdf8c74e4887208cebfe9f7e1713f47c71e38f696f0be47a4749ccacad8a68351bd99e90b23027a2b68947c5c25acb7ecf4a6d5a76aade66974e9aea70d26e49d2818012837555adc9173ba61369a865f2cf137"
+}

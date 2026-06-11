@@ -1,0 +1,12 @@
+{
+    "source": "discovery_engine",
+    "scene": "landscape",
+    "count": 5,
+    "principleIds": [
+        "lighting.md",
+        "composition.md",
+        "technique.md",
+        "subject_impact.md",
+        "creativity.md"
+    ]
+}

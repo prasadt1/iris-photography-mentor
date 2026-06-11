@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 from pathlib import Path
 
 from memory.schema import GroundingCitation
+
+logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 PRINCIPLES_DIR = PROJECT_ROOT / "principles"
@@ -98,6 +101,12 @@ def _search_discovery_engine(query: str, page_size: int = 5) -> list[GroundingCi
                 excerpt=excerpt or doc_id,
             )
         )
+    if not citations:
+        logger.warning(
+            "grounding_de_empty data_store=%s query=%r results=0",
+            data_store_id,
+            query[:80],
+        )
     return citations
 
 
@@ -110,9 +119,21 @@ def ground_principles(scene_type: str) -> list[GroundingCitation]:
     query = f"photography {scene_key} composition lighting technique"
     citations = _search_discovery_engine(query)
     if citations:
+        logger.info(
+            "grounding_ok source=discovery_engine scene=%s count=%s ids=%s",
+            scene_key,
+            len(citations),
+            [c.id for c in citations[:3]],
+        )
         return citations
 
-    return [c for doc in SCENE_TO_DOCS[scene_key] if (c := _load_local(doc))]
+    local = [c for doc in SCENE_TO_DOCS[scene_key] if (c := _load_local(doc))]
+    logger.info(
+        "grounding_fallback source=local_principles scene=%s count=%s",
+        scene_key,
+        len(local),
+    )
+    return local
 
 
 def detect_scene_type_hint(filename: str, mime_type: str) -> str:

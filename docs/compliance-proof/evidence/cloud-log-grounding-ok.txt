@@ -1,0 +1,1 @@
+INFO:tools.grounding:grounding_ok source=discovery_engine scene=general count=5 ids=['lighting.md', 'composition.md', 'technique.md']
