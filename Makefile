@@ -58,6 +58,15 @@ frontend-dev:
 seed-demo:
 	@python3 scripts/seed-demo-data.py
 
+verify-stack:
+	@bash scripts/verify-hackathon-stack.sh
+
+verify-stack-full:
+	@RUN_COACH=1 bash scripts/verify-hackathon-stack.sh
+
+compliance-proof: verify-stack
+	@python3 scripts/build-compliance-proof-images.py
+
 repair-print-sales-demo:
 	@python3 scripts/repair-print-sales-demo.py
 

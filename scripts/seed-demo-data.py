@@ -32,6 +32,8 @@ DB_NAME = os.environ.get("MONGODB_DB_NAME", "practice_companion")
 # Stable demo user — set DEMO_USER_ID in .env to this hex string
 DEMO_USER_HEX = "6577a1f2b3c4d5e6f7a8b9c0"
 DEMO_USER_ID = ObjectId(DEMO_USER_HEX)
+# Stable proposed assignment for demo video (accept -> shoot -> complete arc)
+DEMO_ASSIGNMENT_PROPOSED_ID = ObjectId("6577a1f2b3c4d5e6f7a8b9d0")
 
 SHOOT_IDS = [
     ObjectId("6577a1f2b3c4d5e6f7a8b9c1"),  # baseline — weak composition
@@ -138,18 +140,20 @@ for i, photo in enumerate(_PHOTOS):
                 "creativity": round(4.5 + shoot * 0.35, 1),
                 "subject_impact": round(5.5 + shoot * 0.45, 1),
             },
-            "tags": [["portrait", "natural_light"], ["flat_lay", "craft"], ["landscape", "golden_hour"], ["still_life", "minimalist"]][shoot],
+            # Subject-agnostic, composition-focused copy so captions never contradict the image.
+            # For vivid per-photo captions, seed from real analyzed uploads instead.
+            "tags": [["composition", "practice"], ["composition", "balance"], ["landscape", "golden_hour"], ["composition", "golden_hour"]][shoot],
             "scene": [
-                "A portrait-oriented frame with the subject centered against a soft background.",
-                "A flat lay of handmade textiles arranged on a neutral surface.",
-                "An open landscape under late-day sky with layered depth in the midground.",
-                "A single still-life object on wood with shallow depth of field.",
+                "An early frame from your library — composition still finding its balance.",
+                "A developing frame — the subject reads, though the edges compete for attention.",
+                "A confident frame — clear structure with warm, directional light.",
+                "A standout frame — strong subject placement and clean, intentional light.",
             ][shoot],
             "observations": [
-                "Subject sits near center; limited negative space on the sides.",
-                "Items cluster in the middle; edges feel crowded.",
-                "Horizon sits high; foreground lacks a clear anchor.",
-                "Warm side light models texture well; background is calm.",
+                "Subject sits central; try the rule of thirds for more tension.",
+                "Strong elements, but the frame edges feel crowded — simplify.",
+                "Good depth and light; add a foreground anchor to lead the eye.",
+                "Confident framing and warm light — a clean, intentional result.",
             ],
         }
     )
@@ -173,7 +177,7 @@ def build_portfolio_docs() -> list[dict]:
     return docs
 
 
-def seed(db, *, reset: bool) -> None:
+def seed(db, *, reset: bool, active_demo: bool = False) -> None:
     if reset:
         db.portfolio_entries.delete_many({"user_id": DEMO_USER_ID})
         db.assignments.delete_many({"user_id": DEMO_USER_ID})
@@ -203,36 +207,60 @@ def seed(db, *, reset: bool) -> None:
         {
             "user_id": DEMO_USER_ID,
             "status": "completed",
-            "brief": "Use rule of thirds deliberately in your next portrait shoot — place the subject on a vertical third, not dead center.",
+            "brief": (
+                "Use rule of thirds on your next outdoor frame — place the main subject on a "
+                "vertical third, not dead center.\n"
+                "Success: one clear subject with intentional negative space."
+            ),
             "target_skill": "composition",
-            "rationale": "Baseline portraits clustered near center (composition ~4.5). Post-assignment work shows stronger third placement.",
+            "rationale": (
+                "Pattern: early library frames cluster near center (composition ~4.5).\n"
+                "Why now: baseline before the current composition drill."
+            ),
             "baseline_shoot_ids": [SHOOT_IDS[0]],
             "completion_shoot_ids": [SHOOT_IDS[1]],
             "skill_delta": {
-                "metric": "Intentional Skill Application Rate",
-                "baseline_value": 0.13,
-                "current_value": 0.67,
-                "delta": 0.54,
+                "metric": "composition",
+                "baseline_value": 4.5,
+                "current_value": 5.4,
+                "delta": 0.9,
             },
+            "applied_brief": True,
             "created_at": completed_at - timedelta(days=14),
             "completed_at": completed_at,
         }
     )
 
+    # Demo practice brief — indoor flower still life (weather-proof; matches iOS field demo).
+    # Default: proposed (record Accept on Practice tab). Use --active-demo to skip Accept for reshoots.
+    demo_status = "active" if active_demo else "proposed"
     db.assignments.insert_one(
         {
+            "_id": DEMO_ASSIGNMENT_PROPOSED_ID,
             "user_id": DEMO_USER_ID,
-            "status": "active",
-            "brief": "Experiment with side lighting to add depth on your next craft or still-life shoot. Position key light 45° to the subject and leave one third of the frame as clean negative space.",
-            "target_skill": "lighting",
-            "rationale": "Lighting scores improved in shoot 3 but flat lays still lack dimensional separation. Side light + negative space builds on your textile work.",
-            "baseline_shoot_ids": [SHOOT_IDS[2]],
+            "status": demo_status,
+            "brief": (
+                "Golden-hour composition — fill the frame with one strong subject:\n"
+                "• Pick a single clear subject (a tree, an animal, a fence line)\n"
+                "• Place it on a vertical third — don't show the whole scene\n"
+                "• Use the low warm light: side or backlight, watch your shadows\n"
+                "Success: one intentional frame where the subject dominates, not the scenery."
+            ),
+            "target_skill": "composition",
+            "rationale": (
+                "Pattern: recent frames still cluster near center (composition ~5.4).\n"
+                "Why now: evening light rewards deliberate framing — build on your completed thirds drill."
+            ),
+            "baseline_shoot_ids": [SHOOT_IDS[1]],
             "completion_shoot_ids": [],
-            "created_at": datetime.now(timezone.utc) - timedelta(days=2),
+            "created_at": datetime.now(timezone.utc) - timedelta(hours=6),
             "completed_at": None,
         }
     )
-    print("  inserted 2 assignments (1 completed, 1 active)")
+    print(
+        f"  inserted demo assignment ({demo_status}) — golden-hour composition "
+        f"(id {DEMO_ASSIGNMENT_PROPOSED_ID})"
+    )
 
     db.aesthetic_profile.insert_one(
         {
@@ -251,6 +279,11 @@ def seed(db, *, reset: bool) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed Practice Companion demo data")
     parser.add_argument("--reset", action="store_true", help="Delete demo user data first")
+    parser.add_argument(
+        "--active-demo",
+        action="store_true",
+        help="Seed flower assignment as active (skip Accept — use for reshoots / field recording)",
+    )
     args = parser.parse_args()
 
     if not URI:
@@ -262,10 +295,15 @@ def main() -> None:
     db = client[DB_NAME]
 
     print(f"Seeding database: {DB_NAME}")
-    seed(db, reset=args.reset)
+    seed(db, reset=args.reset, active_demo=args.active_demo)
     print("\nAdd to .env:")
     print(f"  DEMO_USER_ID={DEMO_USER_HEX}")
-    print("\nRestart make api-dev, then open Memory + Practice tabs.")
+    print(f"\nDemo assignment id: {DEMO_ASSIGNMENT_PROPOSED_ID}")
+    if args.active_demo:
+        print("  Status: active — open Practice -> Shoot for this (or FAB with assignment linked).")
+    else:
+        print("  Status: proposed — Practice -> Accept -> Shoot for this.")
+    print("\nTheme: golden-hour single-subject composition (tree / horse / fence — outdoor demo).")
 
 
 if __name__ == "__main__":
