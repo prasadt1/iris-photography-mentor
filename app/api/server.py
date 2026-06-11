@@ -126,13 +126,14 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+def health() -> dict:
     mcp_enabled = os.environ.get("ORCHESTRATOR_USE_MCP", "true").lower() not in (
         "0",
         "false",
         "no",
     )
     mcp_url = os.environ.get("MONGODB_MCP_HTTP_URL", "")
+    data_store_id = os.environ.get("DATA_STORE_ID", "").strip()
     return {
         "status": "ok",
         "phase": "4",
@@ -143,6 +144,37 @@ def health() -> dict[str, str]:
         "mentorMcpReads": "enabled",
         "mentorMcpToolset": "enabled" if mcp_enabled else "disabled",
         "mongodbMcpHttp": mcp_url or "stdio",
+        "geminiModel": os.environ.get("GEMINI_MODEL", "gemini-3.1-pro-preview"),
+        "fieldCaptureModel": os.environ.get("FIELD_CAPTURE_MODEL", "gemini-2.5-flash"),
+        "dataStoreConfigured": bool(data_store_id),
+        "dataStoreId": data_store_id or "",
+    }
+
+
+@app.get("/health/grounding-probe")
+def health_grounding_probe() -> dict:
+    """Judge-facing probe: calls Agent Builder Data Store search (no upload required)."""
+    from tools.grounding import _search_discovery_engine, ground_principles
+
+    scene = "landscape"
+    de_cites = _search_discovery_engine(f"photography {scene} composition lighting technique")
+    if de_cites:
+        return {
+            "source": "discovery_engine",
+            "scene": scene,
+            "count": len(de_cites),
+            "principleIds": [c.id for c in de_cites[:5]],
+        }
+    fallback = ground_principles(scene)
+    return {
+        "source": "local_fallback",
+        "scene": scene,
+        "count": len(fallback),
+        "principleIds": [c.id for c in fallback[:5]],
+        "note": (
+            "Discovery Engine search returned 0 hits (API was still invoked). "
+            "Verify principles are imported in Agent Builder console."
+        ),
     }
 
 

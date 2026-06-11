@@ -78,6 +78,19 @@ def aggregate_roi_by_marketplace(user_id: str | None = None) -> dict[str, Any]:
     }
 
 
+def _avg_score(scores: dict[str, Any]) -> float:
+    keys = ("composition", "lighting", "technique", "creativity", "subject_impact")
+    vals = [float(scores[k]) for k in keys if k in scores and scores[k] is not None]
+    return sum(vals) / len(vals) if vals else 0.0
+
+
+def suggested_list_price_for_score(avg_score: float) -> float:
+    """Etsy-style tier: stronger portfolio frames command higher list prices."""
+    score = max(0.0, min(10.0, avg_score))
+    # 5.0 → ~$35, 6.5 → ~$51, 8.4 → ~$65, 8.6 → ~$67
+    return round(12.0 + score * 6.5, 2)
+
+
 def generate_listing_metadata(
     portfolio_entry_id: str,
     marketplace: str = "etsy",
@@ -88,12 +101,14 @@ def generate_listing_metadata(
         return {"error": "Portfolio entry not found"}
     tags = doc.get("aesthetic_tags") or []
     scene = (doc.get("scene_description") or "Photograph")[:120]
+    avg = _avg_score(doc.get("scores") or {})
+    tag_label = (tags[0] if tags else "photography").replace("_", " ")
     return {
         "marketplace": marketplace,
-        "title": f"Fine art print — {tags[0] if tags else 'photography'}",
+        "title": f"Fine art print — {tag_label}",
         "description": f"Archival print based on: {scene}",
         "tags": tags[:12],
-        "suggestedListPrice": 45.0,
+        "suggestedListPrice": suggested_list_price_for_score(avg),
         "currency": "USD",
     }
 
@@ -103,8 +118,9 @@ def propose_listing_publication(
     marketplace: str,
     listing_metadata: dict[str, Any],
     reasoning: str,
+    user_id: str | None = None,
 ) -> dict[str, Any]:
-    uid = _resolve_user_id(None)
+    uid = _resolve_user_id(user_id)
     if not uid:
         raise ValueError("No user context")
     doc = {

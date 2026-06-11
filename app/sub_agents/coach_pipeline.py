@@ -52,10 +52,15 @@ def _run_coach_model(
     image_bytes: bytes,
     mime_type: str,
     citations: list[GroundingCitation],
+    *,
+    assignment_context: str | None = None,
 ) -> CoachAnalysisOutput:
     prompt_path = Path(__file__).parent.parent / "prompts" / "coach.txt"
     system = prompt_path.read_text(encoding="utf-8")
     principles = _principles_block(citations)
+    assignment_block = ""
+    if assignment_context:
+        assignment_block = f"\n\n## Active practice assignment\n{assignment_context}\n"
 
     client = _gemini_client()
     model = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro-preview")
@@ -69,8 +74,8 @@ def _run_coach_model(
                     types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
                     types.Part.from_text(
                         text=(
-                            f"{system}\n\n## Agent Builder principles\n{principles}\n\n"
-                            "Analyze this photograph."
+                            f"{system}\n\n## Agent Builder principles\n{principles}"
+                            f"{assignment_block}\n\nAnalyze this photograph."
                         )
                     ),
                 ],
@@ -183,6 +188,7 @@ def analyze_photo(
     uid = to_mongo_user_id(effective)
     sid = ObjectId(shoot_id) if shoot_id else ObjectId()
     assignment_oid: ObjectId | None = None
+    assignment_doc: dict[str, Any] | None = None
 
     if assignment_id:
         coll = get_db().assignments
@@ -190,6 +196,7 @@ def analyze_photo(
         doc = coll.find_one({"_id": assignment_oid, "status": "active"})
         if not doc:
             raise ValueError("Active assignment not found for this upload")
+        assignment_doc = doc
         uid = doc["user_id"]
         if doc.get("practice_shoot_id"):
             sid = doc["practice_shoot_id"]
@@ -200,7 +207,21 @@ def analyze_photo(
 
     scene = detect_scene_type_hint(filename, content_type)
     citations = ground_principles(scene)
-    output = _run_coach_model(image_bytes, content_type, citations)
+    assignment_context: str | None = None
+    if assignment_doc:
+        brief = str(assignment_doc.get("brief") or "").strip()
+        skill = str(assignment_doc.get("target_skill") or "").strip()
+        if brief or skill:
+            assignment_context = (
+                f"Brief:\n{brief}\n\nTarget skill: {skill or 'composition'}\n"
+                "Explicitly judge alignment with this brief and target skill in observations and scores."
+            )
+    output = _run_coach_model(
+        image_bytes,
+        content_type,
+        citations,
+        assignment_context=assignment_context,
+    )
 
     image_url = upload_portfolio_image(image_bytes, content_type, str(uid), str(sid))
 

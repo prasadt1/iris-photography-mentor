@@ -31,6 +31,14 @@ _SKILL_TO_SCORE: dict[str, str] = {
     "negative_space": "composition",
 }
 
+_DIMENSION_LABELS: dict[str, str] = {
+    "composition": "Composition",
+    "lighting": "Lighting",
+    "technique": "Technique",
+    "creativity": "Creativity",
+    "subject_impact": "Subject impact",
+}
+
 
 class ReflectionModelOutput(BaseModel):
     summary: str
@@ -75,6 +83,26 @@ def _entries_for_shoots(shoot_ids: list[ObjectId]) -> list[dict[str, Any]]:
     )
 
 
+def _completion_entries(assignment: dict[str, Any], assignment_oid: ObjectId) -> list[dict[str, Any]]:
+    """Use the final practice upload — not every historical attempt on the assignment."""
+    coll = get_db().portfolio_entries
+    linked = list(assignment.get("linked_portfolio_ids") or [])
+    if linked:
+        doc = coll.find_one({"_id": linked[-1]})
+        return [doc] if doc else []
+
+    by_assignment = list(coll.find({"assignment_id": assignment_oid}).sort("created_at", 1))
+    if by_assignment:
+        return [by_assignment[-1]]
+
+    completion_ids = list(assignment.get("completion_shoot_ids") or [])
+    practice_shoot = assignment.get("practice_shoot_id")
+    if practice_shoot and practice_shoot not in completion_ids:
+        completion_ids.append(practice_shoot)
+    shoot_entries = _entries_for_shoots(completion_ids)
+    return [shoot_entries[-1]] if shoot_entries else []
+
+
 def reflect_assignment(assignment_id: str) -> dict[str, Any]:
     coll = get_db().assignments
     oid = ObjectId(assignment_id)
@@ -86,17 +114,7 @@ def reflect_assignment(assignment_id: str) -> dict[str, Any]:
 
     dimension = _score_key(assignment.get("target_skill", "composition"))
     baseline_entries = _entries_for_shoots(list(assignment.get("baseline_shoot_ids") or []))
-    practice_shoot = assignment.get("practice_shoot_id")
-    completion_ids = list(assignment.get("completion_shoot_ids") or [])
-    if practice_shoot and practice_shoot not in completion_ids:
-        completion_ids.append(practice_shoot)
-
-    completion_by_assignment = list(
-        get_db()
-        .portfolio_entries.find({"assignment_id": oid})
-        .sort("created_at", 1)
-    )
-    completion_entries = completion_by_assignment or _entries_for_shoots(completion_ids)
+    completion_entries = _completion_entries(assignment, oid)
 
     baseline_avg = _avg_dimension(baseline_entries, dimension)
     completion_avg = _avg_dimension(completion_entries, dimension)
@@ -104,26 +122,26 @@ def reflect_assignment(assignment_id: str) -> dict[str, Any]:
     if baseline_avg is None and completion_avg is None:
         baseline_value, current_value, delta = 0.0, 0.0, 0.0
     elif baseline_avg is None:
-        baseline_value = max(0.0, (completion_avg or 0) / 10.0 - 0.15)
-        current_value = (completion_avg or 0) / 10.0
+        baseline_value = max(0.0, (completion_avg or 0) - 1.5)
+        current_value = completion_avg or 0
         delta = current_value - baseline_value
     else:
-        baseline_value = baseline_avg / 10.0
-        current_value = (completion_avg or baseline_avg) / 10.0
+        baseline_value = baseline_avg
+        current_value = completion_avg if completion_avg is not None else baseline_avg
         delta = current_value - baseline_value
 
     skill_delta = SkillDelta(
-        metric="Intentional Skill Application Rate",
-        baseline_value=round(baseline_value, 2),
-        current_value=round(current_value, 2),
-        delta=round(delta, 2),
+        metric=_DIMENSION_LABELS.get(dimension, dimension.replace("_", " ").title()),
+        baseline_value=round(baseline_value, 1),
+        current_value=round(current_value, 1),
+        delta=round(delta, 1),
     )
 
     summary = (
-        f"Compared {len(baseline_entries)} baseline and {len(completion_entries)} practice "
-        f"photo(s) on {dimension}. "
+        f"Compared {len(baseline_entries)} baseline and {len(completion_entries)} final "
+        f"practice photo on {dimension}. "
     )
-    applied = delta > 0.02 and len(completion_entries) > 0
+    applied = delta > 0.2 and len(completion_entries) > 0
 
     if completion_entries and os.environ.get("GEMINI_MODEL"):
         try:

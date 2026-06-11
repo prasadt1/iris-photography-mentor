@@ -12,6 +12,7 @@ from bson import ObjectId
 from memory.user_ids import to_mongo_user_id
 
 from memory.db import get_db
+from memory.session_context import resolve_effective_user_id
 from tools.gcs import signed_https_url
 
 logger = logging.getLogger(__name__)
@@ -88,11 +89,9 @@ def _serialize_entry(doc: dict[str, Any]) -> dict[str, Any]:
 
 def _portfolio_user_query(user_id: str | None = None) -> dict[str, Any]:
     query: dict[str, Any] = {}
-    demo_user = os.environ.get("DEMO_USER_ID")
-    if user_id:
-        query["user_id"] = to_mongo_user_id(user_id)
-    elif demo_user:
-        query["user_id"] = ObjectId(demo_user)
+    effective = resolve_effective_user_id(user_id)
+    if effective:
+        query["user_id"] = to_mongo_user_id(effective)
     return query
 
 

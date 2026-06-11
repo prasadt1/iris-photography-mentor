@@ -12,6 +12,7 @@ from memory.user_ids import to_mongo_user_id
 
 from memory.db import get_db
 from memory.portfolio import _avg_score
+from memory.session_context import resolve_effective_user_id
 
 SCORE_KEYS = ("composition", "lighting", "technique", "creativity", "subject_impact")
 
@@ -27,11 +28,9 @@ DIMENSION_LABELS = {
 
 def _user_query(user_id: str | None) -> dict[str, Any]:
     query: dict[str, Any] = {}
-    demo_user = os.environ.get("DEMO_USER_ID")
-    if user_id:
-        query["user_id"] = to_mongo_user_id(user_id)
-    elif demo_user:
-        query["user_id"] = ObjectId(demo_user)
+    effective = resolve_effective_user_id(user_id)
+    if effective:
+        query["user_id"] = to_mongo_user_id(effective)
     return query
 
 

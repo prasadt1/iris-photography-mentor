@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from bson import ObjectId
+
 from memory.assignments import _resolve_user_id
 from memory.db import get_db
 from memory.pending_approvals import list_pending
@@ -13,7 +15,7 @@ from memory.print_sales_helpers import listing_exists_for_portfolio_entry
 from sub_agents.tools import print_sales_tools
 
 
-def _supersede_pending_print_sales(uid: str) -> int:
+def _supersede_pending_print_sales(uid: ObjectId) -> int:
     result = get_db().pending_approvals.update_many(
         {"user_id": uid, "agent_name": "print_sales", "status": "pending"},
         {
@@ -30,7 +32,7 @@ def _supersede_pending_print_sales(uid: str) -> int:
     return result.modified_count
 
 
-def _entry_already_pending(uid: str, entry_id: str) -> bool:
+def _entry_already_pending(uid: ObjectId, entry_id: str) -> bool:
     return (
         get_db().pending_approvals.find_one(
             {
@@ -75,7 +77,7 @@ def run_print_sales_scan(
     if not uid:
         raise ValueError("Set DEMO_USER_ID in .env")
 
-    superseded = _supersede_pending_print_sales(str(uid))
+    superseded = _supersede_pending_print_sales(uid)
 
     entries = list(
         get_db()
@@ -99,7 +101,7 @@ def run_print_sales_scan(
         if key in seen:
             continue
         seen.add(key)
-        if _entry_already_pending(str(uid), eid):
+        if _entry_already_pending(uid, eid):
             continue
         if _entry_already_listed(str(uid), eid):
             continue
@@ -109,6 +111,7 @@ def run_print_sales_scan(
             continue
 
         score = round(_avg_score(doc.get("scores") or {}), 1)
+        price = meta.get("suggestedListPrice", 45.0)
         proposals.append(
             print_sales_tools.propose_listing_publication(
                 eid,
@@ -116,9 +119,10 @@ def run_print_sales_scan(
                 listing_metadata=meta,
                 reasoning=(
                     f"Portfolio score {score}/10 — strong candidate for "
-                    f"{meta.get('marketplace', marketplace)}. "
+                    f"{meta.get('marketplace', marketplace)} at ${price:.0f}. "
                     "Review title, price, and copy before anything is listed."
                 ),
+                user_id=str(uid),
             )
         )
 

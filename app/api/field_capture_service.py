@@ -13,7 +13,8 @@ from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 
-from memory.capture_sessions import assert_active_session, record_frame
+from memory.capture_sessions import assert_active_session, get_capture_session, record_frame
+from memory.db import get_db
 from core.safety import SAFETY_SETTINGS
 from sub_agents.tools import field_coach_tools
 
@@ -124,6 +125,35 @@ def _cue_from_structured(response: Any) -> dict[str, Any]:
     return _parse_cue_payload(raw)
 
 
+def _resolve_assignment_brief(
+    session_id: str,
+    user_id: str | None,
+    assignment_brief: str | None,
+) -> str | None:
+    """Use client brief when present; else load from capture session assignment_id."""
+    if assignment_brief and assignment_brief.strip():
+        return assignment_brief.strip()[:400]
+    try:
+        session = get_capture_session(session_id, user_id=user_id)
+        aid = session.get("assignment_id")
+        if not aid:
+            return None
+        doc = get_db().assignments.find_one({"_id": aid})
+        if not doc or doc.get("status") not in ("active", "proposed"):
+            return None
+        brief = str(doc.get("brief") or "").strip()
+        skill = str(doc.get("target_skill") or "").strip()
+        if not brief:
+            return None
+        ctx = brief
+        if skill:
+            ctx += f" (target skill: {skill})"
+        return ctx[:400]
+    except Exception as exc:
+        logger.debug("field_capture: assignment brief fallback skipped: %s", exc)
+        return None
+
+
 def analyze_field_frame(
     *,
     image_bytes: bytes,
@@ -148,8 +178,9 @@ def analyze_field_frame(
     prompt_path = PROJECT_ROOT / "prompts" / "field_capture_frame.txt"
     system = prompt_path.read_text(encoding="utf-8")
     context = f"Persona: {persona}."
-    if assignment_brief:
-        context += f" Active practice brief: {assignment_brief[:400]}"
+    resolved_brief = _resolve_assignment_brief(session_id, user_id, assignment_brief)
+    if resolved_brief:
+        context += f" Active practice brief: {resolved_brief}"
 
     client = _gemini_client()
     response = client.models.generate_content(

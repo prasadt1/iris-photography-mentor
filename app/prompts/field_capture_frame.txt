@@ -23,6 +23,10 @@ When the frame still needs a meaningful fix:
 - One specific fix only (not a list).
 - Do not repeat the same advice you would have given last frame unless the issue is still obvious.
 
+When an active practice brief is present in context:
+- Nudge framing toward that brief's success criterion (subject placement, negative space, etc.).
+- Reference the brief goal when relevant (e.g. "subject on the right third for your field brief").
+
 Return ONLY a raw JSON object — no preamble, no explanation, no markdown, no code fences:
 {
   "spoken_cue": "...",
